@@ -7,30 +7,35 @@
         </div>
     </header>
 
-    {{#if plannerGroups.length}}
-    <ul class="planner-groups">
-        {{#each plannerGroups as |group|}}
-        <li class="planner-group">
-            <div class="planner-group-label">{{group.label}}</div>
-            <ol class="planner-steps">
-                {{#each group.steps as |step|}}
-                <li class="planner-step">
-                    <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
-                    <span class="planner-step-cost">{{step.cost}} AP</span>
-                </li>
-                {{/each}}
-            </ol>
-            <div class="planner-group-actions">
-                <a data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
-                    <i class="fas fa-check"></i>
-                </a>
-                <a data-plan-cancel data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Cancel'}}">
-                    <i class="fas fa-trash"></i>
-                </a>
-            </div>
-        </li>
-        {{/each}}
-    </ul>
+    {{#if plannerSections.length}}
+    {{#each plannerSections as |section|}}
+    <div class="planner-section">
+        <div class="planner-section-header {{section.cssClass}}">{{section.label}}</div>
+        <ul class="planner-groups">
+            {{#each section.groups as |group|}}
+            <li class="planner-group">
+                <div class="planner-group-label">{{group.label}}</div>
+                <ol class="planner-steps">
+                    {{#each group.steps as |step|}}
+                    <li class="planner-step">
+                        <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
+                        <span class="planner-step-cost">{{step.cost}} AP</span>
+                    </li>
+                    {{/each}}
+                </ol>
+                <div class="planner-group-actions">
+                    <a data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
+                        <i class="fas fa-check"></i>
+                    </a>
+                    <a data-plan-cancel data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Cancel'}}">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+    {{/each}}
     {{else}}
     <p class="planner-empty">{{localize "STEIGERUNGSPLANER.Empty"}}</p>
     {{/if}}

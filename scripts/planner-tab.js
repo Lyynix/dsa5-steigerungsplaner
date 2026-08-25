@@ -7,11 +7,29 @@ export default class PlannerTab {
     return PART_ID;
   }
 
+  // Groups target-groups (one per attribute/point/item, from PlannerData.getGroups) a second
+  // time by display section (Körpertalente, Kampftechniken, Eigenschaften, ...) for the tab's
+  // layout. Sections appear in the order their first member was first encountered.
+  static buildSections(actor) {
+    const sections = new Map();
+
+    for (const group of PlannerData.getGroups(actor).values()) {
+      const section = PlannerController.sectionFor(actor, group.type, group.key);
+      if (!sections.has(section.id)) sections.set(section.id, { ...section, groups: [], totalCost: 0 });
+
+      const s = sections.get(section.id);
+      s.groups.push(group);
+      s.totalCost += group.totalCost;
+    }
+
+    return Array.from(sections.values());
+  }
+
   static async prepareContext(sheet, context) {
     const actor = sheet.actor;
 
-    context.plannerGroups = Array.from(PlannerData.getGroups(actor).values());
-    context.plannerTotalCost = context.plannerGroups.reduce((sum, g) => sum + g.totalCost, 0);
+    context.plannerSections = this.buildSections(actor);
+    context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0);
     context.plannerAvailableXP = Number(actor.system.details.experience.total) - Number(actor.system.details.experience.spent);
     return context;
   }

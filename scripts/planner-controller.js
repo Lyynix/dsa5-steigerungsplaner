@@ -49,6 +49,38 @@ export default class PlannerController {
     return key;
   }
 
+  // The tab's display grouping (Körpertalente, Kampftechniken, Eigenschaften, ...) - distinct
+  // from categoryFor()'s A-E advancement-cost category. For skill items this mirrors the exact
+  // grouping DSA5's own talent list uses (item.system.group.value), `cssClass` reuses the
+  // system's own .skills.<group> gradient classes so the colors match what's already on the
+  // talent tab. Sections without a system equivalent (characteristics, points, combat, magic,
+  // religion) get their own gradient defined in our own stylesheet.
+  static sectionFor(actor, type, key) {
+    if (type === 'attribute') {
+      return { id: 'characteristics', label: game.i18n.localize('STEIGERUNGSPLANER.Section.characteristics'), cssClass: 'steigerungsplaner-section-characteristics' };
+    }
+    if (type === 'point') {
+      return { id: 'points', label: game.i18n.localize('STEIGERUNGSPLANER.Section.points'), cssClass: 'steigerungsplaner-section-points' };
+    }
+    if (type === 'item') {
+      const item = actor.items.get(key);
+      if (item?.type === 'skill') {
+        const group = item.system.group.value;
+        return { id: `skill-${group}`, label: game.i18n.localize(`SKILL.${group}`), cssClass: `skills ${group}` };
+      }
+      if (item?.type === 'combatskill') {
+        return { id: 'combat', label: game.i18n.localize('TYPES.Item.combatskill'), cssClass: 'steigerungsplaner-section-combat' };
+      }
+      if (item?.type === 'spell') {
+        return { id: 'magic', label: game.i18n.localize('TYPES.Item.spell'), cssClass: 'steigerungsplaner-section-magic' };
+      }
+      if (item?.type === 'liturgy') {
+        return { id: 'religion', label: game.i18n.localize('TYPES.Item.liturgy'), cssClass: 'steigerungsplaner-section-religion' };
+      }
+    }
+    return { id: 'other', label: game.i18n.localize('STEIGERUNGSPLANER.Section.other'), cssClass: 'steigerungsplaner-section-other' };
+  }
+
   // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
   // but offset by however many steps for this target are already queued.
   static buildEntry(actor, type, key) {
