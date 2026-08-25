@@ -106,24 +106,38 @@ export default class PlannerController {
   // _refundItemAdvance wraps). `valueAfterRefund` is the target's actual value right after that
   // refund. If the top of this target's "consumed" stack is exactly the step that refund just
   // undid (i.e. it advanced the value from valueAfterRefund to valueAfterRefund + 1), put it back
-  // at the front of the plan. Otherwise leave the plan alone - better to do nothing than guess
-  // wrong (e.g. the refunded step was never plan-sourced in the first place).
+  // at the front of the plan.
   static async restoreIfMatching(actor, type, key, valueAfterRefund) {
     const consumed = PlannerData.getConsumed(actor);
     const idx = PlannerData.lastIndex(consumed, type, key);
-    if (idx === -1) return;
+    const entry = idx === -1 ? null : consumed[idx];
 
-    const entry = consumed[idx];
-    if (entry.to !== valueAfterRefund + 1) return;
+    if (entry && entry.to === valueAfterRefund + 1) {
+      consumed.splice(idx, 1);
+      await PlannerData.saveConsumed(actor, consumed);
 
-    consumed.splice(idx, 1);
-    await PlannerData.saveConsumed(actor, consumed);
+      const plan = PlannerData.getPlan(actor);
+      const insertAt = PlannerData.firstIndex(plan, type, key);
+      if (insertAt === -1) plan.push(entry);
+      else plan.splice(insertAt, 0, entry);
+      await PlannerData.savePlan(actor, plan);
+      return;
+    }
 
+    // Not undoing a plan-sourced step (e.g. de-leveling directly via "-" without ever having
+    // applied anything from the plan first - DSA5 lets you do this even though it's not "legal"
+    // by the rules). Whatever is still queued for this target now assumes the wrong baseline, so
+    // discard it rather than silently track increasingly wrong from/to numbers.
+    await this.discardQueue(actor, type, key);
+  }
+
+  static async discardQueue(actor, type, key) {
     const plan = PlannerData.getPlan(actor);
-    const insertAt = PlannerData.firstIndex(plan, type, key);
-    if (insertAt === -1) plan.push(entry);
-    else plan.splice(insertAt, 0, entry);
-    await PlannerData.savePlan(actor, plan);
+    const remaining = plan.filter((e) => !(e.type === type && e.key === key));
+    if (remaining.length === plan.length) return;
+
+    await PlannerData.savePlan(actor, remaining);
+    ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
   }
 
   // Applies the oldest queued step for a target by invoking the real system advance method
