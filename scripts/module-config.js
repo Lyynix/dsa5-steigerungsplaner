@@ -17,3 +17,7 @@ export const REFUND_FCTS = {
   _refundPointsAdvance: 'point',
   _refundItemAdvance: 'item',
 };
+
+// Combined lookup for places that don't care whether a button is the "+" or "-" one, just which
+// target it belongs to (e.g. badge decoration, since queues can now contain both directions).
+export const ALL_FCTS = { ...ADVANCE_FCTS, ...REFUND_FCTS };

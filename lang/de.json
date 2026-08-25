@@ -12,5 +12,6 @@
   "STEIGERUNGSPLANER.Section.points": "Basiswerte",
   "STEIGERUNGSPLANER.Section.other": "Sonstige",
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
-  "STEIGERUNGSPLANER.ColumnPlan": "Steigerungsliste"
+  "STEIGERUNGSPLANER.ColumnPlan": "Steigerungsliste",
+  "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} kann nicht weiter verringert werden."
 }

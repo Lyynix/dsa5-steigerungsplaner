@@ -1,4 +1,4 @@
-import { ADVANCE_FCTS, MODULE_ID, REFUND_FCTS } from './module-config.js';
+import { ALL_FCTS, MODULE_ID } from './module-config.js';
 import PlannerBadges from './planner-badges.js';
 import PlannerController from './planner-controller.js';
 import PlannerTab from './planner-tab.js';
@@ -121,9 +121,9 @@ export function registerSheetIntegration() {
   // _onFirstRender fires exactly once, when a sheet is (re)opened - not on every subsequent
   // render, unlike _onRender. That matters here: this is a safety net for desyncs no targeted
   // wrap catches (most notably editing the "Advances" number field directly), and running it on
-  // every render would race against our own consumeOldest/restoreIfMatching, which each trigger
-  // their own re-render before the plan flag has caught up with the real advance/refund that just
-  // happened. Once per sheet-open is early enough to catch drift while staying out of that race.
+  // every render would race against our own reconcile() calls, which each trigger their own
+  // re-render before the plan flag has caught up with the real advance/refund that just happened.
+  // Once per sheet-open is early enough to catch drift while staying out of that race.
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._onFirstRender`,
@@ -147,12 +147,12 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
-  // _advanceAttribute/_advancePoints/_advanceItem are normal prototype methods (unlike
-  // advanceWrapper, not captured by value anywhere) and resolve to true when the advance was
-  // actually carried out. Whenever that happens - via a normal un-shifted click OR via our own
-  // "apply" button in the planner tab - drop the oldest queued plan entry for that same target,
-  // since it was just de facto executed.
-  for (const [methodName, type] of Object.entries(ADVANCE_FCTS)) {
+  // All six advance/refund methods are normal prototype methods (unlike advanceWrapper, not
+  // captured by value anywhere) and resolve to true when the change was actually carried out for
+  // real. Whenever that happens - via a normal un-shifted click OR via our own "apply" button in
+  // the planner tab - reconcile the plan against it (consume a matching queued step, restore a
+  // matching consumed one, or discard a stale queue - see PlannerController.reconcile).
+  for (const [methodName, type] of Object.entries(ALL_FCTS)) {
     libWrapper.register(
       MODULE_ID,
       `${basePath}.prototype.${methodName}`,
@@ -160,26 +160,7 @@ export function registerSheetIntegration() {
         const result = await wrapped(key);
         if (result) {
           const value = PlannerController.rawCurrentValue(this.actor, type, key);
-          if (value !== null) await PlannerController.consumeOldest(this.actor, type, key, value);
-        }
-        return result;
-      },
-      'MIXED',
-    );
-  }
-
-  // Mirror image of the above: _refundAttributeAdvance/_refundPointsAdvance/_refundItemAdvance
-  // also resolve to true on success. If the step they just undid is exactly the one on top of
-  // this target's "consumed" stack, put it back at the front of the plan.
-  for (const [methodName, type] of Object.entries(REFUND_FCTS)) {
-    libWrapper.register(
-      MODULE_ID,
-      `${basePath}.prototype.${methodName}`,
-      async function (wrapped, key) {
-        const result = await wrapped(key);
-        if (result) {
-          const value = PlannerController.rawCurrentValue(this.actor, type, key);
-          if (value !== null) await PlannerController.restoreIfMatching(this.actor, type, key, value);
+          if (value !== null) await PlannerController.reconcile(this.actor, type, key, value);
         }
         return result;
       },
