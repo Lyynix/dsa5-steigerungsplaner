@@ -1,4 +1,4 @@
-# DSA5 – Steigerungsplaner
+# DSA5 - Steigerungsplaner
 
 Ein Foundry-VTT-Modul für das [DSA5-System](https://github.com/Plushtoast/dsa5-foundryVTT), mit dem die Spieler Talent-, Kampftechnik-, Zauber-, Liturgie- und Eigenschaftssteigerungen planen können, statt sie sofort auszuführen.
 
@@ -8,12 +8,11 @@ Im DSA5-Charakterbogen steigert ein Klick auf "+" sofort und zieht die AP direkt
 
 - **Shift-Klick auf "+"** neben einem Talent, einer Kampftechnik, einem Zauber, einer Liturgie, einer Eigenschaft oder einem Basiswert (Lebenskraft/Astralenergie/Karmaenergie) plant die nächste Steigerung, statt sie auszuführen. Es werden keine AP abgezogen.
 - **Shift-Klick auf "-"** entfernt die zuletzt geplante Steigerung für dieses Ziel wieder.
-- Ein neuer **"Steigerungsplaner"-Tab** im Charakterbogen zeigt alle geplanten Steigerungen, gruppiert wie im Talente-Tab (Körpertalente, Gesellschaftstalente, Wissenstalente, Handwerkstalente, Naturtalente, Kampftechniken, Zauber, Liturgien, Eigenschaften, Basiswerte) – jeweils mit Icon, den einzelnen geplanten Schritten und deren AP-Kosten.
+- Ein neuer **"Steigerungsplaner"-Tab** im Charakterbogen zeigt alle geplanten Steigerungen, gruppiert wie im Talente-Tab (Körpertalente, Gesellschaftstalente, Wissenstalente, Handwerkstalente, Naturtalente, Kampftechniken, Zauber, Liturgien, Eigenschaften, Basiswerte). Jeweils mit Icon, den einzelnen geplanten Schritten und deren AP-Kosten.
 - Direkt neben jedem "+"-Button im restlichen Charakterbogen zeigt ein kleines Badge (z. B. `+3`), wie viele Schritte für diesen Wert bereits geplant sind, inklusive Tooltip mit den Details.
 - Im Steigerungsplaner-Tab kann jede geplante Steigerung einzeln **angewendet** (führt die reale Steigerung inkl. AP-Abzug aus) oder **verworfen** werden.
 - Plant man mehrfach hintereinander (z. B. Kraftakt 5→6, dann 6→7), wird beim Anwenden immer der älteste Schritt zuerst ausgeführt; beim Verwerfen immer der zuletzt geplante zuerst entfernt.
 - Steigert man normal (ohne Shift) einen Wert, für den bereits Schritte geplant sind, wird automatisch der passende geplante Schritt aus der Liste entfernt. Nimmt man eine reale Steigerung per "-" wieder zurück, wird der zugehörige Plan-Eintrag automatisch wiederhergestellt.
-- Der Planer erkennt, wenn sich ein Wert außerhalb des Planers verändert hat (z. B. direktes Bearbeiten des Zahlenfelds, gelöschtes Talent) und verwirft dann die betroffene, nicht mehr gültige Planung – mit einer Warnung im Chat.
 - Der Steigerungsplaner-Tab und alle Plan-Aktionen stehen nur Spieler:innen mit **Owner**-Rechten auf den jeweiligen Charakter zur Verfügung (Beobachter/Begrenzt sehen den Tab gar nicht). GMs sind auf jeden Charakter automatisch Owner.
 
 ## Voraussetzungen
