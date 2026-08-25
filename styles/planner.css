@@ -105,6 +105,14 @@
   border-radius: 3px;
 }
 
+.steigerungsplaner-tab .planner-group-icon {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  border: none;
+}
+
 .steigerungsplaner-tab .planner-group-label {
   font-weight: bold;
   flex: 0 0 auto;

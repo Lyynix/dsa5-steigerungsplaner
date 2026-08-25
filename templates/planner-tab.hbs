@@ -17,6 +17,7 @@
                 <a class="planner-apply" data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
                     <i class="fas fa-arrow-turn-left"></i>
                 </a>
+                {{#if group.icon}}<img class="planner-group-icon" src="{{group.icon}}" alt="">{{/if}}
                 <div class="planner-group-label">{{group.label}}</div>
                 <ol class="planner-steps">
                     {{#each group.steps as |step|}}

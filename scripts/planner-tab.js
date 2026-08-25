@@ -14,6 +14,8 @@ export default class PlannerTab {
     const sections = new Map();
 
     for (const group of PlannerData.getGroups(actor).values()) {
+      group.icon = PlannerController.iconFor(actor, group.type, group.key);
+
       const section = PlannerController.sectionFor(actor, group.type, group.key);
       if (!sections.has(section.id)) sections.set(section.id, { ...section, groups: [], totalCost: 0 });
 

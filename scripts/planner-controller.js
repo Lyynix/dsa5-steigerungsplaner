@@ -81,6 +81,22 @@ export default class PlannerController {
     return { id: 'other', label: game.i18n.localize('STEIGERUNGSPLANER.Section.other'), cssClass: 'steigerungsplaner-section-other' };
   }
 
+  // Per-target icon shown next to its entry in the planner tab. Items already carry their own
+  // icon; characteristics get the matching d20 die; the three advanceable base stats don't have
+  // a system icon for this context, so they're hand-picked.
+  static iconFor(actor, type, key) {
+    if (type === 'attribute') return `systems/dsa5/icons/dice/d20${key}.svg`;
+    if (type === 'point') {
+      return {
+        wounds: 'systems/dsa5/icons/talents/HeilkundeWunden.webp',
+        astralenergy: 'systems/dsa5/icons/categories/ability_magical.webp',
+        karmaenergy: 'systems/dsa5/icons/categories/ability_clerical.webp',
+      }[key] ?? null;
+    }
+    if (type === 'item') return actor.items.get(key)?.img ?? null;
+    return null;
+  }
+
   // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
   // but offset by however many steps for this target are already queued.
   static buildEntry(actor, type, key) {
