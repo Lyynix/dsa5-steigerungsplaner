@@ -1,0 +1,56 @@
+{
+  "id": "dsa5-steigerungsplaner",
+  "title": "DSA5 - Steigerungsplaner",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "Lyynix",
+      "discord": "lyynix",
+      "flags": {}
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dsa5",
+        "type": "system",
+        "compatibility": {}
+      }
+    ],
+    "requires": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "compatibility": {
+          "minimum": "1.12"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/planner.css"
+  ],
+  "languages": [
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "flags": {
+    "canUpload": true
+  },
+  "description": "Fügt dem DSA5-Charakterbogen einen Steigerungsplaner hinzu: Shift-Klick auf + plant eine Steigerung, statt sie sofort auszuführen."
+}

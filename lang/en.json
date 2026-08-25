@@ -1,0 +1,9 @@
+{
+  "STEIGERUNGSPLANER.Tab": "Advancement Planner",
+  "STEIGERUNGSPLANER.AvailableXP": "Available XP",
+  "STEIGERUNGSPLANER.TotalCost": "Planned cost",
+  "STEIGERUNGSPLANER.Apply": "Apply",
+  "STEIGERUNGSPLANER.Cancel": "Remove last planned step",
+  "STEIGERUNGSPLANER.Empty": "No advancements planned. Shift-click + on the character sheet to plan one.",
+  "STEIGERUNGSPLANER.NothingPlanned": "No planned advancement to remove."
+}

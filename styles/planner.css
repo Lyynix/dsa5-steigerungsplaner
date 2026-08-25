@@ -1,0 +1,85 @@
+/* Foundry toggles the "active" class on .tab elements to show/hide them; core CSS handles the
+   hide-when-inactive case, but our layout rule must not force display:flex unconditionally or
+   it wins the cascade over that and stays visible regardless of which tab is active. */
+.steigerungsplaner-tab {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.steigerungsplaner-tab.active {
+  display: flex;
+}
+
+.steigerungsplaner-tab .planner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #999);
+  padding-bottom: 0.25rem;
+}
+
+.steigerungsplaner-tab .planner-summary {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9em;
+}
+
+.steigerungsplaner-tab .planner-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.steigerungsplaner-tab .planner-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border-light-tertiary, #999);
+  border-radius: 3px;
+}
+
+.steigerungsplaner-tab .planner-group-label {
+  font-weight: bold;
+  flex: 0 0 auto;
+  min-width: 8rem;
+}
+
+.steigerungsplaner-tab .planner-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+}
+
+.steigerungsplaner-tab .planner-step {
+  display: flex;
+  gap: 0.35rem;
+  font-size: 0.85em;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+.steigerungsplaner-tab .planner-group-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.steigerungsplaner-tab .planner-group-actions a {
+  cursor: pointer;
+}
+
+.steigerungsplaner-tab .planner-empty {
+  font-style: italic;
+  opacity: 0.75;
+}

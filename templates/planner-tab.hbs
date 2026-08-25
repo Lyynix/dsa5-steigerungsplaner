@@ -1,0 +1,37 @@
+<div class="tab steigerungsplaner-tab {{tabs.steigerungsplaner.cssClass}}" data-tab="steigerungsplaner" data-group="{{tabs.steigerungsplaner.group}}">
+    <header class="planner-header">
+        <h2>{{localize "STEIGERUNGSPLANER.Tab"}}</h2>
+        <div class="planner-summary">
+            <span>{{localize "STEIGERUNGSPLANER.AvailableXP"}}: {{plannerAvailableXP}}</span>
+            <span>{{localize "STEIGERUNGSPLANER.TotalCost"}}: {{plannerTotalCost}}</span>
+        </div>
+    </header>
+
+    {{#if plannerGroups.length}}
+    <ul class="planner-groups">
+        {{#each plannerGroups as |group|}}
+        <li class="planner-group">
+            <div class="planner-group-label">{{group.label}}</div>
+            <ol class="planner-steps">
+                {{#each group.steps as |step|}}
+                <li class="planner-step">
+                    <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
+                    <span class="planner-step-cost">{{step.cost}} AP</span>
+                </li>
+                {{/each}}
+            </ol>
+            <div class="planner-group-actions">
+                <a data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
+                    <i class="fas fa-check"></i>
+                </a>
+                <a data-plan-cancel data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Cancel'}}">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+        </li>
+        {{/each}}
+    </ul>
+    {{else}}
+    <p class="planner-empty">{{localize "STEIGERUNGSPLANER.Empty"}}</p>
+    {{/if}}
+</div>
