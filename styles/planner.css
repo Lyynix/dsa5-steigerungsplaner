@@ -18,7 +18,7 @@
 .steigerungsplaner-badge {
   display: inline-block;
   flex: 0 0 auto;
-  width: 1.8rem;
+  width: 1.3rem;
   font-size: 0.65rem;
   font-weight: bold;
   line-height: 1.4;
@@ -26,7 +26,7 @@
   color: #fff;
   background: var(--dsadesign1, #937b48);
   border-radius: 999px;
-  margin: 0 0.2rem;
+  margin: 0 0.1rem;
   vertical-align: super;
   cursor: default;
 }
@@ -47,8 +47,8 @@
 
 .steigerungsplaner-badge-above {
   position: absolute;
-  top: -1.3rem;
-  right: -0.3rem;
+  top: -1.1rem;
+  right: -0.4rem;
   margin: 0;
 }
 
