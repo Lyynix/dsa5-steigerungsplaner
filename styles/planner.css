@@ -12,18 +12,21 @@
   display: flex;
 }
 
+/* Sized in rem (relative to the root font-size), not em - em would inherit whatever font-size
+   the badge's container happens to have, making it shrink in compact contexts like the
+   characteristics header row even though the CSS is identical. */
 .steigerungsplaner-badge {
   display: inline-block;
   flex: 0 0 auto;
-  width: 1.8em;
-  font-size: 0.65em;
+  width: 1.8rem;
+  font-size: 0.65rem;
   font-weight: bold;
   line-height: 1.4;
   text-align: center;
   color: #fff;
   background: var(--dsadesign1, #937b48);
   border-radius: 999px;
-  margin: 0 0.2em;
+  margin: 0 0.2rem;
   vertical-align: super;
   cursor: default;
 }
@@ -32,11 +35,45 @@
   background: var(--dsa-danger, #8b0000);
 }
 
+/* The characteristics header row has no room for inline badge text next to "+" at all. Give
+   .header-label a bit of headroom (grows all attribute columns equally, so MU-KK stay aligned)
+   and float a normal-sized badge above the "+" icon in that space instead - see the handling in
+   planner-badges.js, which appends the badge inside the "+" link (position:relative) rather than
+   inserting it as a sibling. Scoped to .char-row-header since .header-label is also used
+   elsewhere (status effects, combat skills title) where this isn't wanted. */
+.char-row-header .header-label {
+  padding-top: 1.3rem;
+}
+
+.steigerungsplaner-badge-above {
+  position: absolute;
+  top: -1.3rem;
+  right: -0.3rem;
+  margin: 0;
+}
+
 /* dsa5.css sets `.row-section .col.third { flex: 30% }` for the skill probe column; narrow it
    here specifically (rather than overriding .col.third globally) so the advance column next to
    it - where our badges live - gets more breathing room. */
 .row-section .col.third.skill-props {
   flex: 20%;
+}
+
+/* dsa5.css splits the combat skill table into .col.fourty (name)/.col.five (guide value)/
+   .col.fifteen (KTW, where our badge + input + +/- live)/.col.eight x2 (AT/FK, PA) = 100%. KTW is
+   too narrow to read once a badge is added - shrink the name and AT/FK/PA columns a little and
+   give the room to KTW. Scoped to .actor-combat-skill so this doesn't affect the many other
+   places .col.fourty/.eight/.fifteen are reused across the sheet. */
+.actor-combat-skill .row-section .col.fourty {
+  flex: 33%;
+}
+
+.actor-combat-skill .row-section .col.eight {
+  flex: 10%;
+}
+
+.actor-combat-skill .row-section .col.fifteen {
+  flex: 27%;
 }
 
 .steigerungsplaner-tab .planner-header {
