@@ -33,9 +33,9 @@ export default class PlannerBadges {
       badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Planned") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
 
       if (type === 'attribute') {
-        // The characteristics header row is too narrow for inline badge text without breaking
-        // the layout - overlay it on the "+" icon itself instead, which needs no extra width.
-        badge.classList.add('steigerungsplaner-badge-overlay');
+        // The characteristics header row is too narrow for inline badge text next to "+" - float
+        // it above the icon instead, in headroom .char-row-header .header-label now reserves for it.
+        badge.classList.add('steigerungsplaner-badge-above');
         el.style.position = 'relative';
         el.appendChild(badge);
       } else {

@@ -32,17 +32,21 @@
   background: var(--dsa-danger, #8b0000);
 }
 
-/* Small overlay dot for the characteristics header row, which is too narrow to fit inline badge
-   text next to the "+" without breaking the layout - see the badge-overlay handling in
-   planner-badges.js, which appends this inside the "+" link instead of inserting it as a sibling. */
-.steigerungsplaner-badge-overlay {
+/* The characteristics header row has no room for inline badge text next to "+" at all. Give
+   .header-label a bit of headroom (grows all attribute columns equally, so MU-KK stay aligned)
+   and float a normal-sized badge above the "+" icon in that space instead - see the handling in
+   planner-badges.js, which appends the badge inside the "+" link (position:relative) rather than
+   inserting it as a sibling. Scoped to .char-row-header since .header-label is also used
+   elsewhere (status effects, combat skills title) where this isn't wanted. */
+.char-row-header .header-label {
+  padding-top: 1.3em;
+}
+
+.steigerungsplaner-badge-above {
   position: absolute;
-  top: -0.5em;
-  right: -0.5em;
-  width: 1.3em;
-  font-size: 0.55em;
+  top: -1.3em;
+  right: -0.3em;
   margin: 0;
-  vertical-align: initial;
 }
 
 /* dsa5.css sets `.row-section .col.third { flex: 30% }` for the skill probe column; narrow it
