@@ -87,14 +87,24 @@ export default class PlannerController {
   // Removes the oldest queued step for a target - called whenever that step was actually
   // executed for real, whether triggered from here or from a normal, un-shifted sheet click
   // (see the _advanceAttribute/_advancePoints/_advanceItem wraps in sheet-integration.js).
+  // `valueAfterAdvance` is the target's actual value right after that advance; only pop the
+  // oldest entry if it's actually the one that produced this transition (its `to` matches) -
+  // otherwise the queue's baseline is already wrong for other reasons, so discard it rather than
+  // remove a step that has nothing to do with what just happened for real.
   // The removed entry is pushed onto a per-target LIFO "consumed" stack rather than discarded,
   // so a matching real refund can restore it (see restoreIfMatching).
-  static async consumeOldest(actor, type, key) {
+  static async consumeOldest(actor, type, key, valueAfterAdvance) {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.firstIndex(plan, type, key);
     if (idx === -1) return;
 
-    const [entry] = plan.splice(idx, 1);
+    const entry = plan[idx];
+    if (entry.to !== valueAfterAdvance) {
+      await this.discardQueue(actor, type, key);
+      return;
+    }
+
+    plan.splice(idx, 1);
     await PlannerData.savePlan(actor, plan);
 
     const consumed = PlannerData.getConsumed(actor);
@@ -140,6 +150,35 @@ export default class PlannerController {
     ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
   }
 
+  // Removes every plan/consumed entry for a target, no questions asked - for when the target
+  // itself is gone (deleted item) rather than merely out of sync. No notification: the player
+  // just deleted the thing themselves, so losing its plan isn't surprising.
+  static async purgeTarget(actor, type, key) {
+    const plan = PlannerData.getPlan(actor);
+    const remainingPlan = plan.filter((e) => !(e.type === type && e.key === key));
+    if (remainingPlan.length !== plan.length) await PlannerData.savePlan(actor, remainingPlan);
+
+    const consumed = PlannerData.getConsumed(actor);
+    const remainingConsumed = consumed.filter((e) => !(e.type === type && e.key === key));
+    if (remainingConsumed.length !== consumed.length) await PlannerData.saveConsumed(actor, remainingConsumed);
+  }
+
+  // Safety net for desyncs none of the targeted advance/refund checks catch - most notably
+  // editing the "Advances" number field directly, which bypasses every wrapped method entirely.
+  // Called once when a sheet is first opened (see the _onFirstRender wrap): if a target's oldest
+  // queued step no longer starts from its actual current value, the queue can't be trusted -
+  // discard it. Deliberately not run on every render: it would race against our own multi-step
+  // consumeOldest/restoreIfMatching updates, which each trigger their own re-render before the
+  // plan flag has caught up with the real advance/refund that just happened.
+  static async validateQueues(actor) {
+    for (const group of PlannerData.getGroups(actor).values()) {
+      if (!group.steps.length) continue;
+      if (this.rawCurrentValue(actor, group.type, group.key) !== group.steps[0].from) {
+        await this.discardQueue(actor, group.type, group.key);
+      }
+    }
+  }
+
   // Applies the oldest queued step for a target by invoking the real system advance method
   // (identical to a normal, un-shifted click) - consumeOldest() runs as a side effect of that
   // call via the wraps in sheet-integration.js, so no separate bookkeeping is needed here.
@@ -147,6 +186,14 @@ export default class PlannerController {
     const actor = sheet.actor;
     const plan = PlannerData.getPlan(actor);
     if (PlannerData.firstIndex(plan, type, key) === -1) return;
+
+    // Guards against a crash in the system's own _advanceItem if the item was deleted but its
+    // plan entry survived somehow (e.g. the deleteItem cleanup hook hasn't run yet).
+    if (type === 'item' && !actor.items.get(key)) {
+      await this.purgeTarget(actor, type, key);
+      sheet.render();
+      return;
+    }
 
     if (type === 'attribute') await sheet._advanceAttribute(key);
     else if (type === 'point') await sheet._advancePoints(key);

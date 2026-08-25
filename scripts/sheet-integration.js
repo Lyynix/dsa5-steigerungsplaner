@@ -105,6 +105,22 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
+  // _onFirstRender fires exactly once, when a sheet is (re)opened - not on every subsequent
+  // render, unlike _onRender. That matters here: this is a safety net for desyncs no targeted
+  // wrap catches (most notably editing the "Advances" number field directly), and running it on
+  // every render would race against our own consumeOldest/restoreIfMatching, which each trigger
+  // their own re-render before the plan flag has caught up with the real advance/refund that just
+  // happened. Once per sheet-open is early enough to catch drift while staying out of that race.
+  libWrapper.register(
+    MODULE_ID,
+    `${basePath}.prototype._onFirstRender`,
+    async function (wrapped, context, options) {
+      await wrapped(context, options);
+      await PlannerController.validateQueues(this.actor);
+    },
+    'MIXED',
+  );
+
   // _onRender fires once per full sheet render, after every part has been inserted - the right
   // moment to decorate every "+" button across the whole sheet (characteristics, points, items)
   // that has queued plan steps, regardless of which tab is currently active.
@@ -129,7 +145,10 @@ export function registerSheetIntegration() {
       `${basePath}.prototype.${methodName}`,
       async function (wrapped, key) {
         const result = await wrapped(key);
-        if (result) await PlannerController.consumeOldest(this.actor, type, key);
+        if (result) {
+          const value = PlannerController.rawCurrentValue(this.actor, type, key);
+          if (value !== null) await PlannerController.consumeOldest(this.actor, type, key, value);
+        }
         return result;
       },
       'MIXED',
