@@ -24,9 +24,7 @@ export default class PlannerBadges {
       const badge = document.createElement('span');
       badge.className = BADGE_CLASS;
       badge.textContent = `+${group.steps.length}`;
-      badge.dataset.tooltip = group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
-      // Placed before the "+" button (not after) so its position stays stable when a badge
-      // appears/disappears - the adjacent input field is what shrinks/grows instead.
+      badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Planned") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
       el.insertAdjacentElement('beforebegin', badge);
     }
   }
