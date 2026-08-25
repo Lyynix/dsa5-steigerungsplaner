@@ -1,7 +1,7 @@
 {
   "id": "dsa5-steigerungsplaner",
   "title": "DSA5 - Steigerungsplaner",
-  "version": "1.0.0",
+  "version": "#{VERSION}#",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -52,5 +52,8 @@
   "flags": {
     "canUpload": true
   },
-  "description": "Fügt dem DSA5-Charakterbogen einen Steigerungsplaner hinzu: Shift-Klick auf + plant eine Steigerung, statt sie sofort auszuführen."
+  "description": "Fügt dem DSA5-Charakterbogen einen Steigerungsplaner hinzu: Shift-Klick auf + plant eine Steigerung, statt sie sofort auszuführen.",
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#"
 }
