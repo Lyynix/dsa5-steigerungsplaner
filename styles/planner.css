@@ -49,68 +49,46 @@
   font-size: 0.9em;
 }
 
-.steigerungsplaner-tab .planner-section + .planner-section {
-  margin-top: 0.75rem;
-}
-
-/* Skill sections reuse dsa5.css's own .skills.<group> gradient classes (same colors as the
-   Talente tab); the other sections get their own gradient below since the system doesn't define
-   one for them in this context. */
-.steigerungsplaner-tab .planner-section-header {
-  padding: 0.2rem 0.5rem;
-  margin-bottom: 0.35rem;
-  font-weight: bold;
-  color: #fff;
-}
-
-.steigerungsplaner-tab .planner-section-header.steigerungsplaner-section-characteristics {
+/* Sections now use dsa5.css's own "row-section skills table-header lineheight <group>" class
+   list directly, which already gives skill sections the right .skills.<group> gradient. The
+   sections with no system equivalent get their own gradient here instead. */
+.steigerungsplaner-section-characteristics {
   background: linear-gradient(90deg, rgb(147, 123, 72) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-.steigerungsplaner-tab .planner-section-header.steigerungsplaner-section-points {
+.steigerungsplaner-section-points {
   background: linear-gradient(90deg, rgb(139, 0, 0) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-.steigerungsplaner-tab .planner-section-header.steigerungsplaner-section-combat {
+.steigerungsplaner-section-combat {
   background: linear-gradient(90deg, rgb(90, 90, 90) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-.steigerungsplaner-tab .planner-section-header.steigerungsplaner-section-magic {
+.steigerungsplaner-section-magic {
   background: linear-gradient(90deg, rgb(74, 90, 168) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-.steigerungsplaner-tab .planner-section-header.steigerungsplaner-section-religion {
+.steigerungsplaner-section-religion {
   background: linear-gradient(90deg, rgb(205, 162, 94) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-.steigerungsplaner-tab .planner-section-header.steigerungsplaner-section-other {
+.steigerungsplaner-section-other {
   background: linear-gradient(90deg, rgb(120, 120, 120) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-.steigerungsplaner-tab .planner-groups {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.steigerungsplaner-tab .planner-group {
-  display: flex;
+/* Scoped to our own tab so this doesn't affect the real Talente tab's rows elsewhere on the
+   sheet, which also use the "row-section wrap skills lineheight tableOdd item" class combo. */
+.steigerungsplaner-tab .row-section.wrap.skills.lineheight.tableOdd.item {
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--color-border-light-tertiary, #999);
-  border-radius: 3px;
 }
 
 .steigerungsplaner-tab .planner-group-icon {
   flex: 0 0 auto;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   border: none;
+  margin-right: 0.35rem;
 }
 
 .steigerungsplaner-tab .planner-group-label {
@@ -131,16 +109,24 @@
 
 .steigerungsplaner-tab .planner-step {
   display: flex;
+  align-items: center;
   gap: 0.35rem;
+  height: 30px;
+  box-sizing: border-box;
   font-size: 0.85em;
   background: rgba(0, 0, 0, 0.05);
-  padding: 0.1rem 0.4rem;
+  padding: 0 0.4rem;
   border-radius: 3px;
 }
 
 .steigerungsplaner-tab .planner-apply,
 .steigerungsplaner-tab .planner-cancel {
   flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 

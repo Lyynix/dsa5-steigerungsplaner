@@ -66,7 +66,7 @@ export default class PlannerController {
       const item = actor.items.get(key);
       if (item?.type === 'skill') {
         const group = item.system.group.value;
-        return { id: `skill-${group}`, label: game.i18n.localize(`SKILL.${group}`), cssClass: `skills ${group}` };
+        return { id: `skill-${group}`, label: game.i18n.localize(`SKILL.${group}`), cssClass: group };
       }
       if (item?.type === 'combatskill') {
         return { id: 'combat', label: game.i18n.localize('TYPES.Item.combatskill'), cssClass: 'steigerungsplaner-section-combat' };

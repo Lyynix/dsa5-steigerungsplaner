@@ -10,5 +10,7 @@
   "STEIGERUNGSPLANER.PlanDiscarded": "Geplante Steigerungen für {label} wurden verworfen (Wert wurde außerhalb des Planers verändert).",
   "STEIGERUNGSPLANER.Section.characteristics": "Eigenschaften",
   "STEIGERUNGSPLANER.Section.points": "Basiswerte",
-  "STEIGERUNGSPLANER.Section.other": "Sonstige"
+  "STEIGERUNGSPLANER.Section.other": "Sonstige",
+  "STEIGERUNGSPLANER.ColumnTarget": "Talent",
+  "STEIGERUNGSPLANER.ColumnPlan": "Steigerungsliste"
 }

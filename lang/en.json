@@ -10,5 +10,7 @@
   "STEIGERUNGSPLANER.PlanDiscarded": "Planned advancements for {label} were discarded (the value changed outside the planner).",
   "STEIGERUNGSPLANER.Section.characteristics": "Characteristics",
   "STEIGERUNGSPLANER.Section.points": "Base stats",
-  "STEIGERUNGSPLANER.Section.other": "Other"
+  "STEIGERUNGSPLANER.Section.other": "Other",
+  "STEIGERUNGSPLANER.ColumnTarget": "Talent",
+  "STEIGERUNGSPLANER.ColumnPlan": "Advancement list"
 }
