@@ -138,19 +138,26 @@
   min-width: 8rem;
 }
 
+/* Many queued steps used to wrap onto a second line, growing the row's height unevenly. Keep it
+   single-line and scroll horizontally instead - min-width: 0 is needed because flex items default
+   to a min-width based on their content, which would otherwise force the row wider rather than
+   let this element shrink and scroll. */
 .steigerungsplaner-tab .planner-steps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 0.5rem;
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 .steigerungsplaner-tab .planner-step {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 0.35rem;
   height: 30px;
   box-sizing: border-box;
