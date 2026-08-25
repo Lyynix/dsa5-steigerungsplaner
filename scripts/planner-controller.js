@@ -114,7 +114,22 @@ export default class PlannerController {
     return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from + 1, cost, category };
   }
 
+  // If this target already has a queue whose oldest entry no longer starts from the actual
+  // current value (e.g. someone typed directly into the "Advances" field), it can't be trusted -
+  // discard it before acting. Checked at the top of every click-driven entry point rather than on
+  // a render sweep, so drift is caught the next time this target is touched instead of only when
+  // the sheet is reopened.
+  static async ensureFresh(actor, type, key) {
+    const plan = PlannerData.getPlan(actor);
+    const idx = PlannerData.firstIndex(plan, type, key);
+    if (idx !== -1 && this.rawCurrentValue(actor, type, key) !== plan[idx].from) {
+      await this.discardQueue(actor, type, key);
+    }
+  }
+
   static async planAdvance(actor, type, key) {
+    await this.ensureFresh(actor, type, key);
+
     const entry = this.buildEntry(actor, type, key);
     if (!entry) return;
     const plan = PlannerData.getPlan(actor);
@@ -124,6 +139,7 @@ export default class PlannerController {
 
   static async cancelLast(actor, type, key) {
     if (!actor.isOwner) return;
+    await this.ensureFresh(actor, type, key);
 
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
@@ -236,6 +252,7 @@ export default class PlannerController {
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
     if (!actor.isOwner) return;
+    await this.ensureFresh(actor, type, key);
 
     const plan = PlannerData.getPlan(actor);
     if (PlannerData.firstIndex(plan, type, key) === -1) return;
