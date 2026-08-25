@@ -25,7 +25,9 @@ export default class PlannerBadges {
       badge.className = BADGE_CLASS;
       badge.textContent = `+${group.steps.length}`;
       badge.dataset.tooltip = group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
-      el.insertAdjacentElement('afterend', badge);
+      // Placed before the "+" button (not after) so its position stays stable when a badge
+      // appears/disappears - the adjacent input field is what shrinks/grows instead.
+      el.insertAdjacentElement('beforebegin', badge);
     }
   }
 }

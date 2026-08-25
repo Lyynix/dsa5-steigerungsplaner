@@ -14,16 +14,25 @@
 
 .steigerungsplaner-badge {
   display: inline-block;
+  flex: 0 0 auto;
+  width: 1.8em;
   font-size: 0.65em;
   font-weight: bold;
   line-height: 1.4;
+  text-align: center;
   color: #fff;
   background: var(--dsadesign1, #937b48);
   border-radius: 999px;
-  padding: 0 0.4em;
-  margin-left: 0.2em;
+  margin: 0 0.2em;
   vertical-align: super;
   cursor: default;
+}
+
+/* dsa5.css sets `.row-section .col.third { flex: 30% }` for the skill probe column; narrow it
+   here specifically (rather than overriding .col.third globally) so the advance column next to
+   it - where our badges live - gets more breathing room. */
+.row-section .col.third.skill-props {
+  flex: 20%;
 }
 
 .steigerungsplaner-tab .planner-header {
