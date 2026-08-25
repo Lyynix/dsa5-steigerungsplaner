@@ -118,9 +118,14 @@
 }
 
 /* Scoped to our own tab so this doesn't affect the real Talente tab's rows elsewhere on the
-   sheet, which also use the "row-section wrap skills lineheight tableOdd item" class combo. */
+   sheet, which also use the "row-section wrap skills lineheight tableOdd item" class combo.
+   The "wrap" class lets the row wrap its children onto multiple lines - with enough queued
+   steps that meant .planner-steps (whose content overflows) wrapped onto its own full-width
+   line below name/apply/delete instead of just shrinking in place. Force single-line so
+   .planner-steps shrinks and scrolls internally (see its min-width: 0) instead. */
 .steigerungsplaner-tab .row-section.wrap.skills.lineheight.tableOdd.item {
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .steigerungsplaner-tab .planner-group-icon {
@@ -138,19 +143,26 @@
   min-width: 8rem;
 }
 
+/* Many queued steps used to wrap onto a second line, growing the row's height unevenly. Keep it
+   single-line and scroll horizontally instead - min-width: 0 is needed because flex items default
+   to a min-width based on their content, which would otherwise force the row wider rather than
+   let this element shrink and scroll. */
 .steigerungsplaner-tab .planner-steps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 0.5rem;
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 .steigerungsplaner-tab .planner-step {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 0.35rem;
   height: 30px;
   box-sizing: border-box;
