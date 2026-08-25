@@ -28,6 +28,10 @@
   cursor: default;
 }
 
+.steigerungsplaner-badge-decrease {
+  background: var(--dsa-danger, #8b0000);
+}
+
 /* dsa5.css sets `.row-section .col.third { flex: 30% }` for the skill probe column; narrow it
    here specifically (rather than overriding .col.third globally) so the advance column next to
    it - where our badges live - gets more breathing room. */
