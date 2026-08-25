@@ -5,6 +5,7 @@ export default class PlannerController {
   // Entry point for a shift-click on any of the sheet's advance/refund "+"/"-" buttons.
   static async handleShiftClick(sheet, fct, key) {
     const actor = sheet.actor;
+    if (!actor.isOwner) return;
 
     if (fct in ADVANCE_FCTS) {
       await this.planAdvance(actor, ADVANCE_FCTS[fct], key);
@@ -122,6 +123,8 @@ export default class PlannerController {
   }
 
   static async cancelLast(actor, type, key) {
+    if (!actor.isOwner) return;
+
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
     if (idx === -1) {
@@ -232,6 +235,8 @@ export default class PlannerController {
   // call via the wraps in sheet-integration.js, so no separate bookkeeping is needed here.
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
+    if (!actor.isOwner) return;
+
     const plan = PlannerData.getPlan(actor);
     if (PlannerData.firstIndex(plan, type, key) === -1) return;
 
