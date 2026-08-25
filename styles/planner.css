@@ -12,18 +12,21 @@
   display: flex;
 }
 
+/* Sized in rem (relative to the root font-size), not em - em would inherit whatever font-size
+   the badge's container happens to have, making it shrink in compact contexts like the
+   characteristics header row even though the CSS is identical. */
 .steigerungsplaner-badge {
   display: inline-block;
   flex: 0 0 auto;
-  width: 1.8em;
-  font-size: 0.65em;
+  width: 1.8rem;
+  font-size: 0.65rem;
   font-weight: bold;
   line-height: 1.4;
   text-align: center;
   color: #fff;
   background: var(--dsadesign1, #937b48);
   border-radius: 999px;
-  margin: 0 0.2em;
+  margin: 0 0.2rem;
   vertical-align: super;
   cursor: default;
 }
@@ -39,13 +42,13 @@
    inserting it as a sibling. Scoped to .char-row-header since .header-label is also used
    elsewhere (status effects, combat skills title) where this isn't wanted. */
 .char-row-header .header-label {
-  padding-top: 1.3em;
+  padding-top: 1.3rem;
 }
 
 .steigerungsplaner-badge-above {
   position: absolute;
-  top: -1.3em;
-  right: -0.3em;
+  top: -1.3rem;
+  right: -0.3rem;
   margin: 0;
 }
 
