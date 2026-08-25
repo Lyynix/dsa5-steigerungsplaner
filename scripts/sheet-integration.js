@@ -1,4 +1,5 @@
 import { ADVANCE_FCTS, MODULE_ID } from './module-config.js';
+import PlannerBadges from './planner-badges.js';
 import PlannerController from './planner-controller.js';
 import PlannerTab from './planner-tab.js';
 
@@ -100,6 +101,19 @@ export function registerSheetIntegration() {
     function (wrapped, partId, element, options) {
       wrapped(partId, element, options);
       if (partId === PlannerTab.partId) PlannerTab.attachListeners(this, element);
+    },
+    'MIXED',
+  );
+
+  // _onRender fires once per full sheet render, after every part has been inserted - the right
+  // moment to decorate every "+" button across the whole sheet (characteristics, points, items)
+  // that has queued plan steps, regardless of which tab is currently active.
+  libWrapper.register(
+    MODULE_ID,
+    `${basePath}.prototype._onRender`,
+    async function (wrapped, context, options) {
+      await wrapped(context, options);
+      PlannerBadges.decorate(this);
     },
     'MIXED',
   );

@@ -12,6 +12,20 @@
   display: flex;
 }
 
+.steigerungsplaner-badge {
+  display: inline-block;
+  font-size: 0.65em;
+  font-weight: bold;
+  line-height: 1.4;
+  color: #fff;
+  background: var(--dsadesign1, #937b48);
+  border-radius: 999px;
+  padding: 0 0.4em;
+  margin-left: 0.2em;
+  vertical-align: super;
+  cursor: default;
+}
+
 .steigerungsplaner-tab .planner-header {
   display: flex;
   justify-content: space-between;
