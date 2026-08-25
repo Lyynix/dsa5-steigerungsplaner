@@ -17,41 +17,52 @@ export default class PlannerController {
     sheet.render();
   }
 
+  // The target's actual current value, independent of anything queued in the plan.
+  static rawCurrentValue(actor, type, key) {
+    if (type === 'attribute') {
+      const ch = actor.system.characteristics[key];
+      return ch ? ch.initial + ch.advances : null;
+    }
+    if (type === 'point') {
+      const status = actor.system.status[key];
+      return status ? status.advances : null;
+    }
+    if (type === 'item') {
+      const item = actor.items.get(key);
+      return item ? item.system.talentValue.value : null;
+    }
+    return null;
+  }
+
+  static categoryFor(actor, type, key) {
+    const isAnimal = actor.system.isPet || actor.system.isFamiliar;
+    if (type === 'attribute') return isAnimal ? 'C' : 'E';
+    if (type === 'point') return isAnimal ? 'C' : 'D';
+    if (type === 'item') return actor.items.get(key)?.system.advanceCategory ?? null;
+    return null;
+  }
+
+  static labelFor(actor, type, key) {
+    if (type === 'attribute') return game.i18n.localize(`CHAR.${key.toUpperCase()}`);
+    if (type === 'point') return game.i18n.localize(key);
+    if (type === 'item') return actor.items.get(key)?.name ?? key;
+    return key;
+  }
+
   // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
   // but offset by however many steps for this target are already queued.
   static buildEntry(actor, type, key) {
-    const DSA5_Utility = game.dsa5.apps.DSA5_Utility;
+    const base = this.rawCurrentValue(actor, type, key);
+    if (base === null) return null;
+
+    const category = this.categoryFor(actor, type, key);
+    if (!category) return null;
+
     const already = PlannerData.queuedCount(actor, type, key);
-    const isAnimal = actor.system.isPet || actor.system.isFamiliar;
+    const from = base + already;
+    const cost = game.dsa5.apps.DSA5_Utility._calculateAdvCost(from, category);
 
-    if (type === 'attribute') {
-      const ch = actor.system.characteristics[key];
-      if (!ch) return null;
-      const from = ch.initial + ch.advances + already;
-      const category = isAnimal ? 'C' : 'E';
-      const cost = DSA5_Utility._calculateAdvCost(from, category);
-      return { id: foundry.utils.randomID(), type, key, label: game.i18n.localize(`CHAR.${key.toUpperCase()}`), from, to: from + 1, cost, category };
-    }
-
-    if (type === 'point') {
-      const status = actor.system.status[key];
-      if (!status) return null;
-      const from = status.advances + already;
-      const category = isAnimal ? 'C' : 'D';
-      const cost = DSA5_Utility._calculateAdvCost(from, category);
-      return { id: foundry.utils.randomID(), type, key, label: game.i18n.localize(key), from, to: from + 1, cost, category };
-    }
-
-    if (type === 'item') {
-      const item = actor.items.get(key);
-      if (!item) return null;
-      const from = item.system.talentValue.value + already;
-      const category = item.system.advanceCategory;
-      const cost = DSA5_Utility._calculateAdvCost(from, category);
-      return { id: foundry.utils.randomID(), type, key, label: item.name, from, to: from + 1, cost, category };
-    }
-
-    return null;
+    return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from + 1, cost, category };
   }
 
   static async planAdvance(actor, type, key) {
@@ -76,11 +87,42 @@ export default class PlannerController {
   // Removes the oldest queued step for a target - called whenever that step was actually
   // executed for real, whether triggered from here or from a normal, un-shifted sheet click
   // (see the _advanceAttribute/_advancePoints/_advanceItem wraps in sheet-integration.js).
+  // The removed entry is pushed onto a per-target LIFO "consumed" stack rather than discarded,
+  // so a matching real refund can restore it (see restoreIfMatching).
   static async consumeOldest(actor, type, key) {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.firstIndex(plan, type, key);
     if (idx === -1) return;
-    plan.splice(idx, 1);
+
+    const [entry] = plan.splice(idx, 1);
+    await PlannerData.savePlan(actor, plan);
+
+    const consumed = PlannerData.getConsumed(actor);
+    consumed.push(entry);
+    await PlannerData.saveConsumed(actor, consumed);
+  }
+
+  // Called whenever a real refund succeeded (via the _refundAttributeAdvance/_refundPointsAdvance/
+  // _refundItemAdvance wraps). `valueAfterRefund` is the target's actual value right after that
+  // refund. If the top of this target's "consumed" stack is exactly the step that refund just
+  // undid (i.e. it advanced the value from valueAfterRefund to valueAfterRefund + 1), put it back
+  // at the front of the plan. Otherwise leave the plan alone - better to do nothing than guess
+  // wrong (e.g. the refunded step was never plan-sourced in the first place).
+  static async restoreIfMatching(actor, type, key, valueAfterRefund) {
+    const consumed = PlannerData.getConsumed(actor);
+    const idx = PlannerData.lastIndex(consumed, type, key);
+    if (idx === -1) return;
+
+    const entry = consumed[idx];
+    if (entry.to !== valueAfterRefund + 1) return;
+
+    consumed.splice(idx, 1);
+    await PlannerData.saveConsumed(actor, consumed);
+
+    const plan = PlannerData.getPlan(actor);
+    const insertAt = PlannerData.firstIndex(plan, type, key);
+    if (insertAt === -1) plan.push(entry);
+    else plan.splice(insertAt, 0, entry);
     await PlannerData.savePlan(actor, plan);
   }
 

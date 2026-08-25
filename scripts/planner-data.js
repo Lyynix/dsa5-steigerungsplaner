@@ -1,4 +1,4 @@
-import { MODULE_ID, FLAG_PLAN } from './module-config.js';
+import { FLAG_CONSUMED, FLAG_PLAN, MODULE_ID } from './module-config.js';
 
 // Reads/writes the plan as an actor flag. The plan is a flat, ordered array of entries;
 // entries belonging to the same target (type+key) form an implicit FIFO/LIFO queue.
@@ -9,6 +9,14 @@ export default class PlannerData {
 
   static async savePlan(actor, plan) {
     await actor.setFlag(MODULE_ID, FLAG_PLAN, plan);
+  }
+
+  static getConsumed(actor) {
+    return foundry.utils.duplicate(actor.getFlag(MODULE_ID, FLAG_CONSUMED) ?? []);
+  }
+
+  static async saveConsumed(actor, consumed) {
+    await actor.setFlag(MODULE_ID, FLAG_CONSUMED, consumed);
   }
 
   static queuedCount(actor, type, key) {

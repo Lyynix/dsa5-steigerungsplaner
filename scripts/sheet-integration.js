@@ -1,4 +1,4 @@
-import { ADVANCE_FCTS, MODULE_ID } from './module-config.js';
+import { ADVANCE_FCTS, MODULE_ID, REFUND_FCTS } from './module-config.js';
 import PlannerBadges from './planner-badges.js';
 import PlannerController from './planner-controller.js';
 import PlannerTab from './planner-tab.js';
@@ -130,6 +130,25 @@ export function registerSheetIntegration() {
       async function (wrapped, key) {
         const result = await wrapped(key);
         if (result) await PlannerController.consumeOldest(this.actor, type, key);
+        return result;
+      },
+      'MIXED',
+    );
+  }
+
+  // Mirror image of the above: _refundAttributeAdvance/_refundPointsAdvance/_refundItemAdvance
+  // also resolve to true on success. If the step they just undid is exactly the one on top of
+  // this target's "consumed" stack, put it back at the front of the plan.
+  for (const [methodName, type] of Object.entries(REFUND_FCTS)) {
+    libWrapper.register(
+      MODULE_ID,
+      `${basePath}.prototype.${methodName}`,
+      async function (wrapped, key) {
+        const result = await wrapped(key);
+        if (result) {
+          const value = PlannerController.rawCurrentValue(this.actor, type, key);
+          if (value !== null) await PlannerController.restoreIfMatching(this.actor, type, key, value);
+        }
         return result;
       },
       'MIXED',
