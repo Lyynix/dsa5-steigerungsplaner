@@ -5,6 +5,7 @@ export default class PlannerController {
   // Entry point for a shift-click on any of the sheet's advance/refund "+"/"-" buttons.
   static async handleShiftClick(sheet, fct, key) {
     const actor = sheet.actor;
+    if (!actor.isOwner) return;
 
     if (fct in ADVANCE_FCTS) {
       await this.planAdvance(actor, ADVANCE_FCTS[fct], key);
@@ -49,6 +50,54 @@ export default class PlannerController {
     return key;
   }
 
+  // The tab's display grouping (Körpertalente, Kampftechniken, Eigenschaften, ...) - distinct
+  // from categoryFor()'s A-E advancement-cost category. For skill items this mirrors the exact
+  // grouping DSA5's own talent list uses (item.system.group.value), `cssClass` reuses the
+  // system's own .skills.<group> gradient classes so the colors match what's already on the
+  // talent tab. Sections without a system equivalent (characteristics, points, combat, magic,
+  // religion) get their own gradient defined in our own stylesheet.
+  static sectionFor(actor, type, key) {
+    if (type === 'attribute') {
+      return { id: 'characteristics', label: game.i18n.localize('STEIGERUNGSPLANER.Section.characteristics'), cssClass: 'steigerungsplaner-section-characteristics' };
+    }
+    if (type === 'point') {
+      return { id: 'points', label: game.i18n.localize('STEIGERUNGSPLANER.Section.points'), cssClass: 'steigerungsplaner-section-points' };
+    }
+    if (type === 'item') {
+      const item = actor.items.get(key);
+      if (item?.type === 'skill') {
+        const group = item.system.group.value;
+        return { id: `skill-${group}`, label: game.i18n.localize(`SKILL.${group}`), cssClass: group };
+      }
+      if (item?.type === 'combatskill') {
+        return { id: 'combat', label: game.i18n.localize('TYPES.Item.combatskill'), cssClass: 'steigerungsplaner-section-combat' };
+      }
+      if (item?.type === 'spell') {
+        return { id: 'magic', label: game.i18n.localize('TYPES.Item.spell'), cssClass: 'steigerungsplaner-section-magic' };
+      }
+      if (item?.type === 'liturgy') {
+        return { id: 'religion', label: game.i18n.localize('TYPES.Item.liturgy'), cssClass: 'steigerungsplaner-section-religion' };
+      }
+    }
+    return { id: 'other', label: game.i18n.localize('STEIGERUNGSPLANER.Section.other'), cssClass: 'steigerungsplaner-section-other' };
+  }
+
+  // Per-target icon shown next to its entry in the planner tab. Items already carry their own
+  // icon; characteristics get the matching d20 die; the three advanceable base stats don't have
+  // a system icon for this context, so they're hand-picked.
+  static iconFor(actor, type, key) {
+    if (type === 'attribute') return `systems/dsa5/icons/dice/d20${key}.svg`;
+    if (type === 'point') {
+      return {
+        wounds: 'systems/dsa5/icons/talents/HeilkundeWunden.webp',
+        astralenergy: 'systems/dsa5/icons/categories/ability_magical.webp',
+        karmaenergy: 'systems/dsa5/icons/categories/ability_clerical.webp',
+      }[key] ?? null;
+    }
+    if (type === 'item') return actor.items.get(key)?.img ?? null;
+    return null;
+  }
+
   // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
   // but offset by however many steps for this target are already queued.
   static buildEntry(actor, type, key) {
@@ -74,6 +123,8 @@ export default class PlannerController {
   }
 
   static async cancelLast(actor, type, key) {
+    if (!actor.isOwner) return;
+
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
     if (idx === -1) {
@@ -184,6 +235,8 @@ export default class PlannerController {
   // call via the wraps in sheet-integration.js, so no separate bookkeeping is needed here.
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
+    if (!actor.isOwner) return;
+
     const plan = PlannerData.getPlan(actor);
     if (PlannerData.firstIndex(plan, type, key) === -1) return;
 

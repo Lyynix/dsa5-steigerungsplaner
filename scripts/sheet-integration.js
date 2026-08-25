@@ -84,6 +84,19 @@ export function registerSheetIntegration() {
     );
   }
 
+  // Only owners (which includes the GM - actor.isOwner is always true for them) should even see
+  // the tab button, matching how the system itself hides magic/religion tabs conditionally here.
+  libWrapper.register(
+    MODULE_ID,
+    `${basePath}.prototype._prepareTabs`,
+    function (wrapped, group) {
+      const tabs = wrapped(group);
+      if (group === 'sheet' && !this.actor.isOwner) delete tabs[PlannerTab.partId];
+      return tabs;
+    },
+    'MIXED',
+  );
+
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._preparePartContext`,
