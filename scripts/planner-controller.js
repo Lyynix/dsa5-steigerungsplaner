@@ -3,16 +3,37 @@ import PlannerData from './planner-data.js';
 
 export default class PlannerController {
   // Entry point for a shift-click on any of the sheet's advance/refund "+"/"-" buttons.
+  //
+  // Queues can now hold both increase and decrease steps (planning "unlevel this, level that"
+  // respec-style moves), so +/- are symmetric: clicking a direction cancels the last queued step
+  // if it happens to be the *opposite* direction (undoing what the previous click just queued),
+  // otherwise it queues one more step in the clicked direction.
   static async handleShiftClick(sheet, fct, key) {
     const actor = sheet.actor;
     if (!actor.isOwner) return;
 
+    let type, direction;
     if (fct in ADVANCE_FCTS) {
-      await this.planAdvance(actor, ADVANCE_FCTS[fct], key);
+      type = ADVANCE_FCTS[fct];
+      direction = 'increase';
     } else if (fct in REFUND_FCTS) {
-      await this.cancelLast(actor, REFUND_FCTS[fct], key);
+      type = REFUND_FCTS[fct];
+      direction = 'decrease';
     } else {
       return;
+    }
+
+    await this.ensureFresh(actor, type, key);
+
+    const plan = PlannerData.getPlan(actor);
+    const lastIdx = PlannerData.lastIndex(plan, type, key);
+    const last = lastIdx === -1 ? null : plan[lastIdx];
+    const lastDirection = last ? (last.to > last.from ? 'increase' : 'decrease') : null;
+
+    if (last && lastDirection !== direction) {
+      await this.cancelLast(actor, type, key);
+    } else {
+      await this.planStep(actor, type, key, direction);
     }
 
     sheet.render();
@@ -98,20 +119,47 @@ export default class PlannerController {
     return null;
   }
 
-  // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
-  // but offset by however many steps for this target are already queued.
-  static buildEntry(actor, type, key) {
-    const base = this.rawCurrentValue(actor, type, key);
-    if (base === null) return null;
+  // Where this target's queue currently "ends" - the value the next queued step (in either
+  // direction) would start from. That's either the last queued entry's `to`, or, if nothing is
+  // queued yet, the actual current value.
+  static chainEnd(actor, type, key) {
+    const plan = PlannerData.getPlan(actor);
+    const idx = PlannerData.lastIndex(plan, type, key);
+    return idx === -1 ? this.rawCurrentValue(actor, type, key) : plan[idx].to;
+  }
 
+  // The lowest value a real refund is allowed to bring this target down to - mirrors the guards
+  // the system's own _refundAttributeAdvance/_refundPointsAdvance (`advances > 0`) and
+  // AdvancableSkill._refundStep (`value > advanceMin`) already enforce, expressed in the same
+  // terms rawCurrentValue/chainEnd use (the full displayed value, not just the raw advances count).
+  static minValue(actor, type, key) {
+    if (type === 'attribute') return actor.system.characteristics[key]?.initial ?? 0;
+    if (type === 'point') return 0;
+    if (type === 'item') return actor.items.get(key)?.system.advanceMin || 0;
+    return 0;
+  }
+
+  // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
+  // continuing from wherever this target's queue currently ends rather than its actual live value.
+  static buildEntry(actor, type, key, direction) {
     const category = this.categoryFor(actor, type, key);
     if (!category) return null;
 
-    const already = PlannerData.queuedCount(actor, type, key);
-    const from = base + already;
-    const cost = game.dsa5.apps.DSA5_Utility._calculateAdvCost(from, category);
+    const from = this.chainEnd(actor, type, key);
+    if (from === null) return null;
 
-    return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from + 1, cost, category };
+    const DSA5_Utility = game.dsa5.apps.DSA5_Utility;
+
+    if (direction === 'decrease') {
+      if (from <= this.minValue(actor, type, key)) return null;
+      const to = from - 1;
+      const cost = DSA5_Utility._calculateAdvCost(from, category, 0) * -1;
+      return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to, cost, category };
+    }
+
+    const to = from + 1;
+    const cost = DSA5_Utility._calculateAdvCost(from, category, 1);
+    return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to, cost, category };
   }
 
   // If this target already has a queue whose oldest entry no longer starts from the actual
@@ -127,11 +175,14 @@ export default class PlannerController {
     }
   }
 
-  static async planAdvance(actor, type, key) {
-    await this.ensureFresh(actor, type, key);
-
-    const entry = this.buildEntry(actor, type, key);
-    if (!entry) return;
+  static async planStep(actor, type, key, direction) {
+    const entry = this.buildEntry(actor, type, key, direction);
+    if (!entry) {
+      if (direction === 'decrease') {
+        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.CannotDecreaseFurther', { label: this.labelFor(actor, type, key) }));
+      }
+      return;
+    }
     const plan = PlannerData.getPlan(actor);
     plan.push(entry);
     await PlannerData.savePlan(actor, plan);
@@ -151,60 +202,52 @@ export default class PlannerController {
     await PlannerData.savePlan(actor, plan);
   }
 
-  // Removes the oldest queued step for a target - called whenever that step was actually
-  // executed for real, whether triggered from here or from a normal, un-shifted sheet click
-  // (see the _advanceAttribute/_advancePoints/_advanceItem wraps in sheet-integration.js).
-  // `valueAfterAdvance` is the target's actual value right after that advance; only pop the
-  // oldest entry if it's actually the one that produced this transition (its `to` matches) -
-  // otherwise the queue's baseline is already wrong for other reasons, so discard it rather than
-  // remove a step that has nothing to do with what just happened for real.
-  // The removed entry is pushed onto a per-target LIFO "consumed" stack rather than discarded,
-  // so a matching real refund can restore it (see restoreIfMatching).
-  static async consumeOldest(actor, type, key, valueAfterAdvance) {
+  // Called whenever a real advance OR refund succeeded for real, whether triggered from here or
+  // from a normal, un-shifted sheet click (see the six ADVANCE_FCTS/REFUND_FCTS method wraps in
+  // sheet-integration.js). `valueAfterChange` is the target's actual value right after that
+  // real change. Three possibilities, checked in order:
+  //
+  //   1. The front of the queue (oldest, next thing due) expected exactly this transition
+  //      (`front.to === valueAfterChange`) - consume it: pop it off the plan and push it onto a
+  //      per-target LIFO "consumed" stack, regardless of whether it was an increase or decrease.
+  //   2. Nothing in the queue matched, but the most recently consumed step for this target
+  //      started at exactly this value (`top.from === valueAfterChange`) - the player just undid
+  //      that step for real (a real refund undoing a consumed increase, or a real advance undoing
+  //      a consumed decrease). Put it back at the front of the plan.
+  //   3. Neither matches - whatever's still queued assumes a baseline that no longer holds (e.g.
+  //      de-leveling directly via "-" without ever having applied anything from the plan first -
+  //      DSA5 lets you do this even though it's not "legal" by the rules). Discard it rather than
+  //      silently tracking increasingly wrong from/to numbers.
+  static async reconcile(actor, type, key, valueAfterChange) {
     const plan = PlannerData.getPlan(actor);
-    const idx = PlannerData.firstIndex(plan, type, key);
-    if (idx === -1) return;
+    const frontIdx = PlannerData.firstIndex(plan, type, key);
+    const front = frontIdx === -1 ? null : plan[frontIdx];
 
-    const entry = plan[idx];
-    if (entry.to !== valueAfterAdvance) {
-      await this.discardQueue(actor, type, key);
+    if (front && front.to === valueAfterChange) {
+      plan.splice(frontIdx, 1);
+      await PlannerData.savePlan(actor, plan);
+
+      const consumed = PlannerData.getConsumed(actor);
+      consumed.push(front);
+      await PlannerData.saveConsumed(actor, consumed);
       return;
     }
 
-    plan.splice(idx, 1);
-    await PlannerData.savePlan(actor, plan);
-
     const consumed = PlannerData.getConsumed(actor);
-    consumed.push(entry);
-    await PlannerData.saveConsumed(actor, consumed);
-  }
+    const topIdx = PlannerData.lastIndex(consumed, type, key);
+    const top = topIdx === -1 ? null : consumed[topIdx];
 
-  // Called whenever a real refund succeeded (via the _refundAttributeAdvance/_refundPointsAdvance/
-  // _refundItemAdvance wraps). `valueAfterRefund` is the target's actual value right after that
-  // refund. If the top of this target's "consumed" stack is exactly the step that refund just
-  // undid (i.e. it advanced the value from valueAfterRefund to valueAfterRefund + 1), put it back
-  // at the front of the plan.
-  static async restoreIfMatching(actor, type, key, valueAfterRefund) {
-    const consumed = PlannerData.getConsumed(actor);
-    const idx = PlannerData.lastIndex(consumed, type, key);
-    const entry = idx === -1 ? null : consumed[idx];
-
-    if (entry && entry.to === valueAfterRefund + 1) {
-      consumed.splice(idx, 1);
+    if (top && top.from === valueAfterChange) {
+      consumed.splice(topIdx, 1);
       await PlannerData.saveConsumed(actor, consumed);
 
-      const plan = PlannerData.getPlan(actor);
       const insertAt = PlannerData.firstIndex(plan, type, key);
-      if (insertAt === -1) plan.push(entry);
-      else plan.splice(insertAt, 0, entry);
+      if (insertAt === -1) plan.push(top);
+      else plan.splice(insertAt, 0, top);
       await PlannerData.savePlan(actor, plan);
       return;
     }
 
-    // Not undoing a plan-sourced step (e.g. de-leveling directly via "-" without ever having
-    // applied anything from the plan first - DSA5 lets you do this even though it's not "legal"
-    // by the rules). Whatever is still queued for this target now assumes the wrong baseline, so
-    // discard it rather than silently track increasingly wrong from/to numbers.
     await this.discardQueue(actor, type, key);
   }
 
@@ -235,8 +278,8 @@ export default class PlannerController {
   // Called once when a sheet is first opened (see the _onFirstRender wrap): if a target's oldest
   // queued step no longer starts from its actual current value, the queue can't be trusted -
   // discard it. Deliberately not run on every render: it would race against our own multi-step
-  // consumeOldest/restoreIfMatching updates, which each trigger their own re-render before the
-  // plan flag has caught up with the real advance/refund that just happened.
+  // reconcile() updates, which each trigger their own re-render before the plan flag has caught
+  // up with the real advance/refund that just happened.
   static async validateQueues(actor) {
     for (const group of PlannerData.getGroups(actor).values()) {
       if (!group.steps.length) continue;
@@ -246,28 +289,33 @@ export default class PlannerController {
     }
   }
 
-  // Applies the oldest queued step for a target by invoking the real system advance method
-  // (identical to a normal, un-shifted click) - consumeOldest() runs as a side effect of that
-  // call via the wraps in sheet-integration.js, so no separate bookkeeping is needed here.
+  // Applies the oldest (front) queued step for a target by invoking the matching real system
+  // method - the real advance method if the front step is an increase, the real refund method if
+  // it's a decrease (identical to a normal, un-shifted click either way) - reconcile() runs as a
+  // side effect of that call via the wraps in sheet-integration.js, so no separate bookkeeping is
+  // needed here.
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
 
     const plan = PlannerData.getPlan(actor);
-    if (PlannerData.firstIndex(plan, type, key) === -1) return;
+    const idx = PlannerData.firstIndex(plan, type, key);
+    if (idx === -1) return;
 
-    // Guards against a crash in the system's own _advanceItem if the item was deleted but its
-    // plan entry survived somehow (e.g. the deleteItem cleanup hook hasn't run yet).
+    // Guards against a crash in the system's own _advanceItem/_refundItemAdvance if the item was
+    // deleted but its plan entry survived somehow (e.g. the deleteItem cleanup hook hasn't run yet).
     if (type === 'item' && !actor.items.get(key)) {
       await this.purgeTarget(actor, type, key);
       sheet.render();
       return;
     }
 
-    if (type === 'attribute') await sheet._advanceAttribute(key);
-    else if (type === 'point') await sheet._advancePoints(key);
-    else if (type === 'item') await sheet._advanceItem(key);
+    const isIncrease = plan[idx].to > plan[idx].from;
+
+    if (type === 'attribute') await (isIncrease ? sheet._advanceAttribute(key) : sheet._refundAttributeAdvance(key));
+    else if (type === 'point') await (isIncrease ? sheet._advancePoints(key) : sheet._refundPointsAdvance(key));
+    else if (type === 'item') await (isIncrease ? sheet._advanceItem(key) : sheet._refundItemAdvance(key));
 
     sheet.render();
   }

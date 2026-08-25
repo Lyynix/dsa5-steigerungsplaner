@@ -19,10 +19,6 @@ export default class PlannerData {
     await actor.setFlag(MODULE_ID, FLAG_CONSUMED, consumed);
   }
 
-  static queuedCount(actor, type, key) {
-    return this.getPlan(actor).filter((e) => e.type === type && e.key === key).length;
-  }
-
   static firstIndex(plan, type, key) {
     return plan.findIndex((e) => e.type === type && e.key === key);
   }

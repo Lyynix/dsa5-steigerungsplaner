@@ -12,5 +12,6 @@
   "STEIGERUNGSPLANER.Section.points": "Base stats",
   "STEIGERUNGSPLANER.Section.other": "Other",
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
-  "STEIGERUNGSPLANER.ColumnPlan": "Advancement list"
+  "STEIGERUNGSPLANER.ColumnPlan": "Advancement list",
+  "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} cannot be decreased any further."
 }
