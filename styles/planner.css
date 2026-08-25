@@ -130,13 +130,9 @@
   border-radius: 3px;
 }
 
-.steigerungsplaner-tab .planner-group-actions {
-  display: flex;
-  gap: 0.5rem;
+.steigerungsplaner-tab .planner-apply,
+.steigerungsplaner-tab .planner-cancel {
   flex: 0 0 auto;
-}
-
-.steigerungsplaner-tab .planner-group-actions a {
   cursor: pointer;
 }
 

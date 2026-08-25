@@ -14,6 +14,9 @@
         <ul class="planner-groups">
             {{#each section.groups as |group|}}
             <li class="planner-group">
+                <a class="planner-apply" data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
+                    <i class="fas fa-arrow-turn-left"></i>
+                </a>
                 <div class="planner-group-label">{{group.label}}</div>
                 <ol class="planner-steps">
                     {{#each group.steps as |step|}}
@@ -23,14 +26,9 @@
                     </li>
                     {{/each}}
                 </ol>
-                <div class="planner-group-actions">
-                    <a data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
-                        <i class="fas fa-check"></i>
-                    </a>
-                    <a data-plan-cancel data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Cancel'}}">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                </div>
+                <a class="planner-cancel" data-plan-cancel data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Cancel'}}">
+                    <i class="fas fa-trash"></i>
+                </a>
             </li>
             {{/each}}
         </ul>
