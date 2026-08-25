@@ -32,11 +32,41 @@
   background: var(--dsa-danger, #8b0000);
 }
 
+/* Small overlay dot for the characteristics header row, which is too narrow to fit inline badge
+   text next to the "+" without breaking the layout - see the badge-overlay handling in
+   planner-badges.js, which appends this inside the "+" link instead of inserting it as a sibling. */
+.steigerungsplaner-badge-overlay {
+  position: absolute;
+  top: -0.5em;
+  right: -0.5em;
+  width: 1.3em;
+  font-size: 0.55em;
+  margin: 0;
+  vertical-align: initial;
+}
+
 /* dsa5.css sets `.row-section .col.third { flex: 30% }` for the skill probe column; narrow it
    here specifically (rather than overriding .col.third globally) so the advance column next to
    it - where our badges live - gets more breathing room. */
 .row-section .col.third.skill-props {
   flex: 20%;
+}
+
+/* dsa5.css splits the combat skill table into .col.fourty (name)/.col.five (guide value)/
+   .col.fifteen (KTW, where our badge + input + +/- live)/.col.eight x2 (AT/FK, PA) = 100%. KTW is
+   too narrow to read once a badge is added - shrink the name and AT/FK/PA columns a little and
+   give the room to KTW. Scoped to .actor-combat-skill so this doesn't affect the many other
+   places .col.fourty/.eight/.fifteen are reused across the sheet. */
+.actor-combat-skill .row-section .col.fourty {
+  flex: 33%;
+}
+
+.actor-combat-skill .row-section .col.eight {
+  flex: 10%;
+}
+
+.actor-combat-skill .row-section .col.fifteen {
+  flex: 27%;
 }
 
 .steigerungsplaner-tab .planner-header {
