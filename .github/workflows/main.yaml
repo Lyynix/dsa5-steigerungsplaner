@@ -27,8 +27,13 @@
 #     (by default) create a repository tag, a repository tag will not create
 #     or publish a GitHub release.
 #
-#   - Has the module's entry on FoundryVTT's module administration site
-#     (https://foundryvtt.com/admin) been updated?
+#   - Did "Publish Release to Foundry Package Admin" fail?
+#     This calls https://foundryvtt.com/article/package-release-api/ to
+#     register the new version, so it shows up for in-app installs/updates.
+#     It requires a repository secret FOUNDRY_RELEASE_TOKEN, set to the
+#     "Package Release Token" from this package's edit page on
+#     foundryvtt.com (above the "Save Package" button) - without it, or if
+#     it's been revoked/refreshed, this step fails with a 401/403.
 #
 name: Create Module Files For GitHub Release
 
@@ -46,6 +51,11 @@ env:
   # The URL to the module archive associated with the module release being
   # processed by this workflow.
   release_module_url: "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/steigerungsplaner.zip"
+
+  # Unlike latest_manifest_url above, this points at *this specific* release's
+  # manifest rather than the latest one - required by the Foundry Package
+  # Release API below, which rejects a "latest" URL.
+  release_manifest_url: "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.json"
 
 
 on:
@@ -140,3 +150,27 @@ jobs:
           artifacts: './module.json, ./steigerungsplaner.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
+
+
+      # Tell FoundryVTT's package admin about the new version, so it shows up
+      # for in-app update checks/installs without manually editing the
+      # "Manifest URL" on the package's admin page after every release.
+      # https://foundryvtt.com/article/package-release-api/
+      #
+      # Requires a repository secret FOUNDRY_RELEASE_TOKEN, set to the
+      # "Package Release Token" from this package's edit page on
+      # foundryvtt.com (above the "Save Package" button).
+      - name: Publish Release to Foundry Package Admin
+        run: |
+          BODY=$(jq -n \
+            --arg id "$(jq -r '.id' module.json)" \
+            --arg version "${{ steps.get_version.outputs.version-without-v }}" \
+            --arg manifest "${{ env.release_manifest_url }}" \
+            --arg notes "https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}" \
+            --arg minimum "$(jq -r '.compatibility.minimum' module.json)" \
+            --arg verified "$(jq -r '.compatibility.verified' module.json)" \
+            '{id: $id, release: {version: $version, manifest: $manifest, notes: $notes, compatibility: {minimum: $minimum, verified: $verified}}}')
+          curl --fail-with-body -X POST https://foundryvtt.com/_api/packages/release_version/ \
+            -H "Content-Type: application/json" \
+            -H "Authorization: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}" \
+            -d "$BODY"
