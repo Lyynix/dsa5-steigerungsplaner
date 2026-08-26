@@ -18,7 +18,7 @@
             <div class="col">{{localize "STEIGERUNGSPLANER.ColumnPlan"}}</div>
         </div>
         {{#each section.groups as |group|}}
-        <div class="row-section wrap skills lineheight tableOdd item">
+        <div class="row-section wrap skills lineheight tableOdd" >
             {{#if group.icon}}<img class="planner-group-icon" src="{{group.icon}}" alt="">{{/if}}
             <div class="planner-group-label">{{group.label}}</div>
             <a class="planner-apply" data-plan-apply data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Apply'}}">
