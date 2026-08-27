@@ -161,6 +161,13 @@ jobs:
       # "Package Release Token" from this package's edit page on
       # foundryvtt.com (above the "Save Package" button).
       - name: Publish Release to Foundry Package Admin
+        env:
+          # Passed via env rather than interpolated straight into the script below: `${{ }}`
+          # expressions are substituted as raw text into the run script *before* bash sees it, so
+          # a token containing shell metacharacters (this one has $, %, #) would get re-parsed as
+          # shell syntax (e.g. "$R" as an empty variable) and reach curl mangled. Referencing it
+          # as a plain env var here means bash substitutes its value exactly once, verbatim.
+          FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
         run: |
           BODY=$(jq -n \
             --arg id "$(jq -r '.id' module.json)" \
@@ -172,5 +179,5 @@ jobs:
             '{id: $id, release: {version: $version, manifest: $manifest, notes: $notes, compatibility: {minimum: $minimum, verified: $verified}}}')
           curl --fail-with-body -X POST https://foundryvtt.com/_api/packages/release_version/ \
             -H "Content-Type: application/json" \
-            -H "Authorization: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}" \
+            -H "Authorization: $FOUNDRY_RELEASE_TOKEN" \
             -d "$BODY"
