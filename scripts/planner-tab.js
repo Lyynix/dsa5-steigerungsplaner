@@ -16,6 +16,7 @@ export default class PlannerTab {
 
     for (const group of PlannerData.getGroups(actor).values()) {
       group.icon = PlannerController.iconFor(actor, group.type, group.key);
+      PlannerController.markAffordability(actor, group.steps);
 
       const section = PlannerController.sectionFor(actor, group.type, group.key);
       if (!sections.has(section.id)) sections.set(section.id, { ...section, groups: [], totalCost: 0 });
@@ -116,6 +117,45 @@ export default class PlannerTab {
         if (!confirmed) return;
 
         this.foldThenRun(sheet, element, stepEls, () => PlannerController.discardQueue(sheet.actor, type, key, { silent: true }));
+      });
+    });
+
+    // Buying multiple steps in one click: click a step's own content (not the X, which stops
+    // propagation before this ever fires) to buy the front of the queue through that step. Capped
+    // by how many are currently affordable - the same .planner-step-unaffordable marking the CSS
+    // preview already respects, read straight back out of the DOM rather than recomputed, so what
+    // you saw highlighted on hover is exactly what happens on click.
+    element.querySelectorAll('.planner-step-inner').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        const stepEl = ev.currentTarget.closest('.planner-step');
+        if (!stepEl) return;
+
+        const { type, key } = ev.currentTarget.dataset;
+        const group = PlannerData.getGroups(sheet.actor).get(`${type}:${key}`);
+        if (!group) return;
+
+        const siblings = Array.from(stepEl.parentElement.children);
+        const affordableCount = siblings.filter((s) => !s.classList.contains('planner-step-unaffordable')).length;
+        const count = Math.min(siblings.indexOf(stepEl) + 1, affordableCount);
+
+        if (count <= 0) {
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.NotEnoughXP', { label: group.label }));
+          return;
+        }
+
+        const tiles = siblings.slice(0, count);
+        const entryIds = group.steps.slice(0, count).map((e) => e.id);
+
+        element.style.pointerEvents = 'none';
+
+        tiles[tiles.length - 1].addEventListener('transitionend', () => {
+          entryIds.forEach((id) => applyingIds.add(id));
+          PlannerController.applyUpTo(sheet, type, key, count).finally(() => {
+            entryIds.forEach((id) => applyingIds.delete(id));
+          });
+        }, { once: true });
+
+        tiles.forEach((t) => t.classList.add('planner-step-applying'));
       });
     });
 

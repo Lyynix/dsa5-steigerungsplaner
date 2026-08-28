@@ -7,6 +7,7 @@
   "STEIGERUNGSPLANER.Cancel": "Discard all planned advancements for this target",
   "STEIGERUNGSPLANER.ConfirmDiscardAll": "Discard all {count} planned steps for {label}?",
   "STEIGERUNGSPLANER.RemoveStep": "Discard steps from here",
+  "STEIGERUNGSPLANER.ApplyStep": "Apply steps up to here",
   "STEIGERUNGSPLANER.Empty": "No advancements planned. Shift-click + on the character sheet to plan one.",
   "STEIGERUNGSPLANER.NothingPlanned": "No planned advancement to remove.",
   "STEIGERUNGSPLANER.PlanDiscarded": "Planned advancements for {label} were discarded (the value changed outside the planner).",
