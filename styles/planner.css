@@ -191,6 +191,7 @@
 }
 
 .steigerungsplaner-tab .planner-step-inner {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -202,6 +203,40 @@
   border-radius: 3px;
   box-sizing: border-box;
   white-space: nowrap;
+}
+
+/* Sits on top of the step's own content rather than reserving permanent space for it - only
+   revealed on hover, via a fade-in gradient so the X stays legible over whatever text is under it. */
+.steigerungsplaner-tab .planner-step-remove {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(90deg, transparent 0%, rgba(71, 0, 0, 0.30) 45%);
+  border-radius: 0 3px 3px 0;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease-in;
+}
+
+.steigerungsplaner-tab .planner-step-inner:hover .planner-step-remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Previews the removal scope: hovering a step's X tints that step and every step queued after it
+   (exactly what clicking it would remove, per cancelFrom) - not just the one the X sits on. :has()
+   is needed because the hovered element is nested inside the tile, not a sibling of it; the actual
+   color fade comes for free from .planner-step's own background-color transition further up. */
+.steigerungsplaner-tab .planner-step:has(.planner-step-remove:hover),
+.steigerungsplaner-tab .planner-step:has(.planner-step-remove:hover) ~ .planner-step {
+  background-color: rgba(71, 0, 0, 0.3);
 }
 
 .steigerungsplaner-tab .planner-apply,
