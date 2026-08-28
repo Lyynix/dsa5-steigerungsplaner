@@ -83,10 +83,20 @@ export default class PlannerTab {
     });
 
     element.querySelectorAll('[data-plan-cancel]').forEach((el) => {
-      el.addEventListener('click', async (ev) => {
+      el.addEventListener('click', (ev) => {
+        const lastStepEl = ev.currentTarget.parentElement.querySelector('.planner-steps .planner-step:last-child');
+
+        if (!lastStepEl) return;
+
         const { type, key } = ev.currentTarget.dataset;
-        await PlannerController.cancelLast(sheet.actor, type, key);
-        sheet.render();
+
+        element.style.pointerEvents = 'none';
+
+        lastStepEl.addEventListener('transitionend', () => {
+          PlannerController.cancelLast(sheet.actor, type, key).then(() => sheet.render());
+        }, { once: true });
+
+        lastStepEl.classList.add('planner-step-cancelling');
       });
     });
   }

@@ -172,11 +172,21 @@
     margin-right: 0;
   }
 
-  &.planner-step-applying {
+  &.planner-step-applying,
+  &.planner-step-cancelling {
     grid-template-columns: 0fr;
     opacity: 0;
     margin-right: 0;
+  }
+
+  /* Green for a step being applied for real, red (matching the decrease badges' --dsa-danger) for
+     one being discarded - same fold, different color tells the two apart at a glance. */
+  &.planner-step-applying {
     background-color: #56a8137f;
+  }
+
+  &.planner-step-cancelling {
+    background-color: rgba(139, 0, 0, 0.5);
   }
 }
 
