@@ -166,7 +166,7 @@
   box-sizing: border-box;
   overflow: hidden;
   margin-right: 0.5rem;
-  transition: grid-template-columns 0.2s ease-in, opacity 0.2s ease-in, margin-right 0.2s ease-in;
+  transition: background-color 0.15s ease-in, grid-template-columns 0.2s ease-in, opacity 0.2s ease-in, margin-right 0.2s ease-in;
 
   &:last-child {
     margin-right: 0;
@@ -176,6 +176,7 @@
     grid-template-columns: 0fr;
     opacity: 0;
     margin-right: 0;
+    background-color: #56a8137f;
   }
 }
 
