@@ -47,6 +47,22 @@ export default class PlannerController {
     return Number(actor.system.details.experience.total) - Number(actor.system.details.experience.spent);
   }
 
+  // Marks each step in a target's queue with `unaffordable: true/false`, walking front-to-back
+  // and running down the available XP as it goes. Once a step doesn't fit anymore, every step
+  // after it is unaffordable too, regardless of its own individual cost - the queue is a chain,
+  // so nothing after an unreachable step can be reached without it either. Mutates `steps` in
+  // place (called once per group while building the tab's render context in PlannerTab).
+  static markAffordability(actor, steps) {
+    let remaining = this.availableXP(actor);
+    let affordable = true;
+
+    for (const step of steps) {
+      affordable = affordable && step.cost <= remaining;
+      if (affordable) remaining -= step.cost;
+      step.unaffordable = !affordable;
+    }
+  }
+
   // The target's actual current value, independent of anything queued in the plan.
   static rawCurrentValue(actor, type, key) {
     if (type === 'attribute') {

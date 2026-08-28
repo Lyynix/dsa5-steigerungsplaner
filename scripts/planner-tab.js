@@ -16,6 +16,7 @@ export default class PlannerTab {
 
     for (const group of PlannerData.getGroups(actor).values()) {
       group.icon = PlannerController.iconFor(actor, group.type, group.key);
+      PlannerController.markAffordability(actor, group.steps);
 
       const section = PlannerController.sectionFor(actor, group.type, group.key);
       if (!sections.has(section.id)) sections.set(section.id, { ...section, groups: [], totalCost: 0 });
