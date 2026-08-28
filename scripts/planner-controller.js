@@ -196,6 +196,24 @@ export default class PlannerController {
     await PlannerData.savePlan(actor, plan);
   }
 
+  // Removes a specific queued entry and everything queued after it for that target (in this
+  // target's own sub-sequence, not the flat plan array's index) - chain-consistent, unlike
+  // removing only the clicked entry: nothing queued after it could stay valid without it anyway
+  // (see the trash icon and per-step X in planner-tab.js).
+  static async cancelFrom(actor, type, key, entryId) {
+    if (!actor.isOwner) return;
+    await this.ensureFresh(actor, type, key);
+
+    const plan = PlannerData.getPlan(actor);
+    const own = plan.filter((e) => e.type === type && e.key === key);
+    const cutIdx = own.findIndex((e) => e.id === entryId);
+    if (cutIdx === -1) return;
+
+    const toRemove = new Set(own.slice(cutIdx).map((e) => e.id));
+    const remaining = plan.filter((e) => !toRemove.has(e.id));
+    await PlannerData.savePlan(actor, remaining);
+  }
+
   static async cancelLast(actor, type, key) {
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
@@ -259,13 +277,18 @@ export default class PlannerController {
     await this.discardQueue(actor, type, key);
   }
 
-  static async discardQueue(actor, type, key) {
+  // silent: true skips the warning notification - used when the removal was a deliberate user
+  // action (the tab's "discard all" trash icon) rather than an automatic desync safety net, where
+  // the default PlanDiscarded wording ("changed outside the planner") wouldn't make sense.
+  static async discardQueue(actor, type, key, { silent = false } = {}) {
     const plan = PlannerData.getPlan(actor);
     const remaining = plan.filter((e) => !(e.type === type && e.key === key));
     if (remaining.length === plan.length) return;
 
     await PlannerData.savePlan(actor, remaining);
-    ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
+    if (!silent) {
+      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
+    }
   }
 
   // Removes every plan/consumed entry for a target, no questions asked - for when the target

@@ -30,6 +30,9 @@
                     <div class="planner-step-inner">
                         <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
                         <span class="planner-step-cost">{{step.cost}} AP</span>
+                        <a class="planner-step-remove" data-type="{{group.type}}" data-key="{{group.key}}" data-id="{{step.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RemoveStep'}}">
+                            <i class="fas fa-xmark"></i>
+                        </a>
                     </div>
                 </li>
                 {{/each}}

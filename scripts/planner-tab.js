@@ -49,6 +49,22 @@ export default class PlannerTab {
     notes.parentElement.insertBefore(element, notes.nextSibling);
   }
 
+  // Adds .planner-step-cancelling to every tile in `tiles` simultaneously (they share the same
+  // transition duration, so one fold plays instead of N sequential ones), then runs `action` once
+  // the last tile's fold finishes and re-renders. Shared by the trash icon (all of a group's
+  // tiles) and the per-step X (a tile and everything queued after it).
+  static foldThenRun(sheet, element, tiles, action) {
+    if (!tiles.length) return;
+
+    element.style.pointerEvents = 'none';
+
+    tiles[tiles.length - 1].addEventListener('transitionend', () => {
+      action().then(() => sheet.render());
+    }, { once: true });
+
+    tiles.forEach((el) => el.classList.add('planner-step-cancelling'));
+  }
+
   static attachListeners(sheet, element) {
     this.relocate(sheet, element);
 
@@ -83,20 +99,38 @@ export default class PlannerTab {
     });
 
     element.querySelectorAll('[data-plan-cancel]').forEach((el) => {
-      el.addEventListener('click', (ev) => {
-        const lastStepEl = ev.currentTarget.parentElement.querySelector('.planner-steps .planner-step:last-child');
-
-        if (!lastStepEl) return;
-
+      el.addEventListener('click', async (ev) => {
         const { type, key } = ev.currentTarget.dataset;
+        const stepEls = Array.from(ev.currentTarget.parentElement.querySelectorAll('.planner-steps .planner-step'));
+        if (!stepEls.length) return;
 
-        element.style.pointerEvents = 'none';
+        const group = PlannerData.getGroups(sheet.actor).get(`${type}:${key}`);
+        if (!group) return;
 
-        lastStepEl.addEventListener('transitionend', () => {
-          PlannerController.cancelLast(sheet.actor, type, key).then(() => sheet.render());
-        }, { once: true });
+        const confirmed = await foundry.applications.api.DialogV2.confirm({
+          window: { title: game.i18n.localize('STEIGERUNGSPLANER.Cancel') },
+          content: game.i18n.format('STEIGERUNGSPLANER.ConfirmDiscardAll', { count: group.steps.length, label: group.label }),
+          rejectClose: false,
+          modal: true,
+        });
+        if (!confirmed) return;
 
-        lastStepEl.classList.add('planner-step-cancelling');
+        this.foldThenRun(sheet, element, stepEls, () => PlannerController.discardQueue(sheet.actor, type, key, { silent: true }));
+      });
+    });
+
+    element.querySelectorAll('.planner-step-remove').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+
+        const stepEl = ev.currentTarget.closest('.planner-step');
+        if (!stepEl) return;
+
+        const siblings = Array.from(stepEl.parentElement.children);
+        const tiles = siblings.slice(siblings.indexOf(stepEl));
+
+        const { type, key, id } = ev.currentTarget.dataset;
+        this.foldThenRun(sheet, element, tiles, () => PlannerController.cancelFrom(sheet.actor, type, key, id));
       });
     });
   }
