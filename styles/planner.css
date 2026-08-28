@@ -154,22 +154,44 @@
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
-  gap: 0.5rem;
   flex: 1 1 auto;
   min-width: 0;
 }
 
 .steigerungsplaner-tab .planner-step {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr;
   flex-shrink: 0;
-  gap: 0.35rem;
   height: 30px;
   box-sizing: border-box;
+  overflow: hidden;
+  margin-right: 0.5rem;
+  transition: background-color 0.15s ease-in, grid-template-columns 0.2s ease-in, opacity 0.2s ease-in, margin-right 0.2s ease-in;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  &.planner-step-applying {
+    grid-template-columns: 0fr;
+    opacity: 0;
+    margin-right: 0;
+    background-color: #56a8137f;
+  }
+}
+
+.steigerungsplaner-tab .planner-step-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  height: 100%;
   font-size: 0.85em;
   background: rgba(0, 0, 0, 0.05);
   padding: 0 0.4rem;
   border-radius: 3px;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .steigerungsplaner-tab .planner-apply,

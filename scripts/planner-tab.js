@@ -1,6 +1,7 @@
 import { PART_ID } from './module-config.js';
 import PlannerData from './planner-data.js';
 import PlannerController from './planner-controller.js';
+import { applyingIds } from './planner-state.js';
 
 export default class PlannerTab {
   static get partId() {
@@ -32,7 +33,7 @@ export default class PlannerTab {
 
     context.plannerSections = this.buildSections(actor);
     context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0);
-    context.plannerAvailableXP = Number(actor.system.details.experience.total) - Number(actor.system.details.experience.spent);
+    context.plannerAvailableXP = PlannerController.availableXP(actor);
     return context;
   }
 
@@ -53,8 +54,31 @@ export default class PlannerTab {
 
     element.querySelectorAll('[data-plan-apply]').forEach((el) => {
       el.addEventListener('click', (ev) => {
+        const firstStepEl = ev.currentTarget.parentElement.querySelector('.planner-steps .planner-step:first-child');
+
+        if (!firstStepEl) return;
+
         const { type, key } = ev.currentTarget.dataset;
-        PlannerController.applyFirst(sheet, type, key);
+        const plan = PlannerData.getPlan(sheet.actor);
+        const idx = PlannerData.firstIndex(plan, type, key);
+        const entry = idx === -1 ? null : plan[idx];
+        if (!entry) return;
+
+        if (entry.cost > 0 && PlannerController.availableXP(sheet.actor) < entry.cost) {
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.NotEnoughXP', { label: entry.label }));
+          return;
+        }
+
+        element.style.pointerEvents = 'none';
+
+        firstStepEl.addEventListener('transitionend', () => {
+          applyingIds.add(entry.id);
+          PlannerController.applyFirst(sheet, type, key).finally(() => {
+            applyingIds.delete(entry.id);
+          });
+        }, { once: true });
+
+        firstStepEl.classList.add('planner-step-applying');
       });
     });
 

@@ -39,6 +39,14 @@ export default class PlannerController {
     sheet.render();
   }
 
+  // The actor's current spendable XP - what the system's own checkEnoughXP (called by every real
+  // advance method) compares a step's cost against, and what the tab's "Verfügbare AP" summary
+  // shows. Used up front to check whether applying the front step would actually succeed, so the
+  // fold animation isn't played only to have to be reverted a moment later.
+  static availableXP(actor) {
+    return Number(actor.system.details.experience.total) - Number(actor.system.details.experience.spent);
+  }
+
   // The target's actual current value, independent of anything queued in the plan.
   static rawCurrentValue(actor, type, key) {
     if (type === 'attribute') {

@@ -27,8 +27,10 @@
             <ol class="planner-steps">
                 {{#each group.steps as |step|}}
                 <li class="planner-step">
-                    <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
-                    <span class="planner-step-cost">{{step.cost}} AP</span>
+                    <div class="planner-step-inner">
+                        <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
+                        <span class="planner-step-cost">{{step.cost}} AP</span>
+                    </div>
                 </li>
                 {{/each}}
             </ol>

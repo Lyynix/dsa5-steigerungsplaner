@@ -13,5 +13,6 @@
   "STEIGERUNGSPLANER.Section.other": "Other",
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
   "STEIGERUNGSPLANER.ColumnPlan": "Advancement list",
-  "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} cannot be decreased any further."
+  "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} cannot be decreased any further.",
+  "STEIGERUNGSPLANER.NotEnoughXP": "Not enough XP to advance {label}."
 }
