@@ -172,6 +172,15 @@
     margin-right: 0;
   }
 
+  /* Dims steps the queue can't reach yet with the AP currently available (see
+     PlannerController.markAffordability) - not a new color, just opacity, so it doesn't compete
+     with the apply/cancel flash colors below. Declared before those so an unaffordable step still
+     mid-removal (cancelling doesn't care about affordability) fully fades out rather than settling
+     on the dimmed opacity - same specificity, source order decides. */
+  &.planner-step-unaffordable {
+    opacity: 0.5;
+  }
+
   &.planner-step-applying,
   &.planner-step-cancelling {
     grid-template-columns: 0fr;
@@ -228,6 +237,18 @@
 .steigerungsplaner-tab .planner-step-inner:hover .planner-step-remove {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Mirrors the removal preview, but forwards: hovering a step's own content (not the X) tints that
+   step and everything queued *before* it - what would actually get bought, capped at what's still
+   affordable via :not(.planner-step-unaffordable). The X sits inside .planner-step-inner, so a
+   plain ":hover" would still fire while hovering it too - suppressed by requiring no remove button
+   anywhere in the list to be hovered, so hovering the X shows only the red removal preview, never
+   a green/red mix. That check has to sit on .planner-steps (one level up), not nested inside the
+   .planner-step :has() below it - :has() can't contain another :has() in its own argument. */
+.steigerungsplaner-tab .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+.steigerungsplaner-tab .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+  background-color: rgba(86, 168, 19, 0.3);
 }
 
 /* Previews the removal scope: hovering a step's X tints that step and every step queued after it
