@@ -154,7 +154,6 @@
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
-  gap: 0.5rem;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -166,11 +165,17 @@
   height: 30px;
   box-sizing: border-box;
   overflow: hidden;
-  transition: grid-template-columns 0.2s ease-in, opacity 0.2s ease-in;
+  margin-right: 0.5rem;
+  transition: grid-template-columns 0.2s ease-in, opacity 0.2s ease-in, margin-right 0.2s ease-in;
+
+  &:last-child {
+    margin-right: 0;
+  }
 
   &.planner-step-applying {
     grid-template-columns: 0fr;
     opacity: 0;
+    margin-right: 0;
   }
 }
 
