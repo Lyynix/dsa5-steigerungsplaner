@@ -170,6 +170,17 @@
   background: rgba(0, 0, 0, 0.05);
   padding: 0 0.4rem;
   border-radius: 3px;
+  overflow: hidden;
+
+  &.planner-step-applying {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    transition: 
+      width 0.2s ease-in, 
+      padding 0.2s ease-in, 
+      opacity 0.2s ease-in;
+  }
 }
 
 .steigerungsplaner-tab .planner-apply,

@@ -1,6 +1,7 @@
 import { PART_ID } from './module-config.js';
 import PlannerData from './planner-data.js';
 import PlannerController from './planner-controller.js';
+import { applyingIds } from './planner-state.js';
 
 export default class PlannerTab {
   static get partId() {
@@ -54,14 +55,24 @@ export default class PlannerTab {
     element.querySelectorAll('[data-plan-apply]').forEach((el) => {
       el.addEventListener('click', (ev) => {
         const firstStepEl = ev.currentTarget.parentElement.querySelector('.planner-steps .planner-step:first-child');
-        firstStepEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        firstStepEl?.classList.add('planner-step-applying');
+
+        if (!firstStepEl) return;
+
+        element.style.pointerEvents = 'none';
 
         const { type, key } = ev.currentTarget.dataset;
-        setTimeout(() => 
-          PlannerController.applyFirst(sheet, type, key),
-          500
-        )
+        const plan = PlannerData.getPlan(sheet.actor);
+        const idx = PlannerData.firstIndex(plan, type, key);
+        const entryId = idx === -1 ? null : plan[idx].id;
+
+        firstStepEl.addEventListener('transitionend', () => {
+          if (entryId !== null) applyingIds.add(entryId);
+          PlannerController.applyFirst(sheet, type, key).finally(() => {
+            if (entryId !== null) applyingIds.delete(entryId);
+          });
+        }, { once: true });
+
+        firstStepEl.classList.add('planner-step-applying');
       });
     });
 
