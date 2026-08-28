@@ -53,8 +53,15 @@ export default class PlannerTab {
 
     element.querySelectorAll('[data-plan-apply]').forEach((el) => {
       el.addEventListener('click', (ev) => {
+        const firstStepEl = ev.currentTarget.parentElement.querySelector('.planner-steps .planner-step:first-child');
+        firstStepEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstStepEl?.classList.add('planner-step-applying');
+
         const { type, key } = ev.currentTarget.dataset;
-        PlannerController.applyFirst(sheet, type, key);
+        setTimeout(() => 
+          PlannerController.applyFirst(sheet, type, key),
+          500
+        )
       });
     });
 
