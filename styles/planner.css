@@ -212,6 +212,7 @@
   border-radius: 3px;
   box-sizing: border-box;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 /* Sits on top of the step's own content rather than reserving permanent space for it - only

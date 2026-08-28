@@ -27,7 +27,7 @@
             <ol class="planner-steps">
                 {{#each group.steps as |step|}}
                 <li class="planner-step{{#if step.unaffordable}} planner-step-unaffordable{{/if}}">
-                    <div class="planner-step-inner">
+                    <div class="planner-step-inner" data-type="{{group.type}}" data-key="{{group.key}}">
                         <span class="planner-step-values">{{step.from}} &raquo; {{step.to}}</span>
                         <span class="planner-step-cost">{{step.cost}} AP</span>
                         <a class="planner-step-remove" data-type="{{group.type}}" data-key="{{group.key}}" data-id="{{step.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RemoveStep'}}">

@@ -343,27 +343,42 @@ export default class PlannerController {
   // needed here.
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
-    if (!actor.isOwner) return;
+    if (!actor.isOwner) return false;
     await this.ensureFresh(actor, type, key);
 
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.firstIndex(plan, type, key);
-    if (idx === -1) return;
+    if (idx === -1) return false;
 
     // Guards against a crash in the system's own _advanceItem/_refundItemAdvance if the item was
     // deleted but its plan entry survived somehow (e.g. the deleteItem cleanup hook hasn't run yet).
     if (type === 'item' && !actor.items.get(key)) {
       await this.purgeTarget(actor, type, key);
       sheet.render();
-      return;
+      return false;
     }
 
     const isIncrease = plan[idx].to > plan[idx].from;
 
-    if (type === 'attribute') await (isIncrease ? sheet._advanceAttribute(key) : sheet._refundAttributeAdvance(key));
-    else if (type === 'point') await (isIncrease ? sheet._advancePoints(key) : sheet._refundPointsAdvance(key));
-    else if (type === 'item') await (isIncrease ? sheet._advanceItem(key) : sheet._refundItemAdvance(key));
+    let result;
+    if (type === 'attribute') result = await (isIncrease ? sheet._advanceAttribute(key) : sheet._refundAttributeAdvance(key));
+    else if (type === 'point') result = await (isIncrease ? sheet._advancePoints(key) : sheet._refundPointsAdvance(key));
+    else if (type === 'item') result = await (isIncrease ? sheet._advanceItem(key) : sheet._refundItemAdvance(key));
 
     sheet.render();
+    return !!result;
+  }
+
+  // Applies the front `count` queued steps for a target in sequence - the multi-buy interaction in
+  // planner-tab.js has already worked out how many are currently affordable before calling this, so
+  // failures here are only the rare case where the real, live-recomputed cost turns out higher than
+  // what was estimated at planning time (see markAffordability). Stops immediately on the first
+  // failure rather than trying the rest - the system's own checkEnoughXP already shows an error
+  // notification for it, so no need to raise our own or keep hammering a queue that won't go through.
+  static async applyUpTo(sheet, type, key, count) {
+    for (let i = 0; i < count; i++) {
+      const success = await this.applyFirst(sheet, type, key);
+      if (!success) break;
+    }
   }
 }
