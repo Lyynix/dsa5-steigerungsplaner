@@ -9,6 +9,7 @@
   "STEIGERUNGSPLANER.RemoveStep": "Schritte ab hier verwerfen",
   "STEIGERUNGSPLANER.ApplyStep": "Schritte bis hier anwenden",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-Klick: im Planer vormerken",
+  "STEIGERUNGSPLANER.PermanentLossLabel": "{label} zurückkaufen",
   "STEIGERUNGSPLANER.Empty": "Keine Steigerungen geplant. Shift-Klick auf + im Charakterbogen um eine zu planen.",
   "STEIGERUNGSPLANER.NothingPlanned": "Keine geplante Steigerung zum Entfernen vorhanden.",
   "STEIGERUNGSPLANER.PlanDiscarded": "Geplante Steigerungen für {label} wurden verworfen (Wert wurde außerhalb des Planers verändert).",

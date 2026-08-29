@@ -32,7 +32,7 @@ export default class PlannerBadges {
       badge.textContent = `${isIncrease ? '+' : '-'}${group.steps.length}`;
       badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Planned") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
 
-      if (type === 'attribute' || type === 'point') {
+      if (type === 'attribute' || type === 'point' || type === 'permanentLoss') {
         // The characteristics header row (and, it turns out, the LeP/AsP/KaP row) is too narrow
         // for inline badge text next to "+" - float it above the icon instead, in headroom
         // .char-row-header .header-label reserves for it.

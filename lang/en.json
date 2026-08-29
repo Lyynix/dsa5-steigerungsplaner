@@ -9,6 +9,7 @@
   "STEIGERUNGSPLANER.RemoveStep": "Discard steps from here",
   "STEIGERUNGSPLANER.ApplyStep": "Apply steps up to here",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-click: add to the planner",
+  "STEIGERUNGSPLANER.PermanentLossLabel": "Rebuy {label}",
   "STEIGERUNGSPLANER.Empty": "No advancements planned. Shift-click + on the character sheet to plan one.",
   "STEIGERUNGSPLANER.NothingPlanned": "No planned advancement to remove.",
   "STEIGERUNGSPLANER.PlanDiscarded": "Planned advancements for {label} were discarded (the value changed outside the planner).",

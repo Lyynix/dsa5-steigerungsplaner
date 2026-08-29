@@ -77,6 +77,10 @@ export default class PlannerController {
       const item = actor.items.get(key);
       return item ? item.system.talentValue.value : null;
     }
+    if (type === 'permanentLoss') {
+      const status = actor.system.status[key];
+      return status ? status.rebuy : null;
+    }
     return null;
   }
 
@@ -92,6 +96,10 @@ export default class PlannerController {
     if (type === 'attribute') return game.i18n.localize(`CHAR.${key.toUpperCase()}`);
     if (type === 'point') return game.i18n.localize(key);
     if (type === 'item') return actor.items.get(key)?.name ?? key;
+    if (type === 'permanentLoss') {
+      const abbrev = game.i18n.localize(key === 'astralenergy' ? 'CHARAbbrev.pAsP' : 'CHARAbbrev.pKaP');
+      return game.i18n.format('STEIGERUNGSPLANER.PermanentLossLabel', { label: abbrev });
+    }
     return key;
   }
 
@@ -105,7 +113,10 @@ export default class PlannerController {
     if (type === 'attribute') {
       return { id: 'characteristics', label: game.i18n.localize('STEIGERUNGSPLANER.Section.characteristics'), cssClass: 'steigerungsplaner-section-characteristics' };
     }
-    if (type === 'point') {
+    // permanentLoss shares the "points" section with the regular AsP/KaP advances - a character
+    // is never both magical and clerical, so there's never more than one permanentLoss group to
+    // show at once anyway; a dedicated section would be overkill for that.
+    if (type === 'point' || type === 'permanentLoss') {
       return { id: 'points', label: game.i18n.localize('STEIGERUNGSPLANER.Section.points'), cssClass: 'steigerungsplaner-section-points' };
     }
     if (type === 'item') {
@@ -132,7 +143,7 @@ export default class PlannerController {
   // a system icon for this context, so they're hand-picked.
   static iconFor(actor, type, key) {
     if (type === 'attribute') return `systems/dsa5/icons/dice/d20${key}.svg`;
-    if (type === 'point') {
+    if (type === 'point' || type === 'permanentLoss') {
       return {
         wounds: 'systems/dsa5/icons/talents/HeilkundeWunden.webp',
         astralenergy: 'systems/dsa5/icons/categories/ability_magical.webp',
@@ -160,17 +171,37 @@ export default class PlannerController {
     if (type === 'attribute') return actor.system.characteristics[key]?.initial ?? 0;
     if (type === 'point') return 0;
     if (type === 'item') return actor.items.get(key)?.system.advanceMin || 0;
+    if (type === 'permanentLoss') return 0;
     return 0;
   }
 
   // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
   // continuing from wherever this target's queue currently ends rather than its actual live value.
   static buildEntry(actor, type, key, direction) {
-    const category = this.categoryFor(actor, type, key);
-    if (!category) return null;
-
     const from = this.chainEnd(actor, type, key);
     if (from === null) return null;
+
+    // Permanent-loss rebuy doesn't go through the A-E cost table at all - _rebuyPC/_refundPC
+    // charge a flat 2 AP regardless of the current rebuy count, so this bypasses categoryFor and
+    // _calculateAdvCost entirely rather than trying to force it through that machinery.
+    if (type === 'permanentLoss') {
+      if (direction === 'decrease') {
+        if (from <= this.minValue(actor, type, key)) return null;
+        return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from - 1, cost: -2, category: null };
+      }
+      // permanentLossSum is a live derived value (permanentLoss - rebuy + permanentGear, see
+      // baseactor.js _permanentEnergyLoss) computed from the actor's actually-applied rebuy count -
+      // it doesn't know about steps already queued but not yet bought for real, so checking it
+      // directly would let every queued step see the same "remaining" loss as the first. Project
+      // what it would be if rebuy were `from` (this target's queue-tracked value) instead, so
+      // planning several rebuys ahead correctly stops once the full loss is accounted for.
+      const status = actor.system.status[key];
+      if (!status || !(status.permanentLoss - from + status.permanentGear > 0)) return null;
+      return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from + 1, cost: 2, category: null };
+    }
+
+    const category = this.categoryFor(actor, type, key);
+    if (!category) return null;
 
     const DSA5_Utility = game.dsa5.apps.DSA5_Utility;
 
@@ -364,6 +395,7 @@ export default class PlannerController {
     if (type === 'attribute') result = await (isIncrease ? sheet._advanceAttribute(key) : sheet._refundAttributeAdvance(key));
     else if (type === 'point') result = await (isIncrease ? sheet._advancePoints(key) : sheet._refundPointsAdvance(key));
     else if (type === 'item') result = await (isIncrease ? sheet._advanceItem(key) : sheet._refundItemAdvance(key));
+    else if (type === 'permanentLoss') result = await (isIncrease ? sheet._rebuyPC(key) : sheet._refundPC(key));
 
     sheet.render();
     return !!result;

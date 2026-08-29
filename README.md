@@ -38,7 +38,6 @@ Im DSA5-Charakterbogen steigert ein Klick auf "+" sofort und zieht die AP direkt
 
 ## Bekannte Einschränkungen
 
-- Der permanente Attributsverlust-Zukauf (z. B. permanenter AsP-Verlust) läuft über einen eigenen Spielmechanismus und wird vom Planer aktuell nicht unterstützt.
 - Der Planer ist auf Charakterbögen (`character`) beschränkt; NSC-, Kreatur- und Fahrzeugbögen werden nicht unterstützt.
 
 ## Mitentwickeln

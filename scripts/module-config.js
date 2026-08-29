@@ -10,12 +10,14 @@ export const ADVANCE_FCTS = {
   _advanceAttribute: 'attribute',
   _advancePoints: 'point',
   _advanceItem: 'item',
+  _rebuyPC: 'permanentLoss',
 };
 
 export const REFUND_FCTS = {
   _refundAttributeAdvance: 'attribute',
   _refundPointsAdvance: 'point',
   _refundItemAdvance: 'item',
+  _refundPC: 'permanentLoss',
 };
 
 // Combined lookup for places that don't care whether a button is the "+" or "-" one, just which
