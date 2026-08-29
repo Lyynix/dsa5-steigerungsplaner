@@ -15,6 +15,7 @@
   "STEIGERUNGSPLANER.Section.characteristics": "Eigenschaften",
   "STEIGERUNGSPLANER.Section.points": "Basiswerte",
   "STEIGERUNGSPLANER.Section.other": "Sonstige",
+  "STEIGERUNGSPLANER.Section.permanentLoss": "Permanenter Verlust",
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
   "STEIGERUNGSPLANER.ColumnPlan": "Steigerungsliste",
   "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} kann nicht weiter verringert werden.",
