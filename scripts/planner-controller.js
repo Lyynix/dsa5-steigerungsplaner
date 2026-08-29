@@ -96,7 +96,10 @@ export default class PlannerController {
     if (type === 'attribute') return game.i18n.localize(`CHAR.${key.toUpperCase()}`);
     if (type === 'point') return game.i18n.localize(key);
     if (type === 'item') return actor.items.get(key)?.name ?? key;
-    if (type === 'permanentLoss') return game.i18n.localize(key === 'astralenergy' ? 'CHARAbbrev.pAsP' : 'CHARAbbrev.pKaP');
+    if (type === 'permanentLoss') {
+      const abbrev = game.i18n.localize(key === 'astralenergy' ? 'CHARAbbrev.pAsP' : 'CHARAbbrev.pKaP');
+      return game.i18n.format('STEIGERUNGSPLANER.PermanentLossLabel', { label: abbrev });
+    }
     return key;
   }
 
@@ -110,11 +113,11 @@ export default class PlannerController {
     if (type === 'attribute') {
       return { id: 'characteristics', label: game.i18n.localize('STEIGERUNGSPLANER.Section.characteristics'), cssClass: 'steigerungsplaner-section-characteristics' };
     }
-    if (type === 'point') {
+    // permanentLoss shares the "points" section with the regular AsP/KaP advances - a character
+    // is never both magical and clerical, so there's never more than one permanentLoss group to
+    // show at once anyway; a dedicated section would be overkill for that.
+    if (type === 'point' || type === 'permanentLoss') {
       return { id: 'points', label: game.i18n.localize('STEIGERUNGSPLANER.Section.points'), cssClass: 'steigerungsplaner-section-points' };
-    }
-    if (type === 'permanentLoss') {
-      return { id: 'permanentLoss', label: game.i18n.localize('STEIGERUNGSPLANER.Section.permanentLoss'), cssClass: 'steigerungsplaner-section-permanentLoss' };
     }
     if (type === 'item') {
       const item = actor.items.get(key);
