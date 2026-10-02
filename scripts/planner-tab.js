@@ -99,6 +99,14 @@ export default class PlannerTab {
       });
     });
 
+    element.querySelectorAll('[data-plan-add]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        const { type, key } = ev.currentTarget.dataset;
+        await PlannerController.appendStep(sheet.actor, type, key);
+        sheet.render();
+      });
+    });
+
     element.querySelectorAll('[data-plan-cancel]').forEach((el) => {
       el.addEventListener('click', async (ev) => {
         const { type, key } = ev.currentTarget.dataset;

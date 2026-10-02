@@ -25,12 +25,9 @@ export default class PlannerController {
 
     await this.ensureFresh(actor, type, key);
 
-    const plan = PlannerData.getPlan(actor);
-    const lastIdx = PlannerData.lastIndex(plan, type, key);
-    const last = lastIdx === -1 ? null : plan[lastIdx];
-    const lastDirection = last ? (last.to > last.from ? 'increase' : 'decrease') : null;
+    const lastDirection = this.queueDirection(actor, type, key);
 
-    if (last && lastDirection !== direction) {
+    if (lastDirection && lastDirection !== direction) {
       await this.cancelLast(actor, type, key);
     } else {
       await this.planStep(actor, type, key, direction);
@@ -163,6 +160,14 @@ export default class PlannerController {
     return idx === -1 ? this.rawCurrentValue(actor, type, key) : plan[idx].to;
   }
 
+  // 'increase' or 'decrease', taken from the last queued entry - null if nothing is queued.
+  static queueDirection(actor, type, key) {
+    const plan = PlannerData.getPlan(actor);
+    const idx = PlannerData.lastIndex(plan, type, key);
+    if (idx === -1) return null;
+    return plan[idx].to > plan[idx].from ? 'increase' : 'decrease';
+  }
+
   // The lowest value a real refund is allowed to bring this target down to - mirrors the guards
   // the system's own _refundAttributeAdvance/_refundPointsAdvance (`advances > 0`) and
   // AdvancableSkill._refundStep (`value > advanceMin`) already enforce, expressed in the same
@@ -228,6 +233,16 @@ export default class PlannerController {
     if (idx !== -1 && this.rawCurrentValue(actor, type, key) !== plan[idx].from) {
       await this.discardQueue(actor, type, key);
     }
+  }
+
+  // The tab's add-step button: one more step in the direction the queue already goes.
+  static async appendStep(actor, type, key) {
+    if (!actor.isOwner) return;
+    await this.ensureFresh(actor, type, key);
+
+    const direction = this.queueDirection(actor, type, key);
+    if (!direction) return;
+    await this.planStep(actor, type, key, direction);
   }
 
   static async planStep(actor, type, key, direction) {

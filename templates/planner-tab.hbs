@@ -37,6 +37,9 @@
                 </li>
                 {{/each}}
             </ol>
+            <a class="planner-add" data-plan-add data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.AddStep'}}">
+                <i class="fas fa-square-plus"></i>
+            </a>
             <a class="planner-cancel" data-plan-cancel data-type="{{group.type}}" data-key="{{group.key}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Cancel'}}">
                 <i class="fas fa-trash"></i>
             </a>
