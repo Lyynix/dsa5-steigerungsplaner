@@ -262,6 +262,7 @@
 }
 
 .steigerungsplaner-tab .planner-apply,
+.steigerungsplaner-tab .planner-add,
 .steigerungsplaner-tab .planner-cancel {
   flex: 0 0 auto;
   width: 30px;

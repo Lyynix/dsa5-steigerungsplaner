@@ -8,6 +8,7 @@
   "STEIGERUNGSPLANER.ConfirmDiscardAll": "Alle {count} geplanten Schritte für {label} verwerfen?",
   "STEIGERUNGSPLANER.RemoveStep": "Schritte ab hier verwerfen",
   "STEIGERUNGSPLANER.ApplyStep": "Schritte bis hier anwenden",
+  "STEIGERUNGSPLANER.AddStep": "Nächsten Schritt hinzufügen",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-Klick: im Planer vormerken",
   "STEIGERUNGSPLANER.PermanentLossLabel": "{label} zurückkaufen",
   "STEIGERUNGSPLANER.Empty": "Keine Steigerungen geplant. Shift-Klick auf + im Charakterbogen um eine zu planen.",

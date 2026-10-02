@@ -8,6 +8,7 @@
   "STEIGERUNGSPLANER.ConfirmDiscardAll": "Discard all {count} planned steps for {label}?",
   "STEIGERUNGSPLANER.RemoveStep": "Discard steps from here",
   "STEIGERUNGSPLANER.ApplyStep": "Apply steps up to here",
+  "STEIGERUNGSPLANER.AddStep": "Add next step",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-click: add to the planner",
   "STEIGERUNGSPLANER.PermanentLossLabel": "Rebuy {label}",
   "STEIGERUNGSPLANER.Empty": "No advancements planned. Shift-click + on the character sheet to plan one.",
