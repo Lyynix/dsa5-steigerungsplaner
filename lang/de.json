@@ -12,6 +12,7 @@
   "STEIGERUNGSPLANER.AddTarget": "Ziel hinzufügen",
   "STEIGERUNGSPLANER.PickerSearch": "Suchen …",
   "STEIGERUNGSPLANER.PickerEmpty": "Nichts gefunden",
+  "STEIGERUNGSPLANER.IndexLoading": "Steigerungsplaner: Lade Sonderfertigkeiten, Zauber und Liturgien …",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-Klick: im Planer vormerken",
   "STEIGERUNGSPLANER.PermanentLossLabel": "{label} zurückkaufen",
   "STEIGERUNGSPLANER.Empty": "Keine Steigerungen geplant. Shift-Klick auf + im Charakterbogen oder „Ziel hinzufügen“, um eine zu planen.",
