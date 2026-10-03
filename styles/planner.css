@@ -513,6 +513,108 @@
   }
 }
 
+/* GM's approval window (request-approval.js): one block per character with their open requests. */
+.steigerungsplaner-request-approval {
+  & .window-content {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  & .approval-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  & .approval-actor-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.4);
+
+    & img {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      border: none;
+    }
+  }
+
+  & .approval-actor-name {
+    flex: 1 1 auto;
+    font-weight: bold;
+  }
+
+  & .approval-xp,
+  & .approval-request-info,
+  & .approval-empty {
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  & .approval-empty {
+    font-style: italic;
+  }
+
+  & ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  & .approval-request {
+    padding: 0.25rem 0;
+
+    & + .approval-request {
+      border-top: 1px solid rgba(127, 127, 127, 0.2);
+    }
+  }
+
+  & .approval-request-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    & img {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      border: none;
+    }
+  }
+
+  & .approval-request-name {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  & .approval-approve,
+  & .approval-reject {
+    flex: 0 0 24px;
+    text-align: center;
+  }
+
+  & .approval-approve:hover {
+    color: rgb(86, 168, 19);
+  }
+
+  & .approval-reject:hover {
+    color: var(--color-level-error, #c00);
+  }
+
+  & .approval-requirements {
+    margin: 0.25rem 0 0 2rem;
+    font-size: var(--font-size-12);
+    opacity: 0.85;
+  }
+}
+
+.steigerungsplaner-tab .planner-request-rejected {
+  color: var(--color-level-error, #c00);
+}
+
 /* Add-target picker (planner-picker.js). Lives on document.body, so nothing here is scoped to the
    tab. Colors mirror Foundry's own #context-menu for both themes - not the id itself, that would
    clash with the real context menu. Just below tooltips, so it sits above every app window. */

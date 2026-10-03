@@ -36,6 +36,9 @@
                 <i class="fas fa-rotate-left"></i>
             </a>
             {{else}}
+            {{#if request.rejected}}
+            <span class="planner-request-info planner-request-rejected" data-tooltip="{{request.rejectedReason}}"><i class="fas fa-ban"></i> {{localize "STEIGERUNGSPLANER.RequestRejected"}}</span>
+            {{/if}}
             <a class="planner-send" data-request-send data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestSend'}}">
                 <i class="fas fa-paper-plane"></i>
             </a>

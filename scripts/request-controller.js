@@ -283,8 +283,17 @@ export default class RequestController {
     return entry;
   }
 
+  // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
+  // becomes "Fertigkeitsspezialisierung (Klettern)", or "(Klettern, Fassaden)" with an addition.
+  static label(request) {
+    if (!request.variant) return request.name;
+    const { name, customEntry } = request.variant;
+    return `${request.name.replace(' ()', '')} (${name}${customEntry ? `, ${customEntry}` : ''})`;
+  }
+
+  // Asking again clears an earlier rejection.
   static async markRequested(actor, id) {
-    await this.#setStatus(actor, id, 'requested');
+    await this.#setStatus(actor, id, 'requested', { rejected: null });
   }
 
   // Takes a request back from the GM, it stays in the plan as planned.
@@ -292,15 +301,105 @@ export default class RequestController {
     await this.#setStatus(actor, id, 'planned');
   }
 
-  static async #setStatus(actor, id, status) {
+  // Sends a request back to the player, with the GM's reason if they gave one.
+  static async rejectRequest(actor, id, reason = '') {
+    await this.#setStatus(actor, id, 'planned', { rejected: { reason } });
+  }
+
+  static async #setStatus(actor, id, status, changes = {}) {
     if (!actor.isOwner) return;
 
     const requests = PlannerData.getRequests(actor);
     const entry = requests.find((r) => r.id === id);
     if (!entry || entry.status === status) return;
 
-    entry.status = status;
+    Object.assign(entry, changes, { status });
     await PlannerData.saveRequests(actor, requests);
+  }
+
+  // Buys a request through the system's own functions, as if the GM dropped the item on the sheet
+  // and picked the variant - so the AP check, deduction, item creation and the AP tracker work
+  // exactly like that. The request is removed once the item is there at the wanted level. Returns
+  // whether that worked; if not (usually not enough AP), the system has already said why.
+  static async approveRequest(actor, id) {
+    if (!actor.isOwner) return false;
+
+    const request = PlannerData.getRequests(actor).find((r) => r.id === id);
+    if (!request) return false;
+
+    const source = await fromUuid(request.uuid);
+    if (!source) {
+      ui.notifications.error(game.i18n.format('STEIGERUNGSPLANER.ApproveMissingItem', { name: this.label(request) }));
+      return false;
+    }
+
+    const bought = await this.#buy(actor, source, request);
+    if (!bought) {
+      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.ApproveFailed', { name: this.label(request), actor: actor.name }));
+      return false;
+    }
+
+    await this.removeRequest(actor, id);
+    return true;
+  }
+
+  static async #buy(actor, source, request) {
+    const data = game.items.fromCompendium(source);
+    const { SpecialabilityRulesDSA5, AdvantageRulesDSA5 } = game.dsa5.apps;
+    const owned = (name) => actor.items.find((i) => i.type === source.type && i.name === name);
+
+    switch (source.type) {
+      case 'spell':
+      case 'ritual':
+      case 'liturgy':
+      case 'ceremony':
+      case 'blessing':
+      case 'magictrick':
+        await actor.sheet._addSpellOrLiturgy(data);
+        return !!owned(data.name);
+      case 'spellextension':
+        await actor.sheet._handleSpellExtension(data);
+        return !!owned(data.name);
+    }
+
+    // Special abilities, advantages and disadvantages: the same functions the system's variant
+    // dialog ends in, called with the stored variant so that dialog doesn't come up.
+    const adoption = this.#adoption(actor, request.variant);
+    const buy =
+      source.type === 'specialability'
+        ? () => SpecialabilityRulesDSA5._specialabilityReturnFunction(actor, data, source.type, adoption)
+        : () => AdvantageRulesDSA5._vantageReturnFunction(actor, data, source.type, adoption);
+
+    // The name the system gives the bought item - advantages don't take the addition.
+    const base = data.name.replace(' ()', '');
+    const custom = source.type === 'specialability' && adoption?.customEntry ? `, ${adoption.customEntry}` : '';
+    const name = adoption ? `${base} (${adoption.name}${custom})` : data.name;
+    const level = () => Number(owned(name)?.system.step.value) || 0;
+    const target = request.level;
+
+    // A new item is bought at the wanted level at once (the system sums up the levels' costs), an
+    // owned one goes up one level per buy, like dropping it on the sheet again.
+    if (!owned(name)) {
+      if (target) data.system.step.value = target;
+      await buy();
+    }
+    while (target && owned(name) && level() < target) {
+      const before = level();
+      await buy();
+      if (level() === before) break;
+    }
+
+    return !!owned(name) && (!target || level() >= target);
+  }
+
+  // What the system's variant dialog would hand over: the chosen item of the character (its StF
+  // can decide the cost) or just the entered name.
+  static #adoption(actor, variant) {
+    if (!variant) return null;
+    const item = variant.itemId ? actor.items.get(variant.itemId) : null;
+    const adoption = item ? { name: item.name, system: item.system } : { name: variant.name };
+    if (variant.customEntry) adoption.customEntry = variant.customEntry;
+    return adoption;
   }
 
   static async removeRequest(actor, id) {
