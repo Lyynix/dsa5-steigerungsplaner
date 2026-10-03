@@ -62,7 +62,9 @@ export default class PlannerTab {
     // Requests count into the planned cost until the GM approves them - then the system charges them.
     const requestCost = context.plannerRequests.reduce((sum, r) => sum + (r.cost ?? 0), 0);
     context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0) + requestCost;
-    context.plannerEmpty = !context.plannerSections.length && !context.plannerRequests.length;
+    // The GM doesn't ask themselves - they get a check mark that buys the request right away.
+    context.plannerIsGM = game.user.isGM;
+    context.plannerEmpty =!context.plannerSections.length && !context.plannerRequests.length;
     return context;
   }
 
@@ -161,6 +163,15 @@ export default class PlannerTab {
     element.querySelectorAll('[data-request-withdraw]').forEach((el) => {
       el.addEventListener('click', async (ev) => {
         await RequestController.withdrawRequest(sheet.actor, ev.currentTarget.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-approve]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        const target = ev.currentTarget;
+        target.style.pointerEvents = 'none';
+        await RequestController.approveRequest(sheet.actor, target.dataset.id);
         sheet.render();
       });
     });

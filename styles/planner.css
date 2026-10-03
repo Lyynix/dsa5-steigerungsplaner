@@ -353,6 +353,7 @@
 .steigerungsplaner-tab .planner-add,
 .steigerungsplaner-tab .planner-send,
 .steigerungsplaner-tab .planner-withdraw,
+.steigerungsplaner-tab .planner-approve,
 .steigerungsplaner-tab .planner-cancel {
   flex: 0 0 auto;
   width: 30px;

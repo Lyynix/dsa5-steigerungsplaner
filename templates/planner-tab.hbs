@@ -42,13 +42,18 @@
             {{/if}}
             {{#if request.requested}}
             <span class="planner-request-info"><i class="fas fa-hourglass-half"></i> {{localize "STEIGERUNGSPLANER.RequestPending"}}</span>
+            {{else if request.rejected}}
+            <span class="planner-request-info planner-request-rejected" data-tooltip="{{request.rejectedReason}}"><i class="fas fa-ban"></i> {{localize "STEIGERUNGSPLANER.RequestRejected"}}</span>
+            {{/if}}
+            {{#if @root.plannerIsGM}}
+            <a class="planner-approve" data-request-approve data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Approve'}}">
+                <i class="fas fa-check"></i>
+            </a>
+            {{else if request.requested}}
             <a class="planner-withdraw" data-request-withdraw data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestWithdraw'}}">
                 <i class="fas fa-rotate-left"></i>
             </a>
             {{else}}
-            {{#if request.rejected}}
-            <span class="planner-request-info planner-request-rejected" data-tooltip="{{request.rejectedReason}}"><i class="fas fa-ban"></i> {{localize "STEIGERUNGSPLANER.RequestRejected"}}</span>
-            {{/if}}
             <a class="planner-send" data-request-send data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestSend'}}">
                 <i class="fas fa-paper-plane"></i>
             </a>
