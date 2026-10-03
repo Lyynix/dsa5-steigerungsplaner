@@ -24,6 +24,8 @@ const INDEX_FIELDS = [
   'system.StF.value',
   'system.talentValue',
   'system.source',
+  'system.description.value',
+  'system.obfuscation.description',
 ];
 
 const CONCURRENCY = 4;
@@ -83,13 +85,19 @@ export default class RequestIndex {
               continue;
             }
 
+            // The description is only kept as plain search text - the details load the full item.
+            // A copy without it, the index object itself is Foundry's cached pack index.
+            const { description: rawDescription, ...system } = entry.system ?? {};
+            const description = system.obfuscation?.description ? '' : rawDescription?.value;
+
             const item = {
               uuid: entry.uuid ?? `Compendium.${pack.collection}.Item.${entry._id}`,
               name: entry.name,
               type: entry.type,
               img: entry.img,
               sources: [source],
-              system: entry.system ?? {},
+              searchText: this.#plainText(description),
+              system,
             };
             seen.set(key, item);
             entries.push(item);
@@ -106,6 +114,17 @@ export default class RequestIndex {
     // Removes itself at exactly 100 %, which the loop above never reaches without any packs.
     if (!packs.length) progress.update({ pct: 1 });
     return entries;
+  }
+
+  // Lowercase text of a description for searching. Links like @UUID[...]{Finte} keep their label;
+  // DOMParser decodes the entities without loading any of the images.
+  static #parser = new DOMParser();
+
+  static #plainText(html) {
+    if (!html) return '';
+    const text = html.replace(/@\w+\[[^\]]*\]\{([^}]*)\}/g, '$1').replace(/@\w+\[([^\]]*)\]/g, '$1');
+    const plain = this.#parser.parseFromString(text, 'text/html').body.textContent ?? '';
+    return plain.replace(/\s+/g, ' ').trim().toLowerCase();
   }
 
   // The book a pack belongs to, named like the item library's module filter does it: the module's

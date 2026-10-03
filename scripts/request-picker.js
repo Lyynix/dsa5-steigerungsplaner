@@ -32,7 +32,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
 
   #catalog = [];
   #documents = new Map();
-  #sources = new Map();
+  #entries = new Map();
   #selected = null;
   #query = '';
   #book = '';
@@ -71,7 +71,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
         selected: entry.uuid === this.#selected,
       })),
     }));
-    this.#sources = new Map(this.#catalog.flatMap((group) => group.entries.map((entry) => [entry.uuid, entry.sources])));
+    this.#entries = new Map(this.#catalog.flatMap((group) => group.entries.map((entry) => [entry.uuid, entry])));
     context.entry = await this.#details();
     return context;
   }
@@ -198,10 +198,12 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     }
   }
 
-  // The search matches either an entry's name or its group's, so "Kampf" lists all combat special
-  // abilities. The book and category filters narrow that down further.
+  // The search matches an entry's name or its group's, so "Kampf" lists all combat special
+  // abilities. From three letters on it also looks into the descriptions - those hits are dimmed and
+  // come last in their group. The book and category filters narrow all of that down further.
   #filter() {
     const q = this.#query.trim().toLowerCase();
+    const searchDescriptions = q.length >= 3;
     let anyVisible = false;
 
     for (const group of this.element.querySelectorAll('.picker-group')) {
@@ -209,9 +211,12 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
       const groupAllowed = !this.#group || group.dataset.group === this.#group;
       let groupVisible = false;
       for (const li of group.querySelectorAll('.picker-entry')) {
-        const nameMatches = li.querySelector('.picker-entry-name').textContent.toLowerCase().includes(q);
-        const bookAllowed = !this.#book || this.#sources.get(li.dataset.uuid)?.includes(this.#book);
-        li.hidden = !groupAllowed || !bookAllowed || (!groupMatches && !nameMatches);
+        const entry = this.#entries.get(li.dataset.uuid);
+        const nameMatches = groupMatches || li.querySelector('.picker-entry-name').textContent.toLowerCase().includes(q);
+        const descriptionMatches = !nameMatches && searchDescriptions && !!entry?.searchText.includes(q);
+        const bookAllowed = !this.#book || entry?.sources.includes(this.#book);
+        li.hidden = !groupAllowed || !bookAllowed || (!nameMatches && !descriptionMatches);
+        li.classList.toggle('description-match', descriptionMatches);
         if (!li.hidden) groupVisible = true;
       }
       group.hidden = !groupVisible;

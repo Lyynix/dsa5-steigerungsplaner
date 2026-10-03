@@ -96,6 +96,7 @@ export default class RequestController {
         type: entry.type,
         img: entry.img,
         sources: entry.sources ?? [],
+        searchText: entry.searchText ?? '',
         requirements: entry.system.requirements?.value ?? '',
         level,
         variant,

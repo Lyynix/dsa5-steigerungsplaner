@@ -373,10 +373,18 @@
     opacity: 0.7;
   }
 
+  /* Flex so description-only hits can be moved behind the name hits with `order`. */
   & .picker-group ol {
+    display: flex;
+    flex-direction: column;
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+
+  & .picker-entry.description-match {
+    order: 1;
+    opacity: 0.6;
   }
 
   & .picker-entry {
