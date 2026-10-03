@@ -1,5 +1,34 @@
 import PlannerData from './planner-data.js';
 
+const GROUP_ORDER = [
+  'advantage',
+  'disadvantage',
+  'sf-general',
+  'sf-combat',
+  'sf-magical',
+  'sf-clerical',
+  'spell',
+  'ritual',
+  'magictrick',
+  'liturgy',
+  'ceremony',
+  'blessing',
+  'spellextension',
+];
+
+// Our own labels where the system has none that fits - the special ability groups are our split,
+// and "Zaubererweiterung" would be wrong for liturgy/ceremony extensions.
+const GROUP_LABELS = {
+  'sf-general': 'STEIGERUNGSPLANER.Group.sfGeneral',
+  'sf-combat': 'STEIGERUNGSPLANER.Group.sfCombat',
+  'sf-magical': 'STEIGERUNGSPLANER.Group.sfMagical',
+  'sf-clerical': 'STEIGERUNGSPLANER.Group.sfClerical',
+  spellextension: 'STEIGERUNGSPLANER.Group.extensions',
+};
+
+const MAGICAL_TYPES = new Set(['spell', 'ritual', 'magictrick']);
+const CLERICAL_TYPES = new Set(['liturgy', 'ceremony', 'blessing']);
+
 // Requests for items that need GM approval instead of being bought step by step (special
 // abilities, spells, liturgies, ...). An entry looks like
 //   { id, uuid, name, type, img, level, variant, status }
@@ -10,6 +39,119 @@ import PlannerData from './planner-data.js';
 //   item on approval, its StF can change the cost
 // - status: 'planned' or 'requested'
 export default class RequestController {
+  // What this character can request, from the request index: [{ id, label, entries }] in the picker's
+  // order, empty groups left out. Each entry gets
+  // - level: { min, max } for leveled special abilities/advantages, otherwise null
+  // - variant: { kind: 'text' | 'list' | 'item', options, allowCustom } if it needs one, otherwise null
+  // - extension: { source, requiredFW, currentFW } for extensions, otherwise null
+  // - requirements: the item's requirements text, the system doesn't check it, the GM does
+  static catalog(actor, entries) {
+    const owned = new Map(actor.items.map((item) => [`${item.type}:${item.name}`, item]));
+    const requested = new Set(PlannerData.getRequests(actor).map((r) => r.uuid));
+    const groups = new Map(GROUP_ORDER.map((id) => [id, []]));
+
+    for (const entry of entries) {
+      const group = this.#groupFor(entry);
+      if (!this.#allowedFor(actor, entry, group)) continue;
+
+      const variant = this.#variantFor(actor, entry);
+
+      // Items with a variant can be owned several times with different ones ("Begabung (Klettern)",
+      // "Begabung (Schwimmen)"), so they're never filtered as owned or already requested.
+      if (!variant && requested.has(entry.uuid)) continue;
+
+      let level = null;
+      const maxLevel = this.#maxLevel(entry);
+      const ownedItem = variant ? null : owned.get(`${entry.type}:${entry.name}`);
+      if (ownedItem) {
+        const current = Number(ownedItem.system.step?.value) || 0;
+        if (maxLevel <= 1 || current >= maxLevel) continue;
+        level = { min: current + 1, max: maxLevel };
+      } else if (maxLevel > 1) {
+        level = { min: 1, max: maxLevel };
+      }
+
+      let extension = null;
+      if (entry.type === 'spellextension') {
+        const source = owned.get(`${entry.system.category}:${entry.system.source}`);
+        if (!source) continue;
+        extension = {
+          source: entry.system.source,
+          requiredFW: Number(entry.system.talentValue) || 0,
+          currentFW: Number(source.system.talentValue?.value) || 0,
+        };
+      }
+
+      groups.get(group).push({
+        uuid: entry.uuid,
+        name: entry.name,
+        type: entry.type,
+        img: entry.img,
+        requirements: entry.system.requirements?.value ?? '',
+        level,
+        variant,
+        extension,
+      });
+    }
+
+    return GROUP_ORDER.filter((id) => groups.get(id).length).map((id) => ({
+      id,
+      label: game.i18n.localize(GROUP_LABELS[id] ?? `TYPES.Item.${id}`),
+      entries: groups.get(id).sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+  }
+
+  // The system groups special ability categories itself (SpecialabilityData.sortedSpecs). It files
+  // staff and ceremonial under "unused", but those are plainly magical and clerical.
+  static #groupFor(entry) {
+    if (entry.type !== 'specialability') return entry.type;
+
+    const { magical, clerical, combat } = CONFIG.Item.dataModels.specialability.sortedSpecs;
+    const category = entry.system.category?.value;
+    if (magical.has(category) || category === 'staff') return 'sf-magical';
+    if (clerical.has(category) || category === 'ceremonial') return 'sf-clerical';
+    if (combat.has(category)) return 'sf-combat';
+    return 'sf-general';
+  }
+
+  // Magical things only for magical characters, clerical ones only for blessed ones - the same
+  // flags that decide whether the sheet shows its magic/religion tab. Advantages and disadvantages
+  // stay open to everyone, otherwise nobody could ever request becoming a spellcaster.
+  static #allowedFor(actor, entry, group) {
+    const category = entry.type === 'spellextension' ? entry.system.category : null;
+    const magical = MAGICAL_TYPES.has(entry.type) || group === 'sf-magical' || ['spell', 'ritual'].includes(category);
+    const clerical = CLERICAL_TYPES.has(entry.type) || group === 'sf-clerical' || ['liturgy', 'ceremony'].includes(category);
+    if (magical) return !!actor.system.isMage;
+    if (clerical) return !!actor.system.isPriest;
+    return true;
+  }
+
+  static #maxLevel(entry) {
+    if (entry.type === 'specialability') return Number(entry.system.maxRank?.value) || 0;
+    if (entry.type === 'advantage' || entry.type === 'disadvantage') return Number(entry.system.max?.value) || 0;
+    return 0;
+  }
+
+  // Which items need a variant is registered at runtime by the content modules (dsa5-core etc.) in
+  // the same tables the system's own adoption dialog reads. `items` is ["text"], ["array"] or a
+  // list of item types - the system compares it loosely against 'text'/'array', so do we.
+  static #variantFor(actor, entry) {
+    const config = game.dsa5.config;
+    const table = entry.type === 'specialability' ? config.AbilitiesNeedingAdaption : ['advantage', 'disadvantage'].includes(entry.type) ? config.vantagesNeedingAdaption : null;
+    const rule = table?.[entry.name];
+    if (!rule) return null;
+
+    const kind = String(rule.items);
+    if (kind === 'text') return { kind: 'text', options: [], allowCustom: false };
+    if (kind === 'array') return { kind: 'list', options: (rule.elems ?? []).map((name) => ({ name })), allowCustom: false };
+
+    const options = actor.items
+      .filter((item) => rule.items.includes(item.type))
+      .map((item) => ({ name: item.name, itemId: item.id }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { kind: 'item', options, allowCustom: !!rule.area };
+  }
+
   // Returns the new entry, or null if the same item with the same variant is already in there.
   static async addRequest(actor, item, { level = null, variant = null } = {}) {
     if (!actor.isOwner) return null;
