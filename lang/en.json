@@ -12,6 +12,7 @@
   "STEIGERUNGSPLANER.AddTarget": "Add target",
   "STEIGERUNGSPLANER.PickerSearch": "Search …",
   "STEIGERUNGSPLANER.PickerEmpty": "Nothing found",
+  "STEIGERUNGSPLANER.IndexLoading": "Advancement Planner: loading special abilities, spells and liturgies …",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-click: add to the planner",
   "STEIGERUNGSPLANER.PermanentLossLabel": "Rebuy {label}",
   "STEIGERUNGSPLANER.Empty": "No advancements planned. Shift-click + on the character sheet or use 'Add target' to plan one.",
