@@ -38,17 +38,14 @@ export default class PlannerTab {
     context.plannerSections = this.buildSections(actor);
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
-    // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
-    // becomes "Fertigkeitsspezialisierung (Klettern)", or "(Klettern, Fassaden)" with an addition.
     // Each one is weighed against the available AP on its own, like each target's steps are.
     context.plannerRequests = PlannerData.getRequests(actor).map((request) => {
       const cost = RequestController.requestCost(actor, request);
       return {
         ...request,
-        label: request.variant
-          ? `${request.name.replace(' ()', '')} (${request.variant.name}${request.variant.customEntry ? `, ${request.variant.customEntry}` : ''})`
-          : request.name,
+        label: RequestController.label(request),
         requested: request.status === 'requested',
+        rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
         cost,
         costUnknown: cost === null,
         unaffordable: cost !== null && cost > context.plannerAvailableXP,
