@@ -1,0 +1,32 @@
+<div class="picker-list">
+    <input type="search" class="picker-search" value="{{query}}" placeholder="{{localize 'STEIGERUNGSPLANER.PickerSearch'}}">
+    <div class="picker-filters">
+        <select class="picker-filter-group" aria-label="{{localize 'STEIGERUNGSPLANER.FilterGroup'}}">
+            <option value="">{{localize "STEIGERUNGSPLANER.FilterGroupAll"}}</option>
+            {{#each groupOptions as |option|}}<option value="{{option.id}}" {{#if option.selected}}selected{{/if}}>{{option.label}}</option>{{/each}}
+        </select>
+        <select class="picker-filter-book" aria-label="{{localize 'STEIGERUNGSPLANER.FilterBook'}}">
+            <option value="">{{localize "STEIGERUNGSPLANER.FilterBookAll"}}</option>
+            {{#each books as |book|}}<option value="{{book.name}}" {{#if book.selected}}selected{{/if}}>{{book.name}}</option>{{/each}}
+        </select>
+    </div>
+    <div class="picker-groups">
+        {{#each groups as |group|}}
+        <section class="picker-group" data-group="{{group.id}}">
+            <h3 class="picker-group-label">{{group.label}}</h3>
+            <ol>
+                {{#each group.entries as |entry|}}
+                <li class="picker-entry{{#if entry.selected}} selected{{/if}}" data-action="selectEntry" data-uuid="{{entry.uuid}}">
+                    {{#if entry.img}}<img src="{{entry.img}}" alt="">{{/if}}
+                    <div class="picker-entry-text">
+                        <span class="picker-entry-name">{{entry.label}}</span>
+                        {{#if entry.source}}<small class="picker-entry-source">{{entry.source}}</small>{{/if}}
+                    </div>
+                </li>
+                {{/each}}
+            </ol>
+        </section>
+        {{/each}}
+        <p class="picker-empty" hidden>{{localize "STEIGERUNGSPLANER.PickerEmpty"}}</p>
+    </div>
+</div>

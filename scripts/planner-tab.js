@@ -3,6 +3,8 @@ import PlannerData from './planner-data.js';
 import PlannerController from './planner-controller.js';
 import PlannerPicker from './planner-picker.js';
 import { applyingIds } from './planner-state.js';
+import RequestController from './request-controller.js';
+import RequestPicker from './request-picker.js';
 
 export default class PlannerTab {
   static get partId() {
@@ -34,9 +36,57 @@ export default class PlannerTab {
     const actor = sheet.actor;
 
     context.plannerSections = this.buildSections(actor);
-    context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0);
     context.plannerAvailableXP = PlannerController.availableXP(actor);
+
+    // Each one is weighed against the available AP on its own, like each target's steps are.
+    context.plannerRequests = PlannerData.getRequests(actor).map((request) => {
+      const cost = RequestController.requestCost(actor, request);
+      const levels = RequestController.requestLevels(actor, request)?.map((level) => ({
+        ...level,
+        label: this.romanNumeral(level.value),
+        clickable: !level.owned && request.status === 'planned',
+        tooltip: this.levelTooltip(level, request.level),
+      }));
+      return {
+        ...request,
+        levels,
+        label: RequestController.label(request),
+        requested: request.status === 'requested',
+        rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
+        cost,
+        costUnknown: cost === null,
+        unaffordable: cost !== null && cost > context.plannerAvailableXP,
+      };
+    });
+
+    // Requests count into the planned cost until the GM approves them - then the system charges them.
+    const requestCost = context.plannerRequests.reduce((sum, r) => sum + (r.cost ?? 0), 0);
+    context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0) + requestCost;
+    // The GM doesn't ask themselves - they get a check mark that buys the request right away.
+    context.plannerIsGM = game.user.isGM;
+    context.plannerEmpty =!context.plannerSections.length && !context.plannerRequests.length;
     return context;
+  }
+
+  // A level button's tooltip: how the planned cost changes when picking that level.
+  static levelTooltip(level, planned) {
+    if (level.owned) return game.i18n.localize('STEIGERUNGSPLANER.LevelOwned');
+    if (level.value === planned) return game.i18n.localize('STEIGERUNGSPLANER.LevelPlanned');
+    if (level.delta === null) return game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+    return `${level.delta > 0 ? '+' : ''}${level.delta} AP`;
+  }
+
+  // Levels are written as roman numerals on the sheet ("Reich II"), so the level buttons are too.
+  static romanNumeral(value) {
+    const numerals = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+    let result = '';
+    for (const [n, numeral] of numerals) {
+      while (value >= n) {
+        result += numeral;
+        value -= n;
+      }
+    }
+    return result;
   }
 
   // sheet.hbs (the root part template) hardcodes a <template data-application-part="X">
@@ -101,6 +151,46 @@ export default class PlannerTab {
     });
 
     element.querySelector('[data-plan-add-target]')?.addEventListener('click', (ev) => PlannerPicker.open(sheet, ev));
+    element.querySelector('[data-plan-add-request]')?.addEventListener('click', () => RequestPicker.open(sheet.actor));
+
+    element.querySelectorAll('[data-request-send]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        await RequestController.markRequested(sheet.actor, ev.currentTarget.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-withdraw]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        await RequestController.withdrawRequest(sheet.actor, ev.currentTarget.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-approve]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        const target = ev.currentTarget;
+        target.style.pointerEvents = 'none';
+        await RequestController.approveRequest(sheet.actor, target.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-level]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        const { id, requestLevel } = ev.currentTarget.dataset;
+        await RequestController.setLevel(sheet.actor, id, Number(requestLevel));
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-remove]').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        const { id } = ev.currentTarget.dataset;
+        const row = ev.currentTarget.closest('.planner-request');
+        this.foldThenRun(sheet, element, [row], () => RequestController.removeRequest(sheet.actor, id));
+      });
+    });
 
     element.querySelectorAll('[data-plan-add]').forEach((el) => {
       el.addEventListener('click', async (ev) => {

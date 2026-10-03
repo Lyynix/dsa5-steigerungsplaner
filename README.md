@@ -1,6 +1,6 @@
 # DSA5 - Steigerungsplaner
 
-Ein Foundry-VTT-Modul für das [DSA5-System](https://github.com/Plushtoast/dsa5-foundryVTT), mit dem die Spieler Steigerungen von Talenten, Kampftechniken, Zaubern, Liturgien, Eigenschaften und Basiswerten sowie den Rückkauf permanenter AsP/KaP planen können, statt sie sofort auszuführen.
+Ein Foundry-VTT-Modul für das [DSA5-System](https://github.com/Plushtoast/dsa5-foundryVTT), mit dem die Spieler Steigerungen von Talenten, Kampftechniken, Zaubern, Liturgien, Eigenschaften und Basiswerten sowie den Rückkauf permanenter AsP/KaP planen können, statt sie sofort auszuführen. Neue Sonderfertigkeiten, Vor- und Nachteile, Zauber, Liturgien und mehr lassen sich ebenfalls planen und beim SL anfragen.
 
 ## Was macht das Modul?
 
@@ -26,6 +26,29 @@ Die geplanten Schritte eines Ziels bauen aufeinander auf (z. B. Kraftakt 5→6, 
 - **"Ziel hinzufügen"** oben im Tab: öffnet eine durchsuchbare Liste aller Ziele, für die noch nichts geplant ist, und plant für das gewählte den ersten Schritt.
 - Schritte, für die die verfügbaren AP gerade nicht reichen, werden abgedunkelt.
 
+### Sonderfertigkeiten, Vor- und Nachteile, Zauber & mehr
+
+Neues, das der Charakter noch nicht hat, kauft man nicht Schritt für Schritt, sondern bekommt es vom SL genehmigt. Dafür gibt es oben im Tab den Button **"Sonderfertigkeiten & mehr"**:
+
+- Er öffnet ein Fenster mit allem, was der Charakter lernen könnte: Vor- und Nachteile, Sonderfertigkeiten (allgemein, Kampf, magisch, karmal), Zauber, Rituale, Zaubertricks, Liturgien, Zeremonien, Segnungen und Erweiterungen. Magisches sehen nur Zauberer, Karmales nur Geweihte. Die Liste stammt aus allen Kompendien, die der Spieler sehen darf, und berücksichtigt den Modulfilter der Bibliothek. Beim ersten Öffnen pro Sitzung wird sie einmal geladen.
+- Suche nach Namen oder Kategorie, ab drei Buchstaben auch in den Beschreibungen (diese Treffer stehen ausgegraut am Ende ihrer Gruppe). Dazu Filter nach Kategorie und Buch. Unter jedem Eintrag steht, aus welchem Buch er stammt.
+- Rechts stehen die Details des gewählten Eintrags: Voraussetzungen, Regeltext, Beschreibung und die AP-Kosten. Bei Bedarf wählt man dort Stufe und Variante (z. B. das Talent bei einer Begabung) und übernimmt den Eintrag mit **"Planen"** in den Plan.
+
+Die geplanten Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sie zählen in die geplanten Kosten mit und werden abgedunkelt, wenn die AP nicht reichen.
+
+- **Stufen-Buttons** (I, II, III, …) bei gestuften Einträgen: ändern die geplante Stufe. Der Tooltip zeigt, wie sich die Kosten dadurch ändern.
+- **Papierflieger**: fragt den Eintrag beim SL an. Solange er dort liegt, lässt er sich nicht ändern, aber über den **Pfeil** zurückziehen.
+- **Mülleimer**: verwirft den Eintrag.
+
+Lehnt der SL ab, steht der Eintrag wieder als geplant im Tab, mit dem Hinweis "abgelehnt" und der Begründung als Tooltip. Bekommt der Charakter einen geplanten Eintrag auf anderem Weg (z. B. zieht der SL das Item direkt auf den Bogen), verschwindet er von selbst aus dem Plan.
+
+### Für den SL
+
+- Das Fenster **"Offene Anfragen"** listet alle angefragten Einträge aller Charaktere mit Variante, Stufe, geschätzten Kosten und Voraussetzungen. Es öffnet sich beim Login, wenn etwas offen ist, und sobald ein Spieler etwas anfragt. Über den Button **"Anfragen"** im Akteure-Verzeichnis lässt es sich jederzeit öffnen.
+- **Haken**: genehmigt die Anfrage und kauft den Eintrag über die Funktionen des Systems, genau wie beim Ziehen auf den Bogen (AP-Prüfung, Abzug, AP-Tracker), nur ohne erneute Variantenauswahl.
+- **Verbotsschild**: lehnt ab, optional mit Begründung.
+- Im Steigerungsplaner-Tab eines Charakters sieht der SL statt "anfragen" direkt den Haken und kann geplante Einträge ohne Umweg kaufen.
+
 ## Voraussetzungen
 
 - Foundry VTT **Version 14**
@@ -46,10 +69,13 @@ Die geplanten Schritte eines Ziels bauen aufeinander auf (z. B. Kraftakt 5→6, 
 1. Charakterbogen eines eigenen (Owner-)Charakters öffnen.
 2. Steigerungen planen: im Bogen per **Shift+Klick auf "+"** (oder "-" für Verringerungen), oder im Tab **"Steigerungsplaner"** über **"Ziel hinzufügen"**.
 3. Im Tab **"Steigerungsplaner"** die geplanten Schritte einsehen, ergänzen, anwenden oder verwerfen (siehe oben).
+4. Neue Sonderfertigkeiten, Vor- und Nachteile, Zauber usw. über **"Sonderfertigkeiten & mehr"** planen und beim SL anfragen.
 
 ## Bekannte Einschränkungen
 
 - Der Planer ist auf Charakterbögen (`character`) beschränkt; NSC-, Kreatur- und Fahrzeugbögen werden nicht unterstützt.
+- Voraussetzungen werden nicht geprüft. Das System speichert sie nur als Freitext und prüft sie selbst auch nicht, die Entscheidung liegt beim SL.
+- Die AP-Kosten von Anfragen sind eine Schätzung. Manche Varianten ändern die Kosten, und freie Sprachpunkte werden erst beim Kauf verrechnet. Es gilt, was das System beim Genehmigen abzieht.
 
 ## Mitentwickeln
 

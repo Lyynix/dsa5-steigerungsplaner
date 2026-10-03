@@ -1,0 +1,34 @@
+<div class="approval-list">
+    {{#each actors as |actor|}}
+    <section class="approval-actor" data-actor-id="{{actor.id}}">
+        <header class="approval-actor-header">
+            <img src="{{actor.img}}" alt="">
+            <a class="approval-actor-name" data-action="openSheet">{{actor.name}}</a>
+            <span class="approval-xp">{{localize "STEIGERUNGSPLANER.AvailableXP"}}: {{actor.availableXP}}</span>
+        </header>
+        <ol>
+            {{#each actor.requests as |request|}}
+            <li class="approval-request" data-request-id="{{request.id}}">
+                <div class="approval-request-main">
+                    {{#if request.img}}<img src="{{request.img}}" alt="">{{/if}}
+                    <span class="approval-request-name">{{{request.link}}}</span>
+                    {{#if request.level}}<span class="approval-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>{{/if}}
+                    {{#if request.costUnknown}}
+                    <span class="approval-request-info" data-tooltip="{{localize 'STEIGERUNGSPLANER.CostUnknown'}}">? AP</span>
+                    {{else}}
+                    <span class="approval-request-info">{{request.cost}} AP</span>
+                    {{/if}}
+                    <a class="approval-approve" data-action="approve" data-tooltip="{{localize 'STEIGERUNGSPLANER.Approve'}}"><i class="fas fa-check"></i></a>
+                    <a class="approval-reject" data-action="reject" data-tooltip="{{localize 'STEIGERUNGSPLANER.Reject'}}"><i class="fas fa-ban"></i></a>
+                </div>
+                {{#if request.requirements}}
+                <p class="approval-requirements"><strong>{{localize "STEIGERUNGSPLANER.Requirements"}}:</strong> {{request.requirements}}</p>
+                {{/if}}
+            </li>
+            {{/each}}
+        </ol>
+    </section>
+    {{else}}
+    <p class="approval-empty">{{localize "STEIGERUNGSPLANER.ApprovalEmpty"}}</p>
+    {{/each}}
+</div>

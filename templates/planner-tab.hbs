@@ -4,13 +4,68 @@
         <a class="planner-add-target" data-plan-add-target>
             <i class="fas fa-plus"></i> {{localize "STEIGERUNGSPLANER.AddTarget"}}
         </a>
+        <a class="planner-add-request" data-plan-add-request data-tooltip="{{localize 'STEIGERUNGSPLANER.AddRequestTooltip'}}">
+            <i class="fas fa-scroll"></i> {{localize "STEIGERUNGSPLANER.AddRequest"}}
+        </a>
         <div class="planner-summary">
             <span>{{localize "STEIGERUNGSPLANER.AvailableXP"}}: {{plannerAvailableXP}}</span>
             <span>{{localize "STEIGERUNGSPLANER.TotalCost"}}: {{plannerTotalCost}}</span>
         </div>
     </header>
 
-    {{#if plannerSections.length}}
+    {{#if plannerRequests.length}}
+    <div>
+        <div class="row-section skills table-header lineheight steigerungsplaner-section-requests">
+            <div class="col">{{localize "STEIGERUNGSPLANER.Section.requests"}}</div>
+        </div>
+        {{#each plannerRequests as |request|}}
+        <div class="row-section wrap skills lineheight tableOdd planner-request{{#if request.unaffordable}} planner-request-unaffordable{{/if}}">
+            {{#if request.img}}<img class="planner-group-icon" src="{{request.img}}" alt="">{{/if}}
+            <div class="planner-request-label">{{request.label}}</div>
+            {{#if request.levels}}
+            <span class="planner-request-levels{{#if request.requested}} locked{{/if}}" {{#if request.requested}}data-tooltip="{{localize 'STEIGERUNGSPLANER.LevelLocked'}}"{{/if}}>
+                {{#each request.levels as |level|}}
+                {{#if level.clickable}}
+                <a class="planner-request-level{{#if level.selected}} selected{{/if}}" data-request-level="{{level.value}}" data-id="{{request.id}}" data-tooltip="{{level.tooltip}}">{{level.label}}</a>
+                {{else}}
+                <span class="planner-request-level{{#if level.owned}} owned{{/if}}{{#if level.selected}} selected{{/if}}"{{#unless request.requested}} data-tooltip="{{level.tooltip}}"{{/unless}}>{{level.label}}</span>
+                {{/if}}
+                {{/each}}
+            </span>
+            {{else if request.level}}
+            <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>
+            {{/if}}
+            {{#if request.costUnknown}}
+            <span class="planner-request-info planner-request-cost" data-tooltip="{{localize 'STEIGERUNGSPLANER.CostUnknown'}}">? AP</span>
+            {{else}}
+            <span class="planner-request-info planner-request-cost"{{#if request.unaffordable}} data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestUnaffordable'}}"{{/if}}>{{request.cost}} AP</span>
+            {{/if}}
+            {{#if request.requested}}
+            <span class="planner-request-info"><i class="fas fa-hourglass-half"></i> {{localize "STEIGERUNGSPLANER.RequestPending"}}</span>
+            {{else if request.rejected}}
+            <span class="planner-request-info planner-request-rejected" data-tooltip="{{request.rejectedReason}}"><i class="fas fa-ban"></i> {{localize "STEIGERUNGSPLANER.RequestRejected"}}</span>
+            {{/if}}
+            {{#if @root.plannerIsGM}}
+            <a class="planner-approve" data-request-approve data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.Approve'}}">
+                <i class="fas fa-check"></i>
+            </a>
+            {{else if request.requested}}
+            <a class="planner-withdraw" data-request-withdraw data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestWithdraw'}}">
+                <i class="fas fa-rotate-left"></i>
+            </a>
+            {{else}}
+            <a class="planner-send" data-request-send data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestSend'}}">
+                <i class="fas fa-paper-plane"></i>
+            </a>
+            {{/if}}
+            <a class="planner-cancel" data-request-remove data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestRemove'}}">
+                <i class="fas fa-trash"></i>
+            </a>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
     {{#each plannerSections as |section|}}
     <div>
         <div class="row-section skills table-header lineheight {{section.cssClass}}">
@@ -50,7 +105,8 @@
         {{/each}}
     </div>
     {{/each}}
-    {{else}}
+
+    {{#if plannerEmpty}}
     <p class="planner-empty">{{localize "STEIGERUNGSPLANER.Empty"}}</p>
     {{/if}}
 </div>

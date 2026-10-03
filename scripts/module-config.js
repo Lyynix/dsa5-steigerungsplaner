@@ -3,6 +3,8 @@ export const FLAG_PLAN = 'plan';
 // LIFO stack per target of plan entries that were consumed by a real advance - lets a matching
 // real refund restore the exact step it just undid instead of leaving the plan stale.
 export const FLAG_CONSUMED = 'consumed';
+// Items that need GM approval instead of being bought step by step - see RequestController.
+export const FLAG_REQUESTS = 'requests';
 export const PART_ID = 'steigerungsplaner';
 
 // data-fct values used by the DSA5 "advanceWrapper" action, mapped to our internal target type

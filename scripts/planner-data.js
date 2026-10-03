@@ -1,4 +1,4 @@
-import { FLAG_CONSUMED, FLAG_PLAN, MODULE_ID } from './module-config.js';
+import { FLAG_CONSUMED, FLAG_PLAN, FLAG_REQUESTS, MODULE_ID } from './module-config.js';
 import { applyingIds } from './planner-state.js';
 
 // Reads/writes the plan as an actor flag. The plan is a flat, ordered array of entries;
@@ -18,6 +18,14 @@ export default class PlannerData {
 
   static async saveConsumed(actor, consumed) {
     await actor.setFlag(MODULE_ID, FLAG_CONSUMED, consumed);
+  }
+
+  static getRequests(actor) {
+    return foundry.utils.duplicate(actor.getFlag(MODULE_ID, FLAG_REQUESTS) ?? []);
+  }
+
+  static async saveRequests(actor, requests) {
+    await actor.setFlag(MODULE_ID, FLAG_REQUESTS, requests);
   }
 
   static firstIndex(plan, type, key) {
