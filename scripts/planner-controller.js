@@ -279,6 +279,8 @@ export default class PlannerController {
       }
       return;
     }
+    // Planned after this target's last consume - a fresh commitment, see pruneConsumed.
+    entry.sinceConsume = true;
     const plan = PlannerData.getPlan(actor);
     plan.push(entry);
     await PlannerData.savePlan(actor, plan);
@@ -339,6 +341,10 @@ export default class PlannerController {
 
     if (front && front.to === valueAfterChange) {
       plan.splice(frontIdx, 1);
+      // What's still queued now is the remainder of what was planned before this consume.
+      for (const entry of plan) {
+        if (entry.type === type && entry.key === key) entry.sinceConsume = false;
+      }
       await PlannerData.savePlan(actor, plan);
 
       const consumed = PlannerData.getConsumed(actor);
@@ -355,6 +361,7 @@ export default class PlannerController {
       consumed.splice(topIdx, 1);
       await PlannerData.saveConsumed(actor, consumed);
 
+      top.sinceConsume = false;
       const insertAt = PlannerData.firstIndex(plan, type, key);
       if (insertAt === -1) plan.push(top);
       else plan.splice(insertAt, 0, top);
@@ -368,7 +375,13 @@ export default class PlannerController {
   // silent: true skips the warning notification - used when the removal was a deliberate user
   // action (the tab's "discard all" trash icon) rather than an automatic desync safety net, where
   // the default PlanDiscarded wording ("changed outside the planner") wouldn't make sense.
+  //
+  // The target's consumed history goes too: once its tracking is reset, undoing a step from before
+  // would have to match a value chain that no longer exists. Also when nothing was queued anymore -
+  // a real change nothing in the plan or history expected is exactly that kind of break.
   static async discardQueue(actor, type, key, { silent = false } = {}) {
+    await this.#dropConsumed(actor, type, key);
+
     const plan = PlannerData.getPlan(actor);
     const remaining = plan.filter((e) => !(e.type === type && e.key === key));
     if (remaining.length === plan.length) return;
@@ -377,6 +390,34 @@ export default class PlannerController {
     if (!silent) {
       ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
     }
+  }
+
+  static async #dropConsumed(actor, type, key) {
+    const consumed = PlannerData.getConsumed(actor);
+    const remaining = consumed.filter((e) => !(e.type === type && e.key === key));
+    if (remaining.length !== consumed.length) await PlannerData.saveConsumed(actor, remaining);
+  }
+
+  // Called when the sheet closes. A target's consumed history is only kept while the player is
+  // still working through what they had planned at the last consume - then undoing a step must
+  // keep working, even after reopening the sheet. It's dropped once that's over:
+  // - nothing is queued for the target anymore (everything planned got applied), or
+  // - something was planned on top since the last consume (a fresh commitment).
+  // Plans from before sinceConsume existed don't have it and count as remainder - left alone.
+  static async pruneConsumed(actor) {
+    if (!actor.isOwner) return;
+
+    const consumed = PlannerData.getConsumed(actor);
+    if (!consumed.length) return;
+
+    const plan = PlannerData.getPlan(actor);
+    const stale = (entry) => {
+      const queued = plan.filter((e) => e.type === entry.type && e.key === entry.key);
+      return !queued.length || queued.some((e) => e.sinceConsume === true);
+    };
+
+    const remaining = consumed.filter((entry) => !stale(entry));
+    if (remaining.length !== consumed.length) await PlannerData.saveConsumed(actor, remaining);
   }
 
   // Removes every plan/consumed entry for a target, no questions asked - for when the target
