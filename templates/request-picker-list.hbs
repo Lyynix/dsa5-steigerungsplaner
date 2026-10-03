@@ -1,0 +1,19 @@
+<div class="picker-list">
+    <input type="search" class="picker-search" value="{{query}}" placeholder="{{localize 'STEIGERUNGSPLANER.PickerSearch'}}">
+    <div class="picker-groups">
+        {{#each groups as |group|}}
+        <section class="picker-group">
+            <h3 class="picker-group-label">{{group.label}}</h3>
+            <ol>
+                {{#each group.entries as |entry|}}
+                <li class="picker-entry{{#if entry.selected}} selected{{/if}}" data-action="selectEntry" data-uuid="{{entry.uuid}}">
+                    {{#if entry.img}}<img src="{{entry.img}}" alt="">{{/if}}
+                    <span>{{entry.label}}</span>
+                </li>
+                {{/each}}
+            </ol>
+        </section>
+        {{/each}}
+        <p class="picker-empty" hidden>{{localize "STEIGERUNGSPLANER.PickerEmpty"}}</p>
+    </div>
+</div>

@@ -1,0 +1,51 @@
+<div class="picker-details">
+    {{#if entry}}
+    <header class="picker-details-header">
+        {{#if entry.img}}<img src="{{entry.img}}" alt="">{{/if}}
+        <div>
+            <h2>{{entry.label}}</h2>
+            <span class="picker-details-group">{{entry.groupLabel}}</span>
+        </div>
+    </header>
+
+    {{#if entry.requirements}}
+    <p><strong>{{localize "STEIGERUNGSPLANER.Requirements"}}:</strong> {{entry.requirements}}</p>
+    {{/if}}
+
+    {{#if entry.extension}}
+    <p class="{{#if entry.extensionTooLow}}picker-warning{{/if}}">{{localize "STEIGERUNGSPLANER.ExtensionFW" required=entry.extension.requiredFW current=entry.extension.currentFW source=entry.extension.source}}</p>
+    {{/if}}
+
+    {{#if entry.levels.length}}
+    <label class="picker-field">
+        <span>{{localize "STEIGERUNGSPLANER.Level"}}</span>
+        <select name="level">
+            {{#each entry.levels as |level|}}<option value="{{level}}">{{level}}</option>{{/each}}
+        </select>
+    </label>
+    {{/if}}
+
+    {{#if entry.variant}}
+    <label class="picker-field">
+        <span>{{localize "STEIGERUNGSPLANER.Variant"}}</span>
+        {{#if entry.variantText}}
+        <input type="text" name="variant">
+        {{else}}
+        <select name="variant">
+            {{#each entry.variant.options as |option|}}<option value="{{@index}}">{{option.name}}</option>{{/each}}
+        </select>
+        {{/if}}
+    </label>
+    {{#if entry.variant.allowCustom}}
+    <label class="picker-field">
+        <span>{{localize "STEIGERUNGSPLANER.VariantCustom"}}</span>
+        <input type="text" name="custom">
+    </label>
+    {{/if}}
+    {{/if}}
+
+    <button type="button" data-action="addRequest"><i class="fas fa-plus"></i> {{localize "STEIGERUNGSPLANER.RequestAdd"}}</button>
+    {{else}}
+    <p class="picker-hint">{{localize "STEIGERUNGSPLANER.RequestPickerHint"}}</p>
+    {{/if}}
+</div>

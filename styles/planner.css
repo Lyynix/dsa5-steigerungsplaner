@@ -315,10 +315,126 @@
   opacity: 0.75;
 }
 
-/* Sits right next to the title - the auto margin pushes the AP summary to the right edge. */
-.steigerungsplaner-tab .planner-add-target {
-  margin: 0 auto 0 0.75rem;
+/* Sit right next to the title - the auto margin on the last one pushes the AP summary to the right. */
+.steigerungsplaner-tab .planner-add-target,
+.steigerungsplaner-tab .planner-add-request {
+  margin-left: 0.75rem;
   cursor: pointer;
+}
+
+.steigerungsplaner-tab .planner-add-request {
+  margin-right: auto;
+}
+
+/* Request picker window (request-picker.js): list on the left, details of the selected entry on
+   the right, both scrolling on their own. */
+.steigerungsplaner-request-picker {
+  & .window-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    overflow: hidden;
+  }
+
+  /* Entries and groups are hidden via the attribute when filtering - display rules below would
+     otherwise override it. */
+  & [hidden] {
+    display: none !important;
+  }
+
+  & .picker-list,
+  & .picker-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  & .picker-groups,
+  & .picker-details {
+    overflow-y: auto;
+  }
+
+  & .picker-group-label {
+    margin: 0.5rem 0 0.25rem;
+    border: none;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  & .picker-group ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  & .picker-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(127, 127, 127, 0.15);
+    }
+
+    &.selected {
+      background: rgba(127, 127, 127, 0.3);
+      font-weight: bold;
+    }
+
+    & img {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      border: none;
+    }
+  }
+
+  & .picker-details-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    & img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border: none;
+    }
+
+    & h2 {
+      margin: 0;
+      border: none;
+    }
+  }
+
+  & .picker-details-group,
+  & .picker-hint {
+    opacity: 0.75;
+  }
+
+  & .picker-hint {
+    font-style: italic;
+  }
+
+  & .picker-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    & > span {
+      flex: 0 0 7rem;
+    }
+  }
+
+  & .picker-warning {
+    color: var(--color-level-error, #c00);
+  }
 }
 
 /* Add-target picker (planner-picker.js). Lives on document.body, so nothing here is scoped to the

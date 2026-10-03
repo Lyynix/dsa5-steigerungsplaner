@@ -16,13 +16,21 @@ const GROUP_ORDER = [
   'spellextension',
 ];
 
-// Our own labels where the system has none that fits - the special ability groups are our split,
-// and "Zaubererweiterung" would be wrong for liturgy/ceremony extensions.
+// Own labels throughout: the system's TYPES.Item.* are singular, the special ability groups are our
+// own split, and "Zaubererweiterung" would be wrong for liturgy/ceremony extensions.
 const GROUP_LABELS = {
+  advantage: 'STEIGERUNGSPLANER.Group.advantage',
+  disadvantage: 'STEIGERUNGSPLANER.Group.disadvantage',
   'sf-general': 'STEIGERUNGSPLANER.Group.sfGeneral',
   'sf-combat': 'STEIGERUNGSPLANER.Group.sfCombat',
   'sf-magical': 'STEIGERUNGSPLANER.Group.sfMagical',
   'sf-clerical': 'STEIGERUNGSPLANER.Group.sfClerical',
+  spell: 'STEIGERUNGSPLANER.Group.spell',
+  ritual: 'STEIGERUNGSPLANER.Group.ritual',
+  magictrick: 'STEIGERUNGSPLANER.Group.magictrick',
+  liturgy: 'STEIGERUNGSPLANER.Group.liturgy',
+  ceremony: 'STEIGERUNGSPLANER.Group.ceremony',
+  blessing: 'STEIGERUNGSPLANER.Group.blessing',
   spellextension: 'STEIGERUNGSPLANER.Group.extensions',
 };
 
@@ -96,7 +104,7 @@ export default class RequestController {
 
     return GROUP_ORDER.filter((id) => groups.get(id).length).map((id) => ({
       id,
-      label: game.i18n.localize(GROUP_LABELS[id] ?? `TYPES.Item.${id}`),
+      label: game.i18n.localize(GROUP_LABELS[id]),
       entries: groups.get(id).sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }
