@@ -355,6 +355,16 @@
     overflow-y: auto;
   }
 
+  & .picker-filters {
+    display: flex;
+    gap: 0.5rem;
+
+    & select {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
   & .picker-group-label {
     margin: 0.5rem 0 0.25rem;
     border: none;

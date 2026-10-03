@@ -32,8 +32,11 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
 
   #catalog = [];
   #documents = new Map();
+  #sources = new Map();
   #selected = null;
   #query = '';
+  #book = '';
+  #group = '';
   #focusSearch = true;
 
   // The actor is kept out of the options on purpose - ApplicationV2 merges and freezes those.
@@ -50,6 +53,14 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     const context = await super._prepareContext(options);
     this.#catalog = RequestController.catalog(this.actor, await RequestIndex.get());
 
+    // Only books and groups that have something for this character are offered as filters.
+    // A filter whose last entry was just planned would otherwise hide everything behind "All".
+    const books = new Set(this.#catalog.flatMap((group) => group.entries.flatMap((entry) => entry.sources)));
+    if (!books.has(this.#book)) this.#book = '';
+    if (!this.#catalog.some((group) => group.id === this.#group)) this.#group = '';
+    context.books = [...books].sort((a, b) => a.localeCompare(b)).map((name) => ({ name, selected: name === this.#book }));
+    context.groupOptions = this.#catalog.map((group) => ({ id: group.id, label: group.label, selected: group.id === this.#group }));
+
     context.query = this.#query;
     context.groups = this.#catalog.map((group) => ({
       ...group,
@@ -60,6 +71,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
         selected: entry.uuid === this.#selected,
       })),
     }));
+    this.#sources = new Map(this.#catalog.flatMap((group) => group.entries.map((entry) => [entry.uuid, entry.sources])));
     context.entry = await this.#details();
     return context;
   }
@@ -71,6 +83,16 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     if (options.parts.includes('list')) {
       search.addEventListener('input', () => {
         this.#query = search.value;
+        this.#filter();
+      });
+      const book = this.element.querySelector('.picker-filter-book');
+      book.addEventListener('change', () => {
+        this.#book = book.value;
+        this.#filter();
+      });
+      const group = this.element.querySelector('.picker-filter-group');
+      group.addEventListener('change', () => {
+        this.#group = group.value;
         this.#filter();
       });
       this.#filter();
@@ -176,16 +198,20 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     }
   }
 
-  // Matches either an entry's name or its group's, so "Kampf" lists all combat special abilities.
+  // The search matches either an entry's name or its group's, so "Kampf" lists all combat special
+  // abilities. The book and category filters narrow that down further.
   #filter() {
     const q = this.#query.trim().toLowerCase();
     let anyVisible = false;
 
     for (const group of this.element.querySelectorAll('.picker-group')) {
       const groupMatches = group.querySelector('.picker-group-label').textContent.toLowerCase().includes(q);
+      const groupAllowed = !this.#group || group.dataset.group === this.#group;
       let groupVisible = false;
       for (const li of group.querySelectorAll('.picker-entry')) {
-        li.hidden = !groupMatches && !li.querySelector('.picker-entry-name').textContent.toLowerCase().includes(q);
+        const nameMatches = li.querySelector('.picker-entry-name').textContent.toLowerCase().includes(q);
+        const bookAllowed = !this.#book || this.#sources.get(li.dataset.uuid)?.includes(this.#book);
+        li.hidden = !groupAllowed || !bookAllowed || (!groupMatches && !nameMatches);
         if (!li.hidden) groupVisible = true;
       }
       group.hidden = !groupVisible;
