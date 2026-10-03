@@ -95,6 +95,7 @@ export default class RequestController {
         name: entry.name,
         type: entry.type,
         img: entry.img,
+        sources: entry.sources ?? [],
         requirements: entry.system.requirements?.value ?? '',
         level,
         variant,
@@ -158,6 +159,87 @@ export default class RequestController {
       .map((item) => ({ name: item.name, itemId: item.id }))
       .sort((a, b) => a.name.localeCompare(b.name));
     return { kind: 'item', options, allowCustom: !!rule.area };
+  }
+
+  // What buying the item would cost in AP, the way the system charges it: for leveled items from the
+  // level the character has up to `level`, for spells and liturgies their activation. null if it
+  // can't be told yet, e.g. a cost by StF while the variant isn't one of the character's items.
+  // `item` is anything with type, name and system - an index entry or the full item.
+  static estimateCost(actor, item, { level = null, variant = null } = {}) {
+    const system = item.system;
+    switch (item.type) {
+      case 'spell':
+      case 'ritual':
+      case 'liturgy':
+      case 'ceremony': {
+        const costs = game.dsa5.config.advancementCosts[system.StF?.value];
+        if (!costs) return null;
+        let sum = 0;
+        for (let i = 0; i <= (Number(system.talentValue?.value) || 0); i++) sum += costs[i];
+        return sum;
+      }
+      case 'blessing':
+      case 'magictrick':
+        return 1;
+      case 'spellextension':
+        return this.#number(system.APValue?.value);
+    }
+
+    const costs = this.levelCosts(actor, item, variant);
+    if (!costs) return null;
+    const from = this.#ownedLevel(actor, item, variant);
+    const to = level ?? from + 1;
+    let sum = 0;
+    for (let i = from; i < to; i++) {
+      if (costs[i] === undefined) return null;
+      sum += costs[i];
+    }
+    return sum;
+  }
+
+  // AP cost of each level of a special ability/advantage/disadvantage, [level 1, level 2, ...], or
+  // null if it can't be told yet. APValue can be "10" (every level), "10;20;30" (per level),
+  // "4/8/12/16" (by the variant's StF) or "5,10" (the first, second ... of that item) - the system
+  // resolves them in this order when buying.
+  static levelCosts(actor, item, variant = null) {
+    let value = String(item.system.APValue?.value ?? '').trim();
+    const base = item.name.replace(' ()', '');
+
+    // Special abilities only count instances with the same variant, advantages count all of them.
+    if (value.includes(',') && (variant || item.type !== 'specialability')) {
+      const prefix = item.type === 'specialability' ? `${base} (${variant.name}` : base;
+      const count = actor.items.filter((i) => i.type === item.type && i.name.includes(prefix)).length;
+      value = value.split(',')[count]?.trim();
+      if (!value) return null;
+    }
+
+    if (value.includes('/')) {
+      const stf = variant?.itemId ? actor.items.get(variant.itemId)?.system.StF?.value : null;
+      if (!stf) return null;
+      value = value.split('/')[stf.charCodeAt(0) - 65]?.trim();
+      if (!value) return null;
+    }
+
+    const costs = value.includes(';') ? value.split(';').map((v) => this.#number(v)) : null;
+    if (costs) return costs.includes(null) ? null : costs;
+
+    const cost = this.#number(value);
+    if (cost === null) return null;
+    return Array(Math.max(this.#maxLevel(item), 1)).fill(cost);
+  }
+
+  // The level the character already has of this item (with this variant), 0 if none.
+  static #ownedLevel(actor, item, variant) {
+    const base = item.name.replace(' ()', '');
+    const name = variant ? `${base} (${variant.name}${variant.customEntry ? `, ${variant.customEntry}` : ''})` : item.name;
+    const owned = actor.items.find((i) => i.type === item.type && i.name === name);
+    return owned ? Number(owned.system.step?.value) || 0 : 0;
+  }
+
+  static #number(value) {
+    const text = String(value ?? '').trim();
+    const number = Number(text);
+    return !text || Number.isNaN(number) ? null : number;
   }
 
   // Returns the new entry, or null if the same item with the same variant is already in there.

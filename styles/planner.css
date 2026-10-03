@@ -395,6 +395,21 @@
     }
   }
 
+  & .picker-entry-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  & .picker-entry-source {
+    overflow: hidden;
+    font-size: var(--font-size-10);
+    font-weight: normal;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.65;
+  }
+
   & .picker-details-header {
     display: flex;
     align-items: center;
@@ -434,6 +449,40 @@
 
   & .picker-warning {
     color: var(--color-level-error, #c00);
+  }
+
+  /* What the player chooses and pays sits above the description, which can get long. */
+  & .picker-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 3px;
+    background: rgba(127, 127, 127, 0.1);
+
+    & p {
+      margin: 0;
+    }
+  }
+
+  & .picker-costs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+
+  & .picker-details > p {
+    margin: 0;
+  }
+
+  & .picker-properties,
+  & .picker-description {
+    line-height: 1.4;
+  }
+
+  & .picker-description {
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(127, 127, 127, 0.3);
   }
 }
 

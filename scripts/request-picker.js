@@ -10,7 +10,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 export default class RequestPicker extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     classes: ['steigerungsplaner-request-picker'],
-    position: { width: 760, height: 600 },
+    position: { width: 880, height: 640 },
     window: { icon: 'fas fa-scroll', resizable: true },
     actions: {
       selectEntry: RequestPicker.#onSelectEntry,
@@ -31,6 +31,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
   }
 
   #catalog = [];
+  #documents = new Map();
   #selected = null;
   #query = '';
   #focusSearch = true;
@@ -55,10 +56,11 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
       entries: group.entries.map((entry) => ({
         ...entry,
         label: entry.name.replace(' ()', ''),
+        source: entry.sources.join(', '),
         selected: entry.uuid === this.#selected,
       })),
     }));
-    context.entry = this.#details();
+    context.entry = await this.#details();
     return context;
   }
 
@@ -72,6 +74,15 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
         this.#filter();
       });
       this.#filter();
+    }
+
+    // The cost depends on the chosen level and variant, so it follows the fields.
+    if (options.parts.includes('details') && context.entry) {
+      const details = this.#detailsElement();
+      for (const field of details.querySelectorAll('[name]')) {
+        field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', () => this.#updateCost());
+      }
+      this.#updateCost();
     }
 
     if (this.#focusSearch) {
@@ -89,18 +100,80 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     return null;
   }
 
-  #details() {
+  // The full item from its compendium, for what the index doesn't have (description, rules text).
+  async #document(uuid) {
+    if (!this.#documents.has(uuid)) this.#documents.set(uuid, await fromUuid(uuid));
+    return this.#documents.get(uuid);
+  }
+
+  async #details() {
     const entry = this.#selectedEntry();
     if (!entry) return null;
+
+    const doc = await this.#document(entry.uuid);
+    const enrich = (html) => (html ? foundry.applications.ux.TextEditor.implementation.enrichHTML(html, { relativeTo: doc, secrets: doc?.isOwner }) : '');
+    const system = doc?.system;
 
     const levels = entry.level ? Array.from({ length: entry.level.max - entry.level.min + 1 }, (_, i) => entry.level.min + i) : [];
     return {
       ...entry,
       label: entry.name.replace(' ()', ''),
+      source: entry.sources.join(', '),
       levels,
       variantText: entry.variant?.kind === 'text',
       extensionTooLow: !!entry.extension && entry.extension.currentFW < entry.extension.requiredFW,
+      // The same short facts the system posts to chat (rule, casting time, AsP cost, ...); it leaves
+      // them out itself if the GM obfuscated the details.
+      properties: system?.chatDataToString ? await enrich(system.chatDataToString(doc.name)) : '',
+      description: system && !system.obfuscation?.description ? await enrich(system.description?.value) : '',
+      stf: ['spell', 'ritual', 'liturgy', 'ceremony'].includes(entry.type) ? system?.StF?.value : null,
+      leveled: !!entry.level,
     };
+  }
+
+  #detailsElement() {
+    return this.element.querySelector('[data-application-part="details"]');
+  }
+
+  // The level and variant currently chosen in the details. `missingVariant` is set when a variant is
+  // needed but none is entered, the cost can still be shown without it for most items.
+  #readChoice(entry) {
+    const details = this.#detailsElement();
+    const level = entry.level ? Number(details.querySelector('[name="level"]').value) : null;
+
+    let variant = null;
+    if (entry.variant?.kind === 'text') {
+      const name = details.querySelector('[name="variant"]').value.trim();
+      if (name) variant = { name };
+    } else if (entry.variant) {
+      const option = entry.variant.options[Number(details.querySelector('[name="variant"]').value)];
+      if (option) {
+        variant = { ...option };
+        const custom = details.querySelector('[name="custom"]')?.value.trim();
+        if (custom) variant.customEntry = custom;
+      }
+    }
+    return { level, variant, missingVariant: !!entry.variant && !variant };
+  }
+
+  async #updateCost() {
+    const entry = this.#selectedEntry();
+    const details = this.#detailsElement();
+    if (!entry || !details) return;
+
+    const doc = (await this.#document(entry.uuid)) ?? entry;
+    const { level, variant } = this.#readChoice(entry);
+    const unknown = game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+
+    const cost = RequestController.estimateCost(this.actor, doc, { level, variant });
+    const costField = details.querySelector('.picker-cost');
+    if (costField) costField.textContent = cost === null ? `${unknown} (${doc.system.APValue?.value ?? '?'})` : `${cost} AP`;
+
+    const levelField = details.querySelector('.picker-level-costs');
+    if (levelField) {
+      const costs = RequestController.levelCosts(this.actor, doc, variant);
+      levelField.textContent = costs ? costs.map((c) => `${c}`).join(' / ') : unknown;
+    }
   }
 
   // Matches either an entry's name or its group's, so "Kampf" lists all combat special abilities.
@@ -112,7 +185,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
       const groupMatches = group.querySelector('.picker-group-label').textContent.toLowerCase().includes(q);
       let groupVisible = false;
       for (const li of group.querySelectorAll('.picker-entry')) {
-        li.hidden = !groupMatches && !li.textContent.toLowerCase().includes(q);
+        li.hidden = !groupMatches && !li.querySelector('.picker-entry-name').textContent.toLowerCase().includes(q);
         if (!li.hidden) groupVisible = true;
       }
       group.hidden = !groupVisible;
@@ -133,21 +206,8 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     const entry = this.#selectedEntry();
     if (!entry) return;
 
-    const details = this.element.querySelector('[data-application-part="details"]');
-    const level = entry.level ? Number(details.querySelector('[name="level"]').value) : null;
-
-    let variant = null;
-    if (entry.variant?.kind === 'text') {
-      const name = details.querySelector('[name="variant"]').value.trim();
-      if (!name) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
-      variant = { name };
-    } else if (entry.variant) {
-      const option = entry.variant.options[Number(details.querySelector('[name="variant"]').value)];
-      if (!option) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
-      variant = { ...option };
-      const custom = details.querySelector('[name="custom"]')?.value.trim();
-      if (custom) variant.customEntry = custom;
-    }
+    const { level, variant, missingVariant } = this.#readChoice(entry);
+    if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
 
     const added = await RequestController.addRequest(this.actor, entry, { level, variant });
     if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestExists', { name: entry.name.replace(' ()', '') }));

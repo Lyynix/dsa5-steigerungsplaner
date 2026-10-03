@@ -8,7 +8,10 @@
                 {{#each group.entries as |entry|}}
                 <li class="picker-entry{{#if entry.selected}} selected{{/if}}" data-action="selectEntry" data-uuid="{{entry.uuid}}">
                     {{#if entry.img}}<img src="{{entry.img}}" alt="">{{/if}}
-                    <span>{{entry.label}}</span>
+                    <div class="picker-entry-text">
+                        <span class="picker-entry-name">{{entry.label}}</span>
+                        {{#if entry.source}}<small class="picker-entry-source">{{entry.source}}</small>{{/if}}
+                    </div>
                 </li>
                 {{/each}}
             </ol>
