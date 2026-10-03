@@ -19,11 +19,16 @@
             <div class="col">{{localize "STEIGERUNGSPLANER.Section.requests"}}</div>
         </div>
         {{#each plannerRequests as |request|}}
-        <div class="row-section wrap skills lineheight tableOdd planner-request">
+        <div class="row-section wrap skills lineheight tableOdd planner-request{{#if request.unaffordable}} planner-request-unaffordable{{/if}}">
             {{#if request.img}}<img class="planner-group-icon" src="{{request.img}}" alt="">{{/if}}
             <div class="planner-request-label">{{request.label}}</div>
             {{#if request.level}}
             <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>
+            {{/if}}
+            {{#if request.costUnknown}}
+            <span class="planner-request-info planner-request-cost" data-tooltip="{{localize 'STEIGERUNGSPLANER.CostUnknown'}}">? AP</span>
+            {{else}}
+            <span class="planner-request-info planner-request-cost"{{#if request.unaffordable}} data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestUnaffordable'}}"{{/if}}>{{request.cost}} AP</span>
             {{/if}}
             {{#if request.requested}}
             <span class="planner-request-info"><i class="fas fa-hourglass-half"></i> {{localize "STEIGERUNGSPLANER.RequestPending"}}</span>
