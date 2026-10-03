@@ -4,6 +4,7 @@ import PlannerController from './planner-controller.js';
 import PlannerPicker from './planner-picker.js';
 import { applyingIds } from './planner-state.js';
 import RequestController from './request-controller.js';
+import RequestPicker from './request-picker.js';
 
 export default class PlannerTab {
   static get partId() {
@@ -39,10 +40,12 @@ export default class PlannerTab {
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
     // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
-    // becomes "Fertigkeitsspezialisierung (Klettern)".
+    // becomes "Fertigkeitsspezialisierung (Klettern)", or "(Klettern, Fassaden)" with an addition.
     context.plannerRequests = PlannerData.getRequests(actor).map((request) => ({
       ...request,
-      label: request.variant ? `${request.name.replace(' ()', '')} (${request.variant.name})` : request.name,
+      label: request.variant
+        ? `${request.name.replace(' ()', '')} (${request.variant.name}${request.variant.customEntry ? `, ${request.variant.customEntry}` : ''})`
+        : request.name,
       requested: request.status === 'requested',
     }));
     context.plannerEmpty = !context.plannerSections.length && !context.plannerRequests.length;
@@ -111,6 +114,7 @@ export default class PlannerTab {
     });
 
     element.querySelector('[data-plan-add-target]')?.addEventListener('click', (ev) => PlannerPicker.open(sheet, ev));
+    element.querySelector('[data-plan-add-request]')?.addEventListener('click', () => RequestPicker.open(sheet.actor));
 
     element.querySelectorAll('[data-request-send]').forEach((el) => {
       el.addEventListener('click', async (ev) => {

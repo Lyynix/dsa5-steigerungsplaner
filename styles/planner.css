@@ -315,10 +315,193 @@
   opacity: 0.75;
 }
 
-/* Sits right next to the title - the auto margin pushes the AP summary to the right edge. */
-.steigerungsplaner-tab .planner-add-target {
-  margin: 0 auto 0 0.75rem;
+/* Sit right next to the title - the auto margin on the last one pushes the AP summary to the right. */
+.steigerungsplaner-tab .planner-add-target,
+.steigerungsplaner-tab .planner-add-request {
+  margin-left: 0.75rem;
   cursor: pointer;
+}
+
+.steigerungsplaner-tab .planner-add-request {
+  margin-right: auto;
+}
+
+/* Request picker window (request-picker.js): list on the left, details of the selected entry on
+   the right, both scrolling on their own. */
+.steigerungsplaner-request-picker {
+  & .window-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    overflow: hidden;
+  }
+
+  /* Entries and groups are hidden via the attribute when filtering - display rules below would
+     otherwise override it. */
+  & [hidden] {
+    display: none !important;
+  }
+
+  & .picker-list,
+  & .picker-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  & .picker-groups,
+  & .picker-details {
+    overflow-y: auto;
+  }
+
+  & .picker-filters {
+    display: flex;
+    gap: 0.5rem;
+
+    & select {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  & .picker-group-label {
+    margin: 0.5rem 0 0.25rem;
+    border: none;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* Flex so description-only hits can be moved behind the name hits with `order`. */
+  & .picker-group ol {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  & .picker-entry.description-match {
+    order: 1;
+    opacity: 0.6;
+  }
+
+  & .picker-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(127, 127, 127, 0.15);
+    }
+
+    &.selected {
+      background: rgba(127, 127, 127, 0.3);
+      font-weight: bold;
+    }
+
+    & img {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      border: none;
+    }
+  }
+
+  & .picker-entry-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  & .picker-entry-source {
+    overflow: hidden;
+    font-size: var(--font-size-10);
+    font-weight: normal;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.65;
+  }
+
+  & .picker-details-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    & img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border: none;
+    }
+
+    & h2 {
+      margin: 0;
+      border: none;
+    }
+  }
+
+  & .picker-details-group,
+  & .picker-hint {
+    opacity: 0.75;
+  }
+
+  & .picker-hint {
+    font-style: italic;
+  }
+
+  & .picker-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    & > span {
+      flex: 0 0 7rem;
+    }
+  }
+
+  & .picker-warning {
+    color: var(--color-level-error, #c00);
+  }
+
+  /* What the player chooses and pays sits above the description, which can get long. */
+  & .picker-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 3px;
+    background: rgba(127, 127, 127, 0.1);
+
+    & p {
+      margin: 0;
+    }
+  }
+
+  & .picker-costs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+
+  & .picker-details > p {
+    margin: 0;
+  }
+
+  & .picker-properties,
+  & .picker-description {
+    line-height: 1.4;
+  }
+
+  & .picker-description {
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(127, 127, 127, 0.3);
+  }
 }
 
 /* Add-target picker (planner-picker.js). Lives on document.body, so nothing here is scoped to the

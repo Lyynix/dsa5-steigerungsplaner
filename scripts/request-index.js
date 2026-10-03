@@ -24,6 +24,8 @@ const INDEX_FIELDS = [
   'system.StF.value',
   'system.talentValue',
   'system.source',
+  'system.description.value',
+  'system.obfuscation.description',
 ];
 
 const CONCURRENCY = 4;
@@ -60,8 +62,9 @@ export default class RequestIndex {
     );
 
     const progress = ui.notifications.info('STEIGERUNGSPLANER.IndexLoading', { localize: true, progress: true, console: false });
-    const seen = new Set();
+    const seen = new Map();
     const entries = [];
+    const sourceNames = new Map();
 
     try {
       for (let i = 0; i < packs.length; i += CONCURRENCY) {
@@ -69,21 +72,35 @@ export default class RequestIndex {
         const indexes = await Promise.all(batch.map((pack) => pack.getIndex({ fields: INDEX_FIELDS })));
 
         batch.forEach((pack, j) => {
+          const source = this.#sourceName(pack, sourceNames);
           for (const entry of indexes[j]) {
             if (!REQUESTABLE_TYPES.has(entry.type)) continue;
 
-            // The same item often exists in several packs (core rules plus a book module) - keep one.
+            // The same item often exists in several packs (core rules plus a book module) - keep the
+            // first one, but list every book it's in.
             const key = `${entry.type}:${entry.name}`;
-            if (seen.has(key)) continue;
-            seen.add(key);
+            const existing = seen.get(key);
+            if (existing) {
+              if (!existing.sources.includes(source)) existing.sources.push(source);
+              continue;
+            }
 
-            entries.push({
+            // The description is only kept as plain search text - the details load the full item.
+            // A copy without it, the index object itself is Foundry's cached pack index.
+            const { description: rawDescription, ...system } = entry.system ?? {};
+            const description = system.obfuscation?.description ? '' : rawDescription?.value;
+
+            const item = {
               uuid: entry.uuid ?? `Compendium.${pack.collection}.Item.${entry._id}`,
               name: entry.name,
               type: entry.type,
               img: entry.img,
-              system: entry.system ?? {},
-            });
+              sources: [source],
+              searchText: this.#plainText(description),
+              system,
+            };
+            seen.set(key, item);
+            entries.push(item);
           }
         });
 
@@ -97,5 +114,31 @@ export default class RequestIndex {
     // Removes itself at exactly 100 %, which the loop above never reaches without any packs.
     if (!packs.length) progress.update({ pct: 1 });
     return entries;
+  }
+
+  // Lowercase text of a description for searching. Links like @UUID[...]{Finte} keep their label;
+  // DOMParser decodes the entities without loading any of the images.
+  static #parser = new DOMParser();
+
+  static #plainText(html) {
+    if (!html) return '';
+    const text = html.replace(/@\w+\[[^\]]*\]\{([^}]*)\}/g, '$1').replace(/@\w+\[([^\]]*)\]/g, '$1');
+    const plain = this.#parser.parseFromString(text, 'text/html').body.textContent ?? '';
+    return plain.replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  // The book a pack belongs to, named like the item library's module filter does it: the module's
+  // own translated name if it has one, otherwise its title. World packs fall back to the pack label.
+  static #sourceName(pack, cache) {
+    const packageName = pack.metadata.packageName;
+    if (cache.has(packageName)) return cache.get(packageName);
+
+    let name;
+    if (game.i18n.has(`${packageName}.name`)) name = game.i18n.localize(`${packageName}.name`);
+    else if (packageName === game.system.id) name = game.system.title;
+    else name = game.modules.get(packageName)?.title.replace(/The Dark Eye 5th Ed. - /i, '') || pack.metadata.label;
+
+    cache.set(packageName, name);
+    return name;
   }
 }
