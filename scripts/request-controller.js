@@ -402,6 +402,31 @@ export default class RequestController {
     return adoption;
   }
 
+  // Drops every request the character already has the item for, at the wanted level if it has one.
+  static async pruneFulfilled(actor) {
+    if (!actor.isOwner) return;
+
+    const requests = PlannerData.getRequests(actor);
+    const remaining = requests.filter((r) => !this.#fulfilled(actor, r));
+    if (remaining.length === requests.length) return;
+
+    await PlannerData.saveRequests(actor, remaining);
+  }
+
+  static #fulfilled(actor, request) {
+    const item = actor.items.find((i) => i.type === request.type && i.name === this.#itemName(request));
+    if (!item) return false;
+    return !request.level || (Number(item.system.step?.value) || 0) >= request.level;
+  }
+
+  // The name the system gives the bought item - advantages don't take the variant's addition.
+  static #itemName(request) {
+    if (!request.variant) return request.name;
+    const base = request.name.replace(' ()', '');
+    const custom = request.type === 'specialability' && request.variant.customEntry ? `, ${request.variant.customEntry}` : '';
+    return `${base} (${request.variant.name}${custom})`;
+  }
+
   static async removeRequest(actor, id) {
     if (!actor.isOwner) return;
 
