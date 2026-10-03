@@ -22,7 +22,17 @@
         <div class="row-section wrap skills lineheight tableOdd planner-request{{#if request.unaffordable}} planner-request-unaffordable{{/if}}">
             {{#if request.img}}<img class="planner-group-icon" src="{{request.img}}" alt="">{{/if}}
             <div class="planner-request-label">{{request.label}}</div>
-            {{#if request.level}}
+            {{#if request.levels}}
+            <span class="planner-request-levels{{#if request.requested}} locked{{/if}}" {{#if request.requested}}data-tooltip="{{localize 'STEIGERUNGSPLANER.LevelLocked'}}"{{/if}}>
+                {{#each request.levels as |level|}}
+                {{#if level.clickable}}
+                <a class="planner-request-level{{#if level.selected}} selected{{/if}}" data-request-level="{{level.value}}" data-id="{{request.id}}" data-tooltip="{{level.tooltip}}">{{level.label}}</a>
+                {{else}}
+                <span class="planner-request-level{{#if level.owned}} owned{{/if}}{{#if level.selected}} selected{{/if}}"{{#unless request.requested}} data-tooltip="{{level.tooltip}}"{{/unless}}>{{level.label}}</span>
+                {{/if}}
+                {{/each}}
+            </span>
+            {{else if request.level}}
             <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>
             {{/if}}
             {{#if request.costUnknown}}

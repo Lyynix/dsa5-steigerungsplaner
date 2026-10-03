@@ -251,6 +251,54 @@ export default class RequestController {
     return this.estimateCost(actor, { type: request.type, name: request.name, system: request.costData }, request);
   }
 
+  // The level buttons of a leveled request: [{ value, owned, selected, delta }] for every level up
+  // to the item's max, or null if it has no levels (or was planned before the max was stored).
+  // delta is how the planned cost would change if that level became the wanted one - positive above
+  // it, negative below, null if the cost can't be told yet.
+  static requestLevels(actor, request) {
+    if (!request.level || !request.costData) return null;
+
+    const item = { type: request.type, name: request.name, system: request.costData };
+    const max = this.#maxLevel(item);
+    if (max <= 1) return null;
+
+    const owned = this.#ownedLevel(actor, item, request.variant);
+    const costs = this.levelCosts(actor, item, request.variant);
+    // costs[i] is what level i + 1 costs, so going from level a to b costs costs[a] .. costs[b - 1].
+    const sum = (from, to) => {
+      let total = 0;
+      for (let i = from; i < to; i++) {
+        if (costs?.[i] === undefined) return null;
+        total += costs[i];
+      }
+      return total;
+    };
+
+    return Array.from({ length: max }, (_, i) => {
+      const value = i + 1;
+      const up = value >= request.level ? sum(request.level, value) : sum(value, request.level);
+      return {
+        value,
+        owned: value <= owned,
+        selected: value > owned && value <= request.level,
+        delta: up === null ? null : value >= request.level ? up : -up,
+      };
+    });
+  }
+
+  // Changes the wanted level of a planned request. Not while the GM has it, that would change what
+  // they're approving - it has to be withdrawn first.
+  static async setLevel(actor, id, level) {
+    if (!actor.isOwner) return;
+
+    const requests = PlannerData.getRequests(actor);
+    const entry = requests.find((r) => r.id === id);
+    if (!entry?.level || entry.status !== 'planned' || entry.level === level) return;
+
+    entry.level = level;
+    await PlannerData.saveRequests(actor, requests);
+  }
+
   // The fields estimateCost reads, kept with the request so the sheet can show its cost without
   // loading the item from its compendium.
   static #costData(system = {}) {

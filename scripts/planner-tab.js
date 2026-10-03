@@ -41,8 +41,15 @@ export default class PlannerTab {
     // Each one is weighed against the available AP on its own, like each target's steps are.
     context.plannerRequests = PlannerData.getRequests(actor).map((request) => {
       const cost = RequestController.requestCost(actor, request);
+      const levels = RequestController.requestLevels(actor, request)?.map((level) => ({
+        ...level,
+        label: this.romanNumeral(level.value),
+        clickable: !level.owned && request.status === 'planned',
+        tooltip: this.levelTooltip(level, request.level),
+      }));
       return {
         ...request,
+        levels,
         label: RequestController.label(request),
         requested: request.status === 'requested',
         rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
@@ -57,6 +64,27 @@ export default class PlannerTab {
     context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0) + requestCost;
     context.plannerEmpty = !context.plannerSections.length && !context.plannerRequests.length;
     return context;
+  }
+
+  // A level button's tooltip: how the planned cost changes when picking that level.
+  static levelTooltip(level, planned) {
+    if (level.owned) return game.i18n.localize('STEIGERUNGSPLANER.LevelOwned');
+    if (level.value === planned) return game.i18n.localize('STEIGERUNGSPLANER.LevelPlanned');
+    if (level.delta === null) return game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+    return `${level.delta > 0 ? '+' : ''}${level.delta} AP`;
+  }
+
+  // Levels are written as roman numerals on the sheet ("Reich II"), so the level buttons are too.
+  static romanNumeral(value) {
+    const numerals = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+    let result = '';
+    for (const [n, numeral] of numerals) {
+      while (value >= n) {
+        result += numeral;
+        value -= n;
+      }
+    }
+    return result;
   }
 
   // sheet.hbs (the root part template) hardcodes a <template data-application-part="X">
@@ -133,6 +161,14 @@ export default class PlannerTab {
     element.querySelectorAll('[data-request-withdraw]').forEach((el) => {
       el.addEventListener('click', async (ev) => {
         await RequestController.withdrawRequest(sheet.actor, ev.currentTarget.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-level]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        const { id, requestLevel } = ev.currentTarget.dataset;
+        await RequestController.setLevel(sheet.actor, id, Number(requestLevel));
         sheet.render();
       });
     });

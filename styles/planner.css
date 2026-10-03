@@ -152,6 +152,50 @@
   white-space: nowrap;
 }
 
+/* Fixed width, so the level buttons in front of it don't shift when the cost gets another digit. */
+.steigerungsplaner-tab .planner-request-cost {
+  width: 4.5em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Level buttons of a leveled request: owned levels grey, planned ones green in the apply color of
+   the step tiles. Locked while the GM has the request. */
+.steigerungsplaner-tab .planner-request-levels {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  margin: 0 0.5rem;
+
+  &.locked {
+    opacity: 0.6;
+  }
+}
+
+.steigerungsplaner-tab .planner-request-level {
+  min-width: 1.6rem;
+  padding: 0 4px;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: 3px;
+  font-size: var(--font-size-12);
+  line-height: 1.4rem;
+  text-align: center;
+
+  &.owned {
+    background: rgba(127, 127, 127, 0.35);
+    opacity: 0.6;
+  }
+
+  &.selected {
+    border-color: rgb(86, 168, 19);
+    background: rgba(86, 168, 19, 0.35);
+  }
+
+  &:is(a):hover {
+    border-color: rgb(86, 168, 19);
+  }
+}
+
 /* Dimmed like unaffordable steps - only the content, the buttons stay usable. */
 .steigerungsplaner-tab .planner-request-unaffordable {
   & .planner-group-icon,
