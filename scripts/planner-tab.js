@@ -36,18 +36,28 @@ export default class PlannerTab {
     const actor = sheet.actor;
 
     context.plannerSections = this.buildSections(actor);
-    context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0);
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
     // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
     // becomes "Fertigkeitsspezialisierung (Klettern)", or "(Klettern, Fassaden)" with an addition.
-    context.plannerRequests = PlannerData.getRequests(actor).map((request) => ({
-      ...request,
-      label: request.variant
-        ? `${request.name.replace(' ()', '')} (${request.variant.name}${request.variant.customEntry ? `, ${request.variant.customEntry}` : ''})`
-        : request.name,
-      requested: request.status === 'requested',
-    }));
+    // Each one is weighed against the available AP on its own, like each target's steps are.
+    context.plannerRequests = PlannerData.getRequests(actor).map((request) => {
+      const cost = RequestController.requestCost(actor, request);
+      return {
+        ...request,
+        label: request.variant
+          ? `${request.name.replace(' ()', '')} (${request.variant.name}${request.variant.customEntry ? `, ${request.variant.customEntry}` : ''})`
+          : request.name,
+        requested: request.status === 'requested',
+        cost,
+        costUnknown: cost === null,
+        unaffordable: cost !== null && cost > context.plannerAvailableXP,
+      };
+    });
+
+    // Requests count into the planned cost until the GM approves them - then the system charges them.
+    const requestCost = context.plannerRequests.reduce((sum, r) => sum + (r.cost ?? 0), 0);
+    context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0) + requestCost;
     context.plannerEmpty = !context.plannerSections.length && !context.plannerRequests.length;
     return context;
   }

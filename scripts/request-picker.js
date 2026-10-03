@@ -240,7 +240,8 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     const { level, variant, missingVariant } = this.#readChoice(entry);
     if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
 
-    const added = await RequestController.addRequest(this.actor, entry, { level, variant });
+    const item = (await this.#document(entry.uuid)) ?? entry;
+    const added = await RequestController.addRequest(this.actor, item, { level, variant });
     if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestExists', { name: entry.name.replace(' ()', '') }));
 
     // The list too: entries without a variant drop out of it once they're requested.

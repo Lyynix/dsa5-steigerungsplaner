@@ -60,6 +60,7 @@
   "STEIGERUNGSPLANER.RequestRemove": "Discard request",
   "STEIGERUNGSPLANER.RequestPending": "requested",
   "STEIGERUNGSPLANER.RequestLevel": "Level {level}",
+  "STEIGERUNGSPLANER.RequestUnaffordable": "Not enough AP",
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
   "STEIGERUNGSPLANER.ColumnPlan": "Advancement list",
   "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} cannot be decreased any further.",

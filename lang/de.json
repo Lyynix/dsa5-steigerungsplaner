@@ -60,6 +60,7 @@
   "STEIGERUNGSPLANER.RequestRemove": "Anfrage verwerfen",
   "STEIGERUNGSPLANER.RequestPending": "angefragt",
   "STEIGERUNGSPLANER.RequestLevel": "Stufe {level}",
+  "STEIGERUNGSPLANER.RequestUnaffordable": "Nicht genug AP",
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
   "STEIGERUNGSPLANER.ColumnPlan": "Steigerungsliste",
   "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} kann nicht weiter verringert werden.",
