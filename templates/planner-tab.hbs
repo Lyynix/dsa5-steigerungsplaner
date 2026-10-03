@@ -10,7 +10,36 @@
         </div>
     </header>
 
-    {{#if plannerSections.length}}
+    {{#if plannerRequests.length}}
+    <div>
+        <div class="row-section skills table-header lineheight steigerungsplaner-section-requests">
+            <div class="col">{{localize "STEIGERUNGSPLANER.Section.requests"}}</div>
+        </div>
+        {{#each plannerRequests as |request|}}
+        <div class="row-section wrap skills lineheight tableOdd planner-request">
+            {{#if request.img}}<img class="planner-group-icon" src="{{request.img}}" alt="">{{/if}}
+            <div class="planner-request-label">{{request.label}}</div>
+            {{#if request.level}}
+            <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>
+            {{/if}}
+            {{#if request.requested}}
+            <span class="planner-request-info"><i class="fas fa-hourglass-half"></i> {{localize "STEIGERUNGSPLANER.RequestPending"}}</span>
+            <a class="planner-withdraw" data-request-withdraw data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestWithdraw'}}">
+                <i class="fas fa-rotate-left"></i>
+            </a>
+            {{else}}
+            <a class="planner-send" data-request-send data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestSend'}}">
+                <i class="fas fa-paper-plane"></i>
+            </a>
+            {{/if}}
+            <a class="planner-cancel" data-request-remove data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestRemove'}}">
+                <i class="fas fa-trash"></i>
+            </a>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
     {{#each plannerSections as |section|}}
     <div>
         <div class="row-section skills table-header lineheight {{section.cssClass}}">
@@ -50,7 +79,8 @@
         {{/each}}
     </div>
     {{/each}}
-    {{else}}
+
+    {{#if plannerEmpty}}
     <p class="planner-empty">{{localize "STEIGERUNGSPLANER.Empty"}}</p>
     {{/if}}
 </div>
