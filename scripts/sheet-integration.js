@@ -135,6 +135,19 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
+  // Closing the sheet is when old consumed history gets cleaned up - not earlier, the player might
+  // still want to undo something while it's open (see PlannerController.pruneConsumed).
+  libWrapper.register(
+    MODULE_ID,
+    `${basePath}.prototype._onClose`,
+    function (wrapped, options) {
+      const result = wrapped(options);
+      PlannerController.pruneConsumed(this.actor);
+      return result;
+    },
+    'MIXED',
+  );
+
   // _onRender fires once per full sheet render, after every part has been inserted - the right
   // moment to decorate every "+" button across the whole sheet (characteristics, points, items)
   // that has queued plan steps, regardless of which tab is currently active.
