@@ -277,3 +277,91 @@
   font-style: italic;
   opacity: 0.75;
 }
+
+/* Sits right next to the title - the auto margin pushes the AP summary to the right edge. */
+.steigerungsplaner-tab .planner-add-target {
+  margin: 0 auto 0 0.75rem;
+  cursor: pointer;
+}
+
+/* Add-target picker (planner-picker.js). Lives on document.body, so nothing here is scoped to the
+   tab. Colors mirror Foundry's own #context-menu for both themes - not the id itself, that would
+   clash with the real context menu. Just below tooltips, so it sits above every app window. */
+.steigerungsplaner-picker {
+  --picker-background: var(--color-cool-5);
+  --picker-border: var(--color-cool-3);
+  --picker-hover-border: var(--color-cool-4);
+  --picker-hover-background: var(--color-dark-1);
+
+  position: fixed;
+  z-index: calc(var(--z-index-tooltip) - 1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 260px;
+  max-height: 400px;
+  padding: 6px;
+  background: var(--picker-background);
+  border: 1px solid var(--picker-border);
+  border-radius: 5px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-12);
+
+  &.theme-light {
+    --picker-background: #d9d8c8;
+    --picker-border: #999;
+    --picker-hover-border: #999;
+    --picker-hover-background: #f0f0e0;
+  }
+
+  /* The items are display: flex, which would otherwise override the hidden attribute when filtering. */
+  & [hidden] {
+    display: none !important;
+  }
+
+  & .picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  & .picker-section {
+    padding: 6px 8px 2px;
+    font-size: var(--font-size-10);
+    font-weight: bold;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  & .picker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: solid transparent;
+    border-width: 1px 0;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--picker-hover-border);
+      background: var(--picker-hover-background);
+      color: var(--color-text-emphatic);
+    }
+
+    & img {
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      border: none;
+    }
+  }
+
+  & .picker-empty {
+    margin: 4px 8px;
+    font-style: italic;
+    opacity: 0.75;
+  }
+}

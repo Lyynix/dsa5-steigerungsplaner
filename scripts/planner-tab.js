@@ -1,6 +1,7 @@
 import { PART_ID } from './module-config.js';
 import PlannerData from './planner-data.js';
 import PlannerController from './planner-controller.js';
+import PlannerPicker from './planner-picker.js';
 import { applyingIds } from './planner-state.js';
 
 export default class PlannerTab {
@@ -98,6 +99,8 @@ export default class PlannerTab {
         firstStepEl.classList.add('planner-step-applying');
       });
     });
+
+    element.querySelector('[data-plan-add-target]')?.addEventListener('click', (ev) => PlannerPicker.open(sheet, ev));
 
     element.querySelectorAll('[data-plan-add]').forEach((el) => {
       el.addEventListener('click', async (ev) => {

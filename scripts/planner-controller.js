@@ -235,6 +235,32 @@ export default class PlannerController {
     }
   }
 
+  // Targets that aren't in the plan yet and could get a first increase - the tab's add-target
+  // picker. Spell extensions also have a talentValue, but as a plain number, hence `.value`.
+  static candidateTargets(actor) {
+    const planned = new Set(PlannerData.getPlan(actor).map((e) => `${e.type}:${e.key}`));
+    const targets = Object.keys(actor.system.characteristics).map((key) => ['attribute', key]);
+
+    targets.push(['point', 'wounds']);
+    const { magical, clerical } = actor.system.guidevalue ?? {};
+    if (actor.system.characteristics[magical]) targets.push(['point', 'astralenergy'], ['permanentLoss', 'astralenergy']);
+    if (actor.system.characteristics[clerical]) targets.push(['point', 'karmaenergy'], ['permanentLoss', 'karmaenergy']);
+
+    const items = actor.items.filter((item) => item.system.talentValue?.value !== undefined);
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    for (const item of items) targets.push(['item', item.id]);
+
+    return targets
+      .filter(([type, key]) => !planned.has(`${type}:${key}`) && this.buildEntry(actor, type, key, 'increase'))
+      .map(([type, key]) => ({
+        type,
+        key,
+        label: this.labelFor(actor, type, key),
+        icon: this.iconFor(actor, type, key),
+        section: this.sectionFor(actor, type, key),
+      }));
+  }
+
   // The tab's add-step button: one more step in the direction the queue already goes.
   static async appendStep(actor, type, key) {
     if (!actor.isOwner) return;
