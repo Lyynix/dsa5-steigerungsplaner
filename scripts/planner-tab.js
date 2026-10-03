@@ -3,6 +3,7 @@ import PlannerData from './planner-data.js';
 import PlannerController from './planner-controller.js';
 import PlannerPicker from './planner-picker.js';
 import { applyingIds } from './planner-state.js';
+import RequestController from './request-controller.js';
 
 export default class PlannerTab {
   static get partId() {
@@ -36,6 +37,15 @@ export default class PlannerTab {
     context.plannerSections = this.buildSections(actor);
     context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0);
     context.plannerAvailableXP = PlannerController.availableXP(actor);
+
+    // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
+    // becomes "Fertigkeitsspezialisierung (Klettern)".
+    context.plannerRequests = PlannerData.getRequests(actor).map((request) => ({
+      ...request,
+      label: request.variant ? `${request.name.replace(' ()', '')} (${request.variant.name})` : request.name,
+      requested: request.status === 'requested',
+    }));
+    context.plannerEmpty = !context.plannerSections.length && !context.plannerRequests.length;
     return context;
   }
 
@@ -101,6 +111,28 @@ export default class PlannerTab {
     });
 
     element.querySelector('[data-plan-add-target]')?.addEventListener('click', (ev) => PlannerPicker.open(sheet, ev));
+
+    element.querySelectorAll('[data-request-send]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        await RequestController.markRequested(sheet.actor, ev.currentTarget.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-withdraw]').forEach((el) => {
+      el.addEventListener('click', async (ev) => {
+        await RequestController.withdrawRequest(sheet.actor, ev.currentTarget.dataset.id);
+        sheet.render();
+      });
+    });
+
+    element.querySelectorAll('[data-request-remove]').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        const { id } = ev.currentTarget.dataset;
+        const row = ev.currentTarget.closest('.planner-request');
+        this.foldThenRun(sheet, element, [row], () => RequestController.removeRequest(sheet.actor, id));
+      });
+    });
 
     element.querySelectorAll('[data-plan-add]').forEach((el) => {
       el.addEventListener('click', async (ev) => {

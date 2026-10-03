@@ -117,6 +117,41 @@
   background: linear-gradient(90deg, rgb(120, 120, 120) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+.steigerungsplaner-section-requests {
+  background: linear-gradient(90deg, rgb(110, 80, 140) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* A request is one row rather than a list of step tiles, so discarding collapses the row vertically
+   instead of folding a tile - same trigger class and red as the tiles, so foldThenRun works for both.
+   max-height instead of height: it needs a concrete start value to animate from, and 2.5rem is just
+   above the row's actual height. */
+.steigerungsplaner-tab .planner-request {
+  max-height: 2.5rem;
+  overflow: hidden;
+  transition: max-height 0.2s ease-in, opacity 0.2s ease-in, padding 0.2s ease-in, background-color 0.15s ease-in;
+
+  &.planner-step-cancelling {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    background-color: rgba(139, 0, 0, 0.5);
+  }
+}
+
+.steigerungsplaner-tab .planner-request-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: bold;
+}
+
+.steigerungsplaner-tab .planner-request-info {
+  flex: 0 0 auto;
+  margin: 0 0.5rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
 /* Scoped to our own tab so this doesn't affect the real Talente tab's rows elsewhere on the
    sheet, which also use the "row-section wrap skills lineheight tableOdd" class combo.
    The "wrap" class lets the row wrap its children onto multiple lines - with enough queued
@@ -263,6 +298,8 @@
 
 .steigerungsplaner-tab .planner-apply,
 .steigerungsplaner-tab .planner-add,
+.steigerungsplaner-tab .planner-send,
+.steigerungsplaner-tab .planner-withdraw,
 .steigerungsplaner-tab .planner-cancel {
   flex: 0 0 auto;
   width: 30px;
