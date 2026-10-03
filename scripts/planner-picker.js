@@ -29,6 +29,12 @@ export default class PlannerPicker {
     const el = document.createElement('nav');
     el.className = 'steigerungsplaner-picker';
 
+    // Same as Foundry's own ContextMenu: take the theme of the nearest themed ancestor, since the
+    // picker lives on document.body and wouldn't inherit the sheet's theme otherwise.
+    const themed = sheet.element.closest('.themed') ?? document.body;
+    const [, theme] = themed.className.match(/(?:^|\s)(theme-\w+)/) ?? [];
+    if (theme) el.classList.add('themed', theme);
+
     const search = document.createElement('input');
     search.type = 'search';
     search.placeholder = game.i18n.localize('STEIGERUNGSPLANER.PickerSearch');
