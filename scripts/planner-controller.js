@@ -439,6 +439,28 @@ export default class PlannerController {
     if (remaining.length !== consumed.length) await PlannerData.saveConsumed(actor, remaining);
   }
 
+  // After a value was set directly (the GM's Ctrl+Enter, or the input fields with planning
+  // switched off): queued steps the new value already covers are done and go quietly, the rest
+  // stays if it continues from the new value. Only a value off the planned chain discards the
+  // queue, with the usual warning. The consumed history goes either way - a direct set isn't a step
+  // that undoing could restore.
+  static async rebaseQueue(actor, type, key) {
+    if (!actor.isOwner) return;
+
+    const value = this.rawCurrentValue(actor, type, key);
+    const plan = PlannerData.getPlan(actor);
+    const own = plan.filter((e) => e.type === type && e.key === key);
+    if (!own.length) return this.#dropConsumed(actor, type, key);
+
+    const start = own.findIndex((e) => e.from === value);
+    const reached = own[own.length - 1].to === value;
+    if (start === -1 && !reached) return this.discardQueue(actor, type, key);
+
+    await this.#dropConsumed(actor, type, key);
+    const done = new Set((start === -1 ? own : own.slice(0, start)).map((e) => e.id));
+    if (done.size) await PlannerData.savePlan(actor, plan.filter((e) => !done.has(e.id)));
+  }
+
   // Called when the sheet closes. A target's consumed history is only kept while the player is
   // still working through what they had planned at the last consume - then undoing a step must
   // keep working, even after reopening the sheet. It's dropped once that's over:

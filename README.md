@@ -25,7 +25,7 @@ Ein **Ziel** ist ein Wert, den man steigern kann: ein Talent, eine Kampftechnik,
 
 Steigert man ganz normal (ohne Shift) ein Ziel, für das Schritte geplant sind, wird der passende Schritt aus dem Plan genommen. Nimmt man so eine Steigerung per "-" wieder zurück, kommt der Schritt zurück in den Plan. Das klappt, solange man den ursprünglichen Plan noch abarbeitet. Ist er komplett angewendet oder wurde Neues dazugeplant, vergisst der Planer das beim Schließen des Bogens.
 
-Ändert sich ein Wert so, dass die Planung nicht mehr dazu passt (z. B. weil er direkt im Bogen überschrieben wurde), verwirft der Planer die Planung für dieses Ziel und meldet das mit einem Hinweis.
+Wird ein Wert direkt gesetzt (Strg+Enter oder mit ausgeschalteter Einstellung), passt der Planer die Planung sofort an: Erreichte Schritte verschwinden, der Rest bleibt. Ändert sich ein Wert auf anderem Weg so, dass die Planung nicht mehr passt, verwirft der Planer sie mit einem Hinweis.
 
 ## Im Steigerungsplaner-Tab
 
@@ -78,7 +78,7 @@ Genehmigt oder lehnt der SL ab, bekommt der Spieler eine Benachrichtigung. Ein a
 
 ## Einstellungen
 
-- **Eingabefelder planen Steigerungen** (Welt, standardmäßig an): Ist sie aus, setzen die Wertfelder den Wert wieder direkt, wie ohne das Modul. Praktisch z. B. beim Erschaffen von Charakteren.
+- **Eingabefelder planen Steigerungen** (Welt, standardmäßig an): Ist sie aus, setzen die Wertfelder den Wert wieder direkt, wie ohne das Modul. Bereits Geplantes wird dabei an den neuen Wert angepasst. Praktisch z. B. beim Erschaffen von Charakteren.
 
 ## Voraussetzungen
 
