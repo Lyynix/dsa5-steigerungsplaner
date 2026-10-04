@@ -4,7 +4,8 @@ import PlannerController from './planner-controller.js';
 // The sheet's number fields for the same targets shift-click plans (talent values, attribute and
 // base stat advances, permanent AsP/KaP rebuys) normally just overwrite the value without any AP.
 // With the world setting on, a value typed there plans the steps up (or down) to it instead.
-// The GM can still set a value directly with Ctrl+Enter.
+// The GM can still set a value directly with Ctrl+Enter. A value set directly - that way, or with
+// the setting off - is set just like the system would, and the target's plan is rebased onto it.
 //
 // Item values have their own jQuery change handler on the input, the others go through the
 // form's submit-on-change. Both are stopped by listening on the sheet in the capture phase, before
@@ -33,11 +34,12 @@ export default class PlannerInput {
     element.addEventListener('input', (ev) => this.#setDirectly.delete(ev.target), true);
   }
 
-  static #active(sheet) {
+  // 'plan' if a typed value plans, 'set' if it's set directly (setting off), null where the
+  // sheet has no advancing at all (no "+"/"-" buttons) - then there's no plan to keep in line.
+  static #mode(sheet) {
     const actor = sheet.actor;
-    if (!actor.isOwner || !game.settings.get(MODULE_ID, SETTING_INPUT_PLANS)) return false;
-    // Where the sheet has no advancing (no "+"/"-" buttons) there's nothing to plan either.
-    return actor.canAdvance ?? true;
+    if (!actor.isOwner || !(actor.canAdvance ?? true)) return null;
+    return game.settings.get(MODULE_ID, SETTING_INPUT_PLANS) ? 'plan' : 'set';
   }
 
   // Which target an input belongs to: { type, key, offset }, offset being what the field's number
@@ -66,12 +68,13 @@ export default class PlannerInput {
   static #onKeydown(sheet, ev) {
     if (ev.key !== 'Enter') return;
     const target = this.#targetFor(sheet, ev.target);
-    if (!target || !this.#active(sheet)) return;
+    const mode = target && this.#mode(sheet);
+    if (!mode) return;
 
     ev.preventDefault();
     ev.stopPropagation();
 
-    if (ev.ctrlKey && game.user.isGM) {
+    if (mode === 'set' || (ev.ctrlKey && game.user.isGM)) {
       this.#setDirectly.add(ev.target);
       this.#set(sheet, ev.target, target);
     } else {
@@ -81,10 +84,13 @@ export default class PlannerInput {
 
   static #onChange(sheet, ev) {
     const target = this.#targetFor(sheet, ev.target);
-    if (!target || !this.#active(sheet)) return;
+    const mode = target && this.#mode(sheet);
+    if (!mode) return;
 
     ev.stopPropagation();
-    if (!this.#setDirectly.has(ev.target)) this.#plan(sheet, ev.target, target);
+    if (this.#setDirectly.has(ev.target)) return;
+    if (mode === 'set') this.#set(sheet, ev.target, target);
+    else this.#plan(sheet, ev.target, target);
   }
 
   // Resets the field to what the sheet showed - the plan is what changed, not the value. Which also
@@ -99,12 +105,16 @@ export default class PlannerInput {
     sheet.render();
   }
 
-  // What the system would have done with the value, for the GM's Ctrl+Enter.
+  // What the system would have done with the value, then the plan is brought in line with it right
+  // away instead of only when the sheet is opened next.
   static async #set(sheet, input, { type, key }) {
     const value = Number(input.value);
     if (!Number.isFinite(value)) return;
 
     if (type === 'item') await sheet.actor.updateEmbeddedDocuments('Item', [{ _id: key, 'system.talentValue.value': value }]);
     else await sheet.actor.update({ [input.name]: value });
+
+    await PlannerController.rebaseQueue(sheet.actor, type, key);
+    sheet.render();
   }
 }
