@@ -6,6 +6,8 @@ export const FLAG_CONSUMED = 'consumed';
 // Items that need GM approval instead of being bought step by step - see RequestController.
 export const FLAG_REQUESTS = 'requests';
 export const PART_ID = 'steigerungsplaner';
+// World setting: typing a value into the sheet's input fields plans the steps instead of setting it.
+export const SETTING_INPUT_PLANS = 'inputPlans';
 
 // data-fct values used by the DSA5 "advanceWrapper" action, mapped to our internal target type
 export const ADVANCE_FCTS = {
