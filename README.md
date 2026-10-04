@@ -8,6 +8,7 @@ Im DSA5-Charakterbogen steigert ein Klick auf "+" sofort und zieht die AP direkt
 
 - **Shift-Klick auf "+"** neben einem Talent, einer Kampftechnik, einem Zauber, einer Liturgie, einer Eigenschaft, einem Basiswert (Lebenskraft/Astralenergie/Karmaenergie) oder beim Rückkauf permanenter AsP/KaP plant die nächste Steigerung, statt sie auszuführen. Es werden keine AP abgezogen.
 - **Shift-Klick auf "-"** nimmt die zuletzt geplante Steigerung für dieses Ziel wieder zurück. Sind keine Steigerungen geplant, plant er stattdessen eine Verringerung, z. B. um Punkte von einem Talent auf ein anderes umzuverteilen. Umgekehrt nimmt Shift-Klick auf "+" eine geplante Verringerung zurück.
+- **Eine Zahl in das Wertfeld eintippen** (Talent, Kampftechnik, Zauber, Liturgie, Steigerungen von Eigenschaften und Basiswerten, Rückkauf pAsP/pKaP) setzt den Wert nicht mehr direkt, sondern plant die Steigerungen bis zu diesem Zielwert. Bereits geplante Schritte werden dabei ergänzt oder gekürzt, eine kleinere Zahl plant Verringerungen. Der Bogen zeigt danach weiter den echten Wert. Der SL kann mit **Strg+Enter** den Wert wie gewohnt direkt setzen. Über die Welt-Einstellung "Eingabefelder planen Steigerungen" lässt sich das abschalten, z. B. beim Erschaffen von Charakteren.
 - Ein neuer **"Steigerungsplaner"-Tab** im Charakterbogen zeigt alle geplanten Schritte, gruppiert wie im Talente-Tab (Körpertalente, Gesellschaftstalente, Naturtalente, Wissenstalente, Handwerkstalente, Kampftechniken, Zauber, Liturgien, Eigenschaften, Basiswerte). Jeweils mit Icon, den einzelnen Schritten und deren AP-Kosten.
 - Direkt neben jedem "+"-Button im restlichen Charakterbogen zeigt ein kleines Badge (z. B. `+3`, bei geplanten Verringerungen rot, z. B. `-2`), wie viele Schritte für diesen Wert geplant sind, inklusive Tooltip mit den Details.
 - Der Tooltip der "+"/"-"-Buttons im Charakterbogen weist zusätzlich auf den Shift-Klick hin.
@@ -67,7 +68,7 @@ Lehnt der SL ab, steht der Eintrag wieder als geplant im Tab, mit dem Hinweis "a
 ## Verwendung
 
 1. Charakterbogen eines eigenen (Owner-)Charakters öffnen.
-2. Steigerungen planen: im Bogen per **Shift+Klick auf "+"** (oder "-" für Verringerungen), oder im Tab **"Steigerungsplaner"** über **"Ziel hinzufügen"**.
+2. Steigerungen planen: im Bogen per **Shift+Klick auf "+"** (oder "-" für Verringerungen), durch Eintippen des Zielwerts ins Wertfeld, oder im Tab **"Steigerungsplaner"** über **"Ziel hinzufügen"**.
 3. Im Tab **"Steigerungsplaner"** die geplanten Schritte einsehen, ergänzen, anwenden oder verwerfen (siehe oben).
 4. Neue Sonderfertigkeiten, Vor- und Nachteile, Zauber usw. über **"Sonderfertigkeiten & mehr"** planen und beim SL anfragen.
 
