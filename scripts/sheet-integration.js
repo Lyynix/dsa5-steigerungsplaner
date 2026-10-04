@@ -2,6 +2,7 @@ import { ALL_FCTS, MODULE_ID } from './module-config.js';
 import PlannerBadges from './planner-badges.js';
 import PlannerController from './planner-controller.js';
 import PlannerHints from './planner-hints.js';
+import PlannerInput from './planner-input.js';
 import PlannerTab from './planner-tab.js';
 
 // Foundry registers sheets under `${scope}.${className}` - stable enough to rely on directly.
@@ -158,6 +159,7 @@ export function registerSheetIntegration() {
       await wrapped(context, options);
       PlannerBadges.decorate(this);
       PlannerHints.decorate(this);
+      PlannerInput.attach(this);
     },
     'MIXED',
   );

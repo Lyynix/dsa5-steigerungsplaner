@@ -13,6 +13,8 @@
   "STEIGERUNGSPLANER.PickerSearch": "Suchen …",
   "STEIGERUNGSPLANER.PickerEmpty": "Nichts gefunden",
   "STEIGERUNGSPLANER.IndexLoading": "Steigerungsplaner: Lade Sonderfertigkeiten, Zauber und Liturgien …",
+  "STEIGERUNGSPLANER.Settings.inputPlans.name": "Eingabefelder planen Steigerungen",
+  "STEIGERUNGSPLANER.Settings.inputPlans.hint": "Ein Wert, der im Charakterbogen in ein Feld für Talente, Kampftechniken, Zauber, Liturgien, Eigenschafts- oder Basiswert-Steigerungen eingetippt wird, plant die nötigen Steigerungen, statt den Wert direkt zu setzen. Der SL kann mit Strg+Enter weiterhin direkt setzen. Zum Erschaffen von Charakteren lässt sich das hier abschalten.",
   "STEIGERUNGSPLANER.ShiftClickHint": "Shift-Klick: im Planer vormerken",
   "STEIGERUNGSPLANER.PermanentLossLabel": "{label} zurückkaufen",
   "STEIGERUNGSPLANER.Empty": "Keine Steigerungen geplant. Shift-Klick auf + im Charakterbogen oder „Ziel hinzufügen“, um eine zu planen.",

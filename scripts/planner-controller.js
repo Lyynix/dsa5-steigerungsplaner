@@ -182,8 +182,8 @@ export default class PlannerController {
 
   // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
   // continuing from wherever this target's queue currently ends rather than its actual live value.
-  static buildEntry(actor, type, key, direction) {
-    const from = this.chainEnd(actor, type, key);
+  // planTo passes `from` itself while it builds several steps before saving any of them.
+  static buildEntry(actor, type, key, direction, from = this.chainEnd(actor, type, key)) {
     if (from === null) return null;
 
     // Permanent-loss rebuy doesn't go through the A-E cost table at all - _rebuyPC/_refundPC
@@ -269,6 +269,47 @@ export default class PlannerController {
     const direction = this.queueDirection(actor, type, key);
     if (!direction) return;
     await this.planStep(actor, type, key, direction);
+  }
+
+  // A value typed into the sheet's input field: plan this target so it ends at `target`. Queued
+  // steps that already lead there are kept, steps past it or going the other way are dropped, the
+  // missing ones are added - all saved at once. The target being the current value clears its queue.
+  static async planTo(actor, type, key, target) {
+    if (!actor.isOwner) return;
+    await this.ensureFresh(actor, type, key);
+
+    const current = this.rawCurrentValue(actor, type, key);
+    if (current === null || !Number.isInteger(target)) return;
+    const direction = target > current ? 'increase' : target < current ? 'decrease' : null;
+    const beyond = (value) => (direction === 'increase' ? value > target : value < target);
+
+    const plan = PlannerData.getPlan(actor);
+    const own = plan.filter((e) => e.type === type && e.key === key);
+    const keep = [];
+    for (const entry of own) {
+      const entryDirection = entry.to > entry.from ? 'increase' : 'decrease';
+      if (entryDirection !== direction || beyond(entry.to)) break;
+      keep.push(entry);
+    }
+
+    const dropped = new Set(own.slice(keep.length).map((e) => e.id));
+    const next = plan.filter((e) => !dropped.has(e.id));
+
+    let from = keep.length ? keep[keep.length - 1].to : current;
+    while (direction && from !== target) {
+      const entry = this.buildEntry(actor, type, key, direction, from);
+      if (!entry) {
+        if (direction === 'decrease') {
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.CannotDecreaseFurther', { label: this.labelFor(actor, type, key) }));
+        }
+        break;
+      }
+      entry.sinceConsume = true;
+      next.push(entry);
+      from = entry.to;
+    }
+
+    if (dropped.size || next.length !== plan.length) await PlannerData.savePlan(actor, next);
   }
 
   static async planStep(actor, type, key, direction) {
