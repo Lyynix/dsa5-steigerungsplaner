@@ -40,13 +40,27 @@ const CLERICAL_TYPES = new Set(['liturgy', 'ceremony', 'blessing']);
 // Types with a FW, which can get planned steps on top of learning them.
 const FW_TYPES = new Set(['spell', 'ritual', 'liturgy', 'ceremony']);
 
+// Order of the request list in the planner tab: advantages, disadvantages, special abilities, then
+// everything magical and everything clerical. Extensions go with the spell/liturgy they extend.
+const LIST_GROUPS = {
+  advantage: 0,
+  disadvantage: 1,
+  specialability: 2,
+  spell: 3,
+  ritual: 3,
+  magictrick: 3,
+  liturgy: 4,
+  ceremony: 4,
+  blessing: 4,
+};
+
 // Requests being approved on this client right now - pruneFulfilled leaves them to approveRequest,
 // which turns the wanted FW into plan steps itself once the item is bought.
 const approving = new Set();
 
 // Requests for items that need GM approval instead of being bought step by step (special
 // abilities, spells, liturgies, ...). An entry looks like
-//   { id, uuid, name, type, img, level, variant, targetFW, costData, status }
+//   { id, uuid, name, type, img, level, variant, targetFW, extensionOf, costData, status }
 // - uuid/name/type/img: taken from the request index
 // - level: the wanted level for leveled special abilities/advantages, otherwise null
 // - variant: the chosen variant (adoption), e.g. { name: 'Klettern', itemId: '...' }, otherwise
@@ -55,6 +69,8 @@ const approving = new Set();
 // - targetFW: for spells, rituals, liturgies and ceremonies the FW the player wants to raise it to
 //   after learning it, otherwise null. Only the player's own planning: the GM approves learning
 //   it, then the steps up to it become regular plan entries
+// - extensionOf: for extensions { type, name, requiredFW } of the spell/liturgy they extend,
+//   otherwise null - see extensionState
 // - costData: the item's cost fields (APValue, StF, ...) for the estimate, see requestCost
 // - status: 'planned' or 'requested'
 export default class RequestController {
@@ -62,11 +78,14 @@ export default class RequestController {
   // order, empty groups left out. Each entry gets
   // - level: { min, max } for leveled special abilities/advantages, otherwise null
   // - variant: { kind: 'text' | 'list' | 'item', options, allowCustom } if it needs one, otherwise null
-  // - extension: { source, requiredFW, currentFW } for extensions, otherwise null
+  // - extension: { source, requiredFW, currentFW, plannedFW } for extensions, otherwise null.
+  //   The source is the spell/liturgy it extends, owned or only requested - currentFW is null for
+  //   a requested one, plannedFW the FW it gets to with what's planned
   // - requirements: the item's requirements text, the system doesn't check it, the GM does
   static catalog(actor, entries) {
     const owned = new Map(actor.items.map((item) => [`${item.type}:${item.name}`, item]));
-    const requested = new Set(PlannerData.getRequests(actor).map((r) => r.uuid));
+    const requests = PlannerData.getRequests(actor);
+    const requested = new Set(requests.map((r) => r.uuid));
     const groups = new Map(GROUP_ORDER.map((id) => [id, []]));
 
     for (const entry of entries) {
@@ -92,13 +111,9 @@ export default class RequestController {
 
       let extension = null;
       if (entry.type === 'spellextension') {
-        const source = owned.get(`${entry.system.category}:${entry.system.source}`);
+        const source = this.#extensionSource(actor, { type: entry.system.category, name: entry.system.source }, requests, owned);
         if (!source) continue;
-        extension = {
-          source: entry.system.source,
-          requiredFW: Number(entry.system.talentValue) || 0,
-          currentFW: Number(source.system.talentValue?.value) || 0,
-        };
+        extension = { source: entry.system.source, requiredFW: Number(entry.system.talentValue) || 0, ...source };
       }
 
       groups.get(group).push({
@@ -296,6 +311,36 @@ export default class RequestController {
     });
   }
 
+  // Where an extension's spell/liturgy stands: { currentFW, plannedFW } if the character has it
+  // (plannedFW including the steps planned for it) or requested it (currentFW null, plannedFW the
+  // request's target FW), null if neither.
+  static #extensionSource(actor, { type, name }, requests = PlannerData.getRequests(actor), owned = null) {
+    const item = owned ? owned.get(`${type}:${name}`) : actor.items.find((i) => i.type === type && i.name === name);
+    if (item) {
+      const currentFW = Number(item.system.talentValue?.value) || 0;
+      return { currentFW, plannedFW: Math.max(currentFW, Number(PlannerController.chainEnd(actor, 'item', item.id)) || 0) };
+    }
+    const request = requests.find((r) => r.type === type && r.name === name);
+    return request ? { currentFW: null, plannedFW: this.requestFW(request)?.target ?? 0 } : null;
+  }
+
+  // Whether an extension request can be sent to the GM - the system only buys an extension when the
+  // spell/liturgy is there with a high enough FW, so there's no point in asking before. One of
+  //   'ready', 'fwTooLow' (owned, FW below the requirement), 'notLearned' (only requested) or
+  //   'missing' (neither owned nor requested anymore),
+  // as { state, source, requiredFW, currentFW, plannedFW }. null for anything else and for requests
+  // planned before the source was stored with them - those aren't held back.
+  static extensionState(actor, request) {
+    if (request.type !== 'spellextension' || !request.extensionOf) return null;
+
+    const { name, requiredFW } = request.extensionOf;
+    const source = this.#extensionSource(actor, request.extensionOf);
+    const base = { source: name, requiredFW, currentFW: source?.currentFW ?? null, plannedFW: source?.plannedFW ?? null };
+    if (!source) return { ...base, state: 'missing' };
+    if (source.currentFW === null) return { ...base, state: 'notLearned' };
+    return { ...base, state: source.currentFW >= requiredFW ? 'ready' : 'fwTooLow' };
+  }
+
   // The FW part of a spell/liturgy request: { start, target, stepsCost }, start being the FW it's
   // learned at, stepsCost what raising it from there to target costs (null if that can't be told).
   // null for other types and for requests planned before the cost data was stored with them.
@@ -376,12 +421,23 @@ export default class RequestController {
       level,
       variant,
       targetFW: FW_TYPES.has(item.type) ? Math.max(Number(item.system.talentValue?.value) || 0, Number(targetFW) || 0) : null,
+      extensionOf:
+        item.type === 'spellextension'
+          ? { type: item.system.category, name: item.system.source, requiredFW: Number(item.system.talentValue) || 0 }
+          : null,
       costData: this.#costData(item.system),
       status: 'planned',
     };
     requests.push(entry);
     await PlannerData.saveRequests(actor, requests);
     return entry;
+  }
+
+  // Which group of the planner tab's request list a request belongs to, see LIST_GROUPS. Extensions
+  // planned before their source was stored with them count as magical.
+  static listGroup(request) {
+    const type = request.type === 'spellextension' ? (request.extensionOf?.type ?? 'spell') : request.type;
+    return LIST_GROUPS[type] ?? Object.keys(LIST_GROUPS).length;
   }
 
   // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
@@ -392,8 +448,11 @@ export default class RequestController {
     return `${request.name.replace(' ()', '')} (${name}${customEntry ? `, ${customEntry}` : ''})`;
   }
 
-  // Asking again clears an earlier rejection.
+  // Asking again clears an earlier rejection. Extensions only once they can be bought.
   static async markRequested(actor, id) {
+    const request = PlannerData.getRequests(actor).find((r) => r.id === id);
+    const extension = request && this.extensionState(actor, request);
+    if (extension && extension.state !== 'ready') return;
     await this.#setStatus(actor, id, 'requested', { rejected: null });
   }
 

@@ -144,7 +144,10 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
       source: entry.sources.join(', '),
       levels,
       variantText: entry.variant?.kind === 'text',
-      extensionTooLow: !!entry.extension && entry.extension.currentFW < entry.extension.requiredFW,
+      // Compared with what's planned - planning an extension the spell's planned FW doesn't reach yet
+      // is fine, it's only marked.
+      extensionText: entry.extension && this.#extensionText(entry.extension),
+      extensionTooLow: !!entry.extension && entry.extension.plannedFW < entry.extension.requiredFW,
       // The same short facts the system posts to chat (rule, casting time, AsP cost, ...); it leaves
       // them out itself if the GM obfuscated the details.
       properties: system?.chatDataToString ? await enrich(system.chatDataToString(doc.name)) : '',
@@ -155,6 +158,13 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
       startFW: stf ? Number(system?.talentValue?.value) || 0 : null,
       leveled: !!entry.level,
     };
+  }
+
+  #extensionText({ source, requiredFW, currentFW, plannedFW }) {
+    const data = { source, required: requiredFW, current: currentFW, planned: plannedFW };
+    if (currentFW === null) return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWRequested', data);
+    if (plannedFW > currentFW) return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWPlanned', data);
+    return game.i18n.format('STEIGERUNGSPLANER.ExtensionFW', data);
   }
 
   #detailsElement() {

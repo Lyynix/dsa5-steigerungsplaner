@@ -51,17 +51,18 @@ Schritte, für die die verfügbaren AP gerade nicht reichen, werden abgedunkelt.
 Neues kauft man nicht Schritt für Schritt, sondern bekommt es vom SL genehmigt. Dafür gibt es oben im Tab den Button **"Katalog"**. Er öffnet ein Fenster mit allem, was der Charakter lernen könnte:
 
 - Vor- und Nachteile, Sonderfertigkeiten (allgemein, Kampf, magisch, karmal), Zauber, Rituale, Zaubertricks, Liturgien, Zeremonien, Segnungen und Erweiterungen. Dazu höhere Stufen von Sonderfertigkeiten und Vorteilen, die der Charakter schon hat.
-- Magisches sehen nur Zauberer, Karmales nur Geweihte. Erweiterungen erscheinen nur für Zauber und Liturgien, die der Charakter beherrscht.
+- Magisches sehen nur Zauberer, Karmales nur Geweihte. Erweiterungen erscheinen für Zauber und Liturgien, die der Charakter beherrscht oder geplant hat.
 - Die Liste stammt aus allen Kompendien, die der Spieler sehen darf, und berücksichtigt den Modulfilter der Bibliothek. Beim ersten Öffnen pro Sitzung wird sie einmal geladen und im Cache zwischengespeichert.
 
 Im Fenster kann man nach Einträgen **suchen** (1), ab drei Buchstaben auch in den Beschreibungen (diese Treffer stehen ausgegraut am Ende ihrer Gruppe), und nach **Kategorie oder Buch filtern** (2). Die Ergebnisse stehen in der **Liste** (3) darunter, unter jedem Eintrag das Buch, aus dem er stammt. Wählt man einen Eintrag aus, sieht man rechts die **Details** (4): Voraussetzungen, Regeltext und Beschreibung, darüber die **AP-Kosten** und bei Erweiterungen den nötigen FW (5). Bei Bedarf wählt man dort auch Stufe und Variante (z. B. das Talent bei einer Begabung), bei Zaubern und Liturgien den **Ziel-FW**, auf den man sie nach dem Erlernen steigern will. Mit einem Klick auf **"Planen"** (6) kommt der Eintrag in den Plan.
 
 ![Auswahlfenster mit Filtern nach Kategorie und Buch und den Details einer Zaubererweiterung](assets/request-picker.png)
 
-Geplante Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sie zählen in die verplanten AP mit und werden abgedunkelt, wenn die AP nicht reichen.
+Geplante Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sortiert sind sie nach Art (Vor- und Nachteile, Sonderfertigkeiten, Magisches, Karmales) und darin alphabetisch, Erweiterungen stehen so direkt bei ihrem Zauber. Sie zählen in die verplanten AP mit und werden abgedunkelt, wenn die AP nicht reichen.
 
 - **Papierflieger** (1): fragt den Eintrag beim SL an. Solange er dort liegt, lässt er sich nicht ändern, aber mit dem **Rückgängig-Pfeil** (2) zurückziehen.
 - **Mülleimer** (3): verwirft den Eintrag.
+- **Erweiterungen** lassen sich schon planen, wenn ihr Zauber oder ihre Liturgie erst geplant ist. Anfragen kann man sie aber erst, wenn der Charakter den Zauber beherrscht und dessen FW reicht, bis dahin ist der Papierflieger gesperrt und der Tooltip sagt, was fehlt. Wird der Zauber aus dem Plan genommen, bleibt die Erweiterung stehen und bekommt ein Warndreieck.
 - **Stufen-Buttons** (4) bei gestuften Einträgen: ändern die geplante Stufe. Der Tooltip zeigt, wie sich die Kosten dadurch ändern.
 - **Ziel-FW** bei Zaubern, Ritualen, Liturgien und Zeremonien: der FW, auf den man nach dem Erlernen steigern will. Daneben steht, was die Steigerungen zusätzlich kosten, sie zählen in die verplanten AP mit. Der SL genehmigt nur das Erlernen und sieht den Ziel-FW nicht. Nach der Genehmigung stehen die Steigerungen als normale Schritte im Plan.
 

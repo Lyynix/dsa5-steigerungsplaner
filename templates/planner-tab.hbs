@@ -20,7 +20,10 @@
         {{#each plannerRequests as |request|}}
         <div class="row-section wrap skills lineheight tableOdd planner-request{{#if request.unaffordable}} planner-request-unaffordable{{/if}}">
             {{#if request.img}}<img class="planner-group-icon" src="{{request.img}}" alt="">{{/if}}
-            <div class="planner-request-label">{{request.label}}</div>
+            <div class="planner-request-label">
+                {{request.label}}
+                {{#if request.extensionMissing}}<i class="fas fa-triangle-exclamation planner-request-warning" data-tooltip="{{request.blockedReason}}"></i>{{/if}}
+            </div>
             {{#if request.levels}}
             <span class="planner-request-levels{{#if request.requested}} locked{{/if}}" {{#if request.requested}}data-tooltip="{{localize 'STEIGERUNGSPLANER.LevelLocked'}}"{{/if}}>
                 {{#each request.levels as |level|}}
@@ -59,6 +62,10 @@
             <a class="planner-withdraw" data-request-withdraw data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestWithdraw'}}">
                 <i class="fas fa-rotate-left"></i>
             </a>
+            {{else if request.blockedReason}}
+            <span class="planner-send planner-send-blocked" data-tooltip="{{request.blockedReason}}">
+                <i class="fas fa-paper-plane"></i>
+            </span>
             {{else}}
             <a class="planner-send" data-request-send data-id="{{request.id}}" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestSend'}}">
                 <i class="fas fa-paper-plane"></i>

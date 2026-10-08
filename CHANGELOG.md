@@ -7,8 +7,10 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 ### Hinzugefügt
 - **Changelog:** Neue CHANGELOG.md, die unter anderem der [Big Bad Module Manager](https://foundryvtt.com/packages/bbmm) nach Updates anzeigt.
 - **Ziel-FW für angefragte Zauber und Liturgien:** Beim Planen im Katalog und in der Anfrage lässt sich ein FW angeben, auf den der Zauber oder die Liturgie nach dem Erlernen steigen soll. Die Kosten zählen in die verplanten AP mit, nach der Genehmigung durch den SL stehen die Steigerungen als normale Schritte im Plan ([#41](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/41)).
+- **Erweiterungen für geplante Zauber und Liturgien:** Erweiterungen lassen sich schon planen, solange der Zauber oder die Liturgie nur angefragt ist. Anfragen kann man sie, sobald der Zauber gelernt ist und sein FW reicht ([#49](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/49)).
 
 ### Geändert
+- Die Anfragen im Planer-Tab sind nach Art und darin alphabetisch sortiert, Erweiterungen stehen direkt bei ihrem Zauber oder ihrer Liturgie.
 - Kürzere Beschriftungen im Planer-Tab: „Wert planen“ statt „Ziel hinzufügen“, „Katalog“ statt „Sonderfertigkeiten & mehr“ (auch als Fenstertitel) und „… AP frei · … AP verplant“ als Zusammenfassung. Die ausführliche Erklärung steht jeweils im Tooltip.
 
 ### Behoben
