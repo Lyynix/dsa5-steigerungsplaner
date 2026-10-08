@@ -29,11 +29,11 @@ Wird ein Wert direkt gesetzt (Strg+Enter oder mit ausgeschalteter Einstellung), 
 
 ## Im Steigerungsplaner-Tab
 
-Oben stehen die **verfügbaren AP** und die **geplanten Kosten**. Darunter alle geplanten Schritte, gruppiert wie im Talente-Tab (Körper-, Gesellschafts-, Natur-, Wissens- und Handwerkstalente, Kampftechniken, Zauber, Liturgien, Eigenschaften, Basiswerte, Sonstige).
+Oben steht, wie viele AP **frei** und wie viele schon **verplant** sind. Darunter alle geplanten Schritte, gruppiert wie im Talente-Tab (Körper-, Gesellschafts-, Natur-, Wissens- und Handwerkstalente, Kampftechniken, Zauber, Liturgien, Eigenschaften, Basiswerte, Sonstige).
 
 Die Schritte eines Ziels bauen aufeinander auf (z. B. Kraftakt 5→6, dann 6→7). Angewendet wird deshalb immer von vorne. Die Bedienelemente:
 
-- **"Ziel hinzufügen"** (1) oben im Tab: öffnet eine durchsuchbare Liste aller Ziele, für die noch nichts geplant ist, und plant für das gewählte die erste Steigerung.
+- **"Wert planen"** (1) oben im Tab: öffnet eine durchsuchbare Liste aller Ziele, für die noch nichts geplant ist, und plant für das gewählte die erste Steigerung.
 - **Pfeil neben den Kacheln** (2): wendet den vordersten Schritt an, also die echte Steigerung inklusive AP-Abzug.
 - **Klick auf eine Kachel** (3): wendet alle Schritte bis einschließlich dieser an, so weit die AP reichen.
 - **X einer Kachel** (4): verwirft diesen und alle folgenden Schritte.
@@ -48,7 +48,7 @@ Schritte, für die die verfügbaren AP gerade nicht reichen, werden abgedunkelt.
 
 ## Sonderfertigkeiten, Vor- und Nachteile, Zauber & mehr
 
-Neues kauft man nicht Schritt für Schritt, sondern bekommt es vom SL genehmigt. Dafür gibt es oben im Tab den Button **"Sonderfertigkeiten & mehr"**. Er öffnet ein Fenster mit allem, was der Charakter lernen könnte:
+Neues kauft man nicht Schritt für Schritt, sondern bekommt es vom SL genehmigt. Dafür gibt es oben im Tab den Button **"Katalog"**. Er öffnet ein Fenster mit allem, was der Charakter lernen könnte:
 
 - Vor- und Nachteile, Sonderfertigkeiten (allgemein, Kampf, magisch, karmal), Zauber, Rituale, Zaubertricks, Liturgien, Zeremonien, Segnungen und Erweiterungen. Dazu höhere Stufen von Sonderfertigkeiten und Vorteilen, die der Charakter schon hat.
 - Magisches sehen nur Zauberer, Karmales nur Geweihte. Erweiterungen erscheinen nur für Zauber und Liturgien, die der Charakter beherrscht.
@@ -58,7 +58,7 @@ Im Fenster kann man nach Einträgen **suchen** (1), ab drei Buchstaben auch in d
 
 ![Auswahlfenster mit Filtern nach Kategorie und Buch und den Details einer Zaubererweiterung](assets/request-picker.png)
 
-Geplante Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sie zählen in die geplanten Kosten mit und werden abgedunkelt, wenn die AP nicht reichen.
+Geplante Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sie zählen in die verplanten AP mit und werden abgedunkelt, wenn die AP nicht reichen.
 
 - **Papierflieger** (1): fragt den Eintrag beim SL an. Solange er dort liegt, lässt er sich nicht ändern, aber mit dem **Rückgängig-Pfeil** (2) zurückziehen.
 - **Mülleimer** (3): verwirft den Eintrag.
@@ -98,9 +98,9 @@ Genehmigt oder lehnt der SL ab, bekommt der Spieler eine Benachrichtigung. Ein a
 ## Kurzanleitung
 
 1. Charakterbogen eines eigenen Charakters öffnen.
-2. Steigerungen planen: per **Shift-Klick auf "+"** (oder "-" für Verringerungen), durch Eintippen des Zielwerts ins Wertfeld oder im Tab **"Steigerungsplaner"** über **"Ziel hinzufügen"** (siehe [Planen im Charakterbogen](#planen-im-charakterbogen)).
+2. Steigerungen planen: per **Shift-Klick auf "+"** (oder "-" für Verringerungen), durch Eintippen des Zielwerts ins Wertfeld oder im Tab **"Steigerungsplaner"** über **"Wert planen"** (siehe [Planen im Charakterbogen](#planen-im-charakterbogen)).
 3. Im Tab **"Steigerungsplaner"** das Geplante ansehen, ergänzen, anwenden oder verwerfen (siehe [Im Steigerungsplaner-Tab](#im-steigerungsplaner-tab)).
-4. Neue Sonderfertigkeiten, Vor- und Nachteile, Zauber usw. über **"Sonderfertigkeiten & mehr"** planen und beim SL anfragen (siehe [Sonderfertigkeiten, Vor- und Nachteile, Zauber & mehr](#sonderfertigkeiten-vor--und-nachteile-zauber--mehr)).
+4. Neue Sonderfertigkeiten, Vor- und Nachteile, Zauber usw. über den **"Katalog"** planen und beim SL anfragen (siehe [Sonderfertigkeiten, Vor- und Nachteile, Zauber & mehr](#sonderfertigkeiten-vor--und-nachteile-zauber--mehr)).
 
 ## Bekannte Einschränkungen
 
