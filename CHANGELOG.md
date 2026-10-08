@@ -4,6 +4,8 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 
 ## Unveröffentlicht
 
+## 1.1.0 – 2026-10-08
+
 ### Hinzugefügt
 - **Changelog:** Neue CHANGELOG.md, die unter anderem der [Big Bad Module Manager](https://foundryvtt.com/packages/bbmm) nach Updates anzeigt.
 - **Ziel-FW für angefragte Zauber und Liturgien:** Beim Planen im Katalog und in der Anfrage lässt sich ein FW angeben, auf den der Zauber oder die Liturgie nach dem Erlernen steigen soll. Die Kosten zählen in die verplanten AP mit, nach der Genehmigung durch den SL stehen die Steigerungen als normale Schritte im Plan ([#41](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/41)).
