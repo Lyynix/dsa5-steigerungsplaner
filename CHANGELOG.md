@@ -7,6 +7,12 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 ### Hinzugefügt
 - **Changelog:** Neue CHANGELOG.md, die unter anderem der [Big Bad Module Manager](https://foundryvtt.com/packages/bbmm) nach Updates anzeigt.
 
+### Geändert
+- Kürzere Beschriftungen im Planer-Tab: „Wert planen“ statt „Ziel hinzufügen“, „Katalog“ statt „Sonderfertigkeiten & mehr“ (auch als Fenstertitel) und „… AP frei · … AP verplant“ als Zusammenfassung. Die ausführliche Erklärung steht jeweils im Tooltip.
+
+### Behoben
+- Die Buttons und die AP-Zusammenfassung im Kopf des Planer-Tabs brechen nicht mehr auf zwei Zeilen um ([#43](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/43)).
+
 ## 1.0.0 – 2026-10-04
 
 ### Hinzugefügt
