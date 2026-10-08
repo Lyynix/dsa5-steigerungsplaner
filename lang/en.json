@@ -63,6 +63,8 @@
   "STEIGERUNGSPLANER.RequestRemove": "Discard request",
   "STEIGERUNGSPLANER.RequestPending": "requested",
   "STEIGERUNGSPLANER.RequestLevel": "Level {level}",
+  "STEIGERUNGSPLANER.TargetFW": "Target SR",
+  "STEIGERUNGSPLANER.TargetFWTooltip": "Learning: {learn} AP · Raising to SR {fw}: {steps} AP",
   "STEIGERUNGSPLANER.RequestUnaffordable": "Not enough AP",
   "STEIGERUNGSPLANER.LevelOwned": "Already owned",
   "STEIGERUNGSPLANER.LevelPlanned": "Currently planned",

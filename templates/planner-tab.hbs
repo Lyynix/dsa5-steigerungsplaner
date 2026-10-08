@@ -34,6 +34,13 @@
             {{else if request.level}}
             <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>
             {{/if}}
+            {{#if request.fw}}
+            <label class="planner-request-fw" data-tooltip="{{request.fw.tooltip}}">
+                {{localize "STEIGERUNGSPLANER.TargetFW"}} {{request.fw.start}} &rarr;
+                <input type="number" data-request-fw data-id="{{request.id}}" value="{{request.fw.target}}" min="{{request.fw.start}}" step="1">
+                {{#if request.fw.hint}}<span class="planner-request-fw-hint">{{request.fw.hint}}</span>{{/if}}
+            </label>
+            {{/if}}
             {{#if request.costUnknown}}
             <span class="planner-request-info planner-request-cost" data-tooltip="{{localize 'STEIGERUNGSPLANER.CostUnknown'}}">? AP</span>
             {{else}}

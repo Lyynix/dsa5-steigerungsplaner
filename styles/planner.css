@@ -152,6 +152,33 @@
   white-space: nowrap;
 }
 
+/* Wanted FW of a spell/liturgy request: "FW 0 → [7] +24 AP". The hint is dimmed, it's only the
+   player's own planning on top of what the GM approves. */
+.steigerungsplaner-tab .planner-request-fw {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0.5rem;
+  white-space: nowrap;
+
+  & input {
+    width: 3em;
+    height: 1.6rem;
+    text-align: center;
+  }
+}
+
+.steigerungsplaner-tab .planner-request-fw-hint,
+.steigerungsplaner-request-picker .picker-fw-hint {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.steigerungsplaner-request-picker .picker-field input[name="targetFW"] {
+  width: 4em;
+}
+
 /* Fixed width, so the level buttons in front of it don't shift when the cost gets another digit. */
 .steigerungsplaner-tab .planner-request-cost {
   width: 4.5em;

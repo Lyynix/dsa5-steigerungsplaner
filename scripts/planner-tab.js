@@ -47,9 +47,20 @@ export default class PlannerTab {
         clickable: !level.owned && request.status === 'planned',
         tooltip: this.levelTooltip(level, request.level),
       }));
+      const fw = RequestController.requestFW(request);
       return {
         ...request,
         levels,
+        fw: fw && {
+          ...fw,
+          // Shown next to the field only once something is planned on top of learning it.
+          hint: fw.target > fw.start ? (fw.stepsCost === null ? '+? AP' : `+${fw.stepsCost} AP`) : '',
+          tooltip: game.i18n.format('STEIGERUNGSPLANER.TargetFWTooltip', {
+            learn: cost ?? '?',
+            fw: fw.target,
+            steps: fw.stepsCost ?? '?',
+          }),
+        },
         label: RequestController.label(request),
         requested: request.status === 'requested',
         rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
@@ -60,7 +71,8 @@ export default class PlannerTab {
     });
 
     // Requests count into the planned cost until the GM approves them - then the system charges them.
-    const requestCost = context.plannerRequests.reduce((sum, r) => sum + (r.cost ?? 0), 0);
+    // A spell's wanted FW counts too, the GM approving it turns those into regular steps.
+    const requestCost = context.plannerRequests.reduce((sum, r) => sum + (r.cost ?? 0) + (r.fw?.stepsCost ?? 0), 0);
     context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0) + requestCost;
     // The GM doesn't ask themselves - they get a check mark that buys the request right away.
     context.plannerIsGM = game.user.isGM;
@@ -172,6 +184,22 @@ export default class PlannerTab {
         const target = ev.currentTarget;
         target.style.pointerEvents = 'none';
         await RequestController.approveRequest(sheet.actor, target.dataset.id);
+        sheet.render();
+      });
+    });
+
+    // The wanted FW of a spell/liturgy request. Handled on the field itself so the change doesn't
+    // reach the sheet's form, Enter just commits the value instead of submitting the form.
+    element.querySelectorAll('[data-request-fw]').forEach((el) => {
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key !== 'Enter') return;
+        ev.preventDefault();
+        ev.currentTarget.blur();
+      });
+      el.addEventListener('change', async (ev) => {
+        ev.stopPropagation();
+        const { id } = ev.currentTarget.dataset;
+        await RequestController.setTargetFW(sheet.actor, id, Number(ev.currentTarget.value));
         sheet.render();
       });
     });

@@ -63,6 +63,8 @@
   "STEIGERUNGSPLANER.RequestRemove": "Anfrage verwerfen",
   "STEIGERUNGSPLANER.RequestPending": "angefragt",
   "STEIGERUNGSPLANER.RequestLevel": "Stufe {level}",
+  "STEIGERUNGSPLANER.TargetFW": "Ziel-FW",
+  "STEIGERUNGSPLANER.TargetFWTooltip": "Erlernen: {learn} AP · Steigern auf FW {fw}: {steps} AP",
   "STEIGERUNGSPLANER.RequestUnaffordable": "Nicht genug AP",
   "STEIGERUNGSPLANER.LevelOwned": "Schon vorhanden",
   "STEIGERUNGSPLANER.LevelPlanned": "Aktuell geplant",
