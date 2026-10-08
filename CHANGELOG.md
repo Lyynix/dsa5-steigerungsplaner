@@ -4,6 +4,7 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 
 ## Unveröffentlicht
 
+### Hinzugefügt
 - **Changelog:** Hinzufügen einer CHANGELOG.md, die unter anderem von [Big Bad Module Manager](https://foundryvtt.com/packages/bbmm) eingelesen und dargestellt wird.
 
 ## 1.0.0 – 2026-10-04
