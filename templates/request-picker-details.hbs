@@ -10,7 +10,7 @@
 
     <div class="picker-choice">
         {{#if entry.extension}}
-        <p class="{{#if entry.extensionTooLow}}picker-warning{{/if}}">{{localize "STEIGERUNGSPLANER.ExtensionFW" required=entry.extension.requiredFW current=entry.extension.currentFW source=entry.extension.source}}</p>
+        <p class="{{#if entry.extensionTooLow}}picker-warning{{/if}}">{{entry.extensionText}}</p>
         {{/if}}
 
         {{#if entry.levels.length}}

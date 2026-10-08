@@ -687,6 +687,20 @@
   color: var(--color-level-error, #c00);
 }
 
+/* An extension whose spell/liturgy is gone from both the sheet and the plan. */
+.steigerungsplaner-tab .planner-request-warning {
+  margin-left: 0.35rem;
+  color: var(--color-level-warning, #c90);
+  font-weight: normal;
+}
+
+/* Send button of an extension that can't be asked for yet - the tooltip says why. Not Foundry's
+   .disabled class: that one sets pointer-events: none, which would hide the tooltip too. */
+.steigerungsplaner-tab .planner-send-blocked {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* Add-target picker (planner-picker.js). Lives on document.body, so nothing here is scoped to the
    tab. Colors mirror Foundry's own #context-menu for both themes - not the id itself, that would
    clash with the real context menu. Just below tooltips, so it sits above every app window. */

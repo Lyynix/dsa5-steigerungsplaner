@@ -48,6 +48,7 @@ export default class PlannerTab {
         tooltip: this.levelTooltip(level, request.level),
       }));
       const fw = RequestController.requestFW(request);
+      const extension = RequestController.extensionState(actor, request);
       return {
         ...request,
         levels,
@@ -64,6 +65,9 @@ export default class PlannerTab {
         label: RequestController.label(request),
         requested: request.status === 'requested',
         rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
+        // An extension can only be asked for once its spell/liturgy is there with a high enough FW.
+        blockedReason: extension && extension.state !== 'ready' ? this.extensionBlockedReason(extension) : '',
+        extensionMissing: extension?.state === 'missing',
         cost,
         costUnknown: cost === null,
         unaffordable: cost !== null && cost > context.plannerAvailableXP,
@@ -78,6 +82,13 @@ export default class PlannerTab {
     context.plannerIsGM = game.user.isGM;
     context.plannerEmpty =!context.plannerSections.length && !context.plannerRequests.length;
     return context;
+  }
+
+  static extensionBlockedReason({ state, source, requiredFW, currentFW }) {
+    const data = { source, required: requiredFW, current: currentFW };
+    if (state === 'missing') return game.i18n.format('STEIGERUNGSPLANER.ExtensionSourceMissing', data);
+    if (state === 'notLearned') return game.i18n.format('STEIGERUNGSPLANER.ExtensionSourceNotLearned', data);
+    return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWTooLow', data);
   }
 
   // A level button's tooltip: how the planned cost changes when picking that level.
