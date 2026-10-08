@@ -40,6 +40,20 @@ const CLERICAL_TYPES = new Set(['liturgy', 'ceremony', 'blessing']);
 // Types with a FW, which can get planned steps on top of learning them.
 const FW_TYPES = new Set(['spell', 'ritual', 'liturgy', 'ceremony']);
 
+// Order of the request list in the planner tab: advantages, disadvantages, special abilities, then
+// everything magical and everything clerical. Extensions go with the spell/liturgy they extend.
+const LIST_GROUPS = {
+  advantage: 0,
+  disadvantage: 1,
+  specialability: 2,
+  spell: 3,
+  ritual: 3,
+  magictrick: 3,
+  liturgy: 4,
+  ceremony: 4,
+  blessing: 4,
+};
+
 // Requests being approved on this client right now - pruneFulfilled leaves them to approveRequest,
 // which turns the wanted FW into plan steps itself once the item is bought.
 const approving = new Set();
@@ -417,6 +431,13 @@ export default class RequestController {
     requests.push(entry);
     await PlannerData.saveRequests(actor, requests);
     return entry;
+  }
+
+  // Which group of the planner tab's request list a request belongs to, see LIST_GROUPS. Extensions
+  // planned before their source was stored with them count as magical.
+  static listGroup(request) {
+    const type = request.type === 'spellextension' ? (request.extensionOf?.type ?? 'spell') : request.type;
+    return LIST_GROUPS[type] ?? Object.keys(LIST_GROUPS).length;
   }
 
   // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"

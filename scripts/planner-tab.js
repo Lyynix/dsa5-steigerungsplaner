@@ -39,6 +39,8 @@ export default class PlannerTab {
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
     // Each one is weighed against the available AP on its own, like each target's steps are.
+    // Sorted by group, then by name - so an extension ("Axxeleratus - Noch schneller") ends up right
+    // below its spell, whenever it was planned.
     context.plannerRequests = PlannerData.getRequests(actor).map((request) => {
       const cost = RequestController.requestCost(actor, request);
       const levels = RequestController.requestLevels(actor, request)?.map((level) => ({
@@ -73,6 +75,9 @@ export default class PlannerTab {
         unaffordable: cost !== null && cost > context.plannerAvailableXP,
       };
     });
+    context.plannerRequests.sort(
+      (a, b) => RequestController.listGroup(a) - RequestController.listGroup(b) || a.label.localeCompare(b.label, game.i18n.lang),
+    );
 
     // Requests count into the planned cost until the GM approves them - then the system charges them.
     // A spell's wanted FW counts too, the GM approving it turns those into regular steps.

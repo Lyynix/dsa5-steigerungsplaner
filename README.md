@@ -58,7 +58,7 @@ Im Fenster kann man nach Einträgen **suchen** (1), ab drei Buchstaben auch in d
 
 ![Auswahlfenster mit Filtern nach Kategorie und Buch und den Details einer Zaubererweiterung](assets/request-picker.png)
 
-Geplante Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sie zählen in die verplanten AP mit und werden abgedunkelt, wenn die AP nicht reichen.
+Geplante Einträge stehen im Tab unter **"Anfragen"**, mit ihren geschätzten AP-Kosten. Sortiert sind sie nach Art (Vor- und Nachteile, Sonderfertigkeiten, Magisches, Karmales) und darin alphabetisch, Erweiterungen stehen so direkt bei ihrem Zauber. Sie zählen in die verplanten AP mit und werden abgedunkelt, wenn die AP nicht reichen.
 
 - **Papierflieger** (1): fragt den Eintrag beim SL an. Solange er dort liegt, lässt er sich nicht ändern, aber mit dem **Rückgängig-Pfeil** (2) zurückziehen.
 - **Mülleimer** (3): verwirft den Eintrag.
