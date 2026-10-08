@@ -137,6 +137,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     const system = doc?.system;
 
     const levels = entry.level ? Array.from({ length: entry.level.max - entry.level.min + 1 }, (_, i) => entry.level.min + i) : [];
+    const stf = ['spell', 'ritual', 'liturgy', 'ceremony'].includes(entry.type) ? system?.StF?.value : null;
     return {
       ...entry,
       label: entry.name.replace(' ()', ''),
@@ -148,7 +149,10 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
       // them out itself if the GM obfuscated the details.
       properties: system?.chatDataToString ? await enrich(system.chatDataToString(doc.name)) : '',
       description: system && !system.obfuscation?.description ? await enrich(system.description?.value) : '',
-      stf: ['spell', 'ritual', 'liturgy', 'ceremony'].includes(entry.type) ? system?.StF?.value : null,
+      stf,
+      // Spells and liturgies can get a FW to raise them to after learning, starting at the FW
+      // they're learned at.
+      startFW: stf ? Number(system?.talentValue?.value) || 0 : null,
       leveled: !!entry.level,
     };
   }
@@ -157,11 +161,12 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     return this.element.querySelector('[data-application-part="details"]');
   }
 
-  // The level and variant currently chosen in the details. `missingVariant` is set when a variant is
-  // needed but none is entered, the cost can still be shown without it for most items.
+  // The level, variant and wanted FW currently chosen in the details. `missingVariant` is set when
+  // a variant is needed but none is entered, the cost can still be shown without it for most items.
   #readChoice(entry) {
     const details = this.#detailsElement();
     const level = entry.level ? Number(details.querySelector('[name="level"]').value) : null;
+    const targetFW = Number(details.querySelector('[name="targetFW"]')?.value) || null;
 
     let variant = null;
     if (entry.variant?.kind === 'text') {
@@ -175,7 +180,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
         if (custom) variant.customEntry = custom;
       }
     }
-    return { level, variant, missingVariant: !!entry.variant && !variant };
+    return { level, variant, targetFW, missingVariant: !!entry.variant && !variant };
   }
 
   async #updateCost() {
@@ -184,7 +189,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     if (!entry || !details) return;
 
     const doc = (await this.#document(entry.uuid)) ?? entry;
-    const { level, variant } = this.#readChoice(entry);
+    const { level, variant, targetFW } = this.#readChoice(entry);
     const unknown = game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
 
     const cost = RequestController.estimateCost(this.actor, doc, { level, variant });
@@ -195,6 +200,14 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     if (levelField) {
       const costs = RequestController.levelCosts(this.actor, doc, variant);
       levelField.textContent = costs ? costs.map((c) => `${c}`).join(' / ') : unknown;
+    }
+
+    // What raising it to the wanted FW costs on top of learning it.
+    const fwHint = details.querySelector('.picker-fw-hint');
+    if (fwHint) {
+      const { talentValue, StF } = doc.system;
+      const fw = RequestController.requestFW({ type: doc.type, targetFW, costData: { talentValue, StF } });
+      fwHint.textContent = !fw || fw.target <= fw.start ? '' : fw.stepsCost === null ? '+? AP' : `+${fw.stepsCost} AP`;
     }
   }
 
@@ -237,11 +250,11 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     const entry = this.#selectedEntry();
     if (!entry) return;
 
-    const { level, variant, missingVariant } = this.#readChoice(entry);
+    const { level, variant, targetFW, missingVariant } = this.#readChoice(entry);
     if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
 
     const item = (await this.#document(entry.uuid)) ?? entry;
-    const added = await RequestController.addRequest(this.actor, item, { level, variant });
+    const added = await RequestController.addRequest(this.actor, item, { level, variant, targetFW });
     if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestExists', { name: entry.name.replace(' ()', '') }));
 
     // The list too: entries without a variant drop out of it once they're requested.

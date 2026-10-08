@@ -41,6 +41,14 @@
         {{/if}}
         {{/if}}
 
+        {{#if entry.stf}}
+        <label class="picker-field">
+            <span>{{localize "STEIGERUNGSPLANER.TargetFW"}}</span>
+            <input type="number" name="targetFW" value="{{entry.startFW}}" min="{{entry.startFW}}" step="1">
+            <span class="picker-fw-hint"></span>
+        </label>
+        {{/if}}
+
         <div class="picker-costs">
             {{#if entry.stf}}<span><strong>{{localize "STEIGERUNGSPLANER.StF"}}:</strong> {{entry.stf}}</span>{{/if}}
             {{#if entry.leveled}}<span><strong>{{localize "STEIGERUNGSPLANER.CostPerLevel"}}:</strong> <span class="picker-level-costs"></span></span>{{/if}}

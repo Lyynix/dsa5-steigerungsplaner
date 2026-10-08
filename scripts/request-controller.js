@@ -1,3 +1,4 @@
+import PlannerController from './planner-controller.js';
 import PlannerData from './planner-data.js';
 
 const GROUP_ORDER = [
@@ -36,15 +37,24 @@ const GROUP_LABELS = {
 
 const MAGICAL_TYPES = new Set(['spell', 'ritual', 'magictrick']);
 const CLERICAL_TYPES = new Set(['liturgy', 'ceremony', 'blessing']);
+// Types with a FW, which can get planned steps on top of learning them.
+const FW_TYPES = new Set(['spell', 'ritual', 'liturgy', 'ceremony']);
+
+// Requests being approved on this client right now - pruneFulfilled leaves them to approveRequest,
+// which turns the wanted FW into plan steps itself once the item is bought.
+const approving = new Set();
 
 // Requests for items that need GM approval instead of being bought step by step (special
 // abilities, spells, liturgies, ...). An entry looks like
-//   { id, uuid, name, type, img, level, variant, costData, status }
+//   { id, uuid, name, type, img, level, variant, targetFW, costData, status }
 // - uuid/name/type/img: taken from the request index
 // - level: the wanted level for leveled special abilities/advantages, otherwise null
 // - variant: the chosen variant (adoption), e.g. { name: 'Klettern', itemId: '...' }, otherwise
 //   null. itemId is set when the variant is an item of the character - the system needs the real
 //   item on approval, its StF can change the cost
+// - targetFW: for spells, rituals, liturgies and ceremonies the FW the player wants to raise it to
+//   after learning it, otherwise null. Only the player's own planning: the GM approves learning
+//   it, then the steps up to it become regular plan entries
 // - costData: the item's cost fields (APValue, StF, ...) for the estimate, see requestCost
 // - status: 'planned' or 'requested'
 export default class RequestController {
@@ -286,6 +296,48 @@ export default class RequestController {
     });
   }
 
+  // The FW part of a spell/liturgy request: { start, target, stepsCost }, start being the FW it's
+  // learned at, stepsCost what raising it from there to target costs (null if that can't be told).
+  // null for other types and for requests planned before the cost data was stored with them.
+  static requestFW(request) {
+    if (!FW_TYPES.has(request.type) || !request.costData) return null;
+
+    const start = Number(request.costData.talentValue?.value) || 0;
+    const target = Math.max(start, Number(request.targetFW) || start);
+    return { start, target, stepsCost: this.#stepsCost(request.costData.StF?.value, start, target) };
+  }
+
+  // Raising a FW from a to a + 1 costs the cost table's entry a + 1, same as a regular planned step.
+  static #stepsCost(stf, from, to) {
+    const costs = game.dsa5.config.advancementCosts[stf];
+    if (!costs) return null;
+    let total = 0;
+    for (let fw = from; fw < to; fw++) {
+      if (costs[fw + 1] === undefined) return null;
+      total += costs[fw + 1];
+    }
+    return total;
+  }
+
+  // Changes the FW a spell/liturgy request should be raised to after learning. Also while the GM
+  // has it - they don't see it, it doesn't change what they approve.
+  static async setTargetFW(actor, id, fw) {
+    if (!actor.isOwner) return;
+
+    const requests = PlannerData.getRequests(actor);
+    const entry = requests.find((r) => r.id === id);
+    const current = entry && this.requestFW(entry);
+    if (!current || !Number.isInteger(fw)) return;
+
+    // Capped by the cost table, beyond it there's no cost to plan with.
+    const max = (game.dsa5.config.advancementCosts[entry.costData.StF?.value]?.length ?? 1) - 1;
+    const target = Math.min(Math.max(fw, current.start), Math.max(max, current.start));
+    if (target === current.target) return;
+
+    entry.targetFW = target;
+    await PlannerData.saveRequests(actor, requests);
+  }
+
   // Changes the wanted level of a planned request. Not while the GM has it, that would change what
   // they're approving - it has to be withdrawn first.
   static async setLevel(actor, id, level) {
@@ -308,7 +360,7 @@ export default class RequestController {
 
   // Returns the new entry, or null if the same item with the same variant is already in there.
   // `item` is the full item, its system data is needed for the cost.
-  static async addRequest(actor, item, { level = null, variant = null } = {}) {
+  static async addRequest(actor, item, { level = null, variant = null, targetFW = null } = {}) {
     if (!actor.isOwner) return null;
 
     const requests = PlannerData.getRequests(actor);
@@ -323,6 +375,7 @@ export default class RequestController {
       img: item.img,
       level,
       variant,
+      targetFW: FW_TYPES.has(item.type) ? Math.max(Number(item.system.talentValue?.value) || 0, Number(targetFW) || 0) : null,
       costData: this.#costData(item.system),
       status: 'planned',
     };
@@ -381,14 +434,31 @@ export default class RequestController {
       return false;
     }
 
-    const bought = await this.#buy(actor, source, request);
-    if (!bought) {
-      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.ApproveFailed', { name: this.label(request), actor: actor.name }));
-      return false;
-    }
+    approving.add(id);
+    try {
+      const bought = await this.#buy(actor, source, request);
+      if (!bought) {
+        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.ApproveFailed', { name: this.label(request), actor: actor.name }));
+        return false;
+      }
 
-    await this.removeRequest(actor, id);
-    return true;
+      await this.#planTargetFW(actor, request);
+      await this.removeRequest(actor, id);
+      return true;
+    } finally {
+      approving.delete(id);
+    }
+  }
+
+  // Once a spell/liturgy is learned, the FW the player wanted becomes regular plan entries on the
+  // new item - the player applies them like any other steps.
+  static async #planTargetFW(actor, request) {
+    const fw = this.requestFW(request);
+    if (!fw || fw.target <= fw.start) return;
+
+    const item = actor.items.find((i) => i.type === request.type && i.name === this.#itemName(request));
+    if (!item || Number(item.system.talentValue?.value) >= fw.target) return;
+    await PlannerController.planTo(actor, 'item', item.id, fw.target);
   }
 
   static async #buy(actor, source, request) {
@@ -451,14 +521,16 @@ export default class RequestController {
   }
 
   // Drops every request the character already has the item for, at the wanted level if it has one.
+  // A wanted FW is kept as plan steps, like on approval.
   static async pruneFulfilled(actor) {
     if (!actor.isOwner) return;
 
     const requests = PlannerData.getRequests(actor);
-    const remaining = requests.filter((r) => !this.#fulfilled(actor, r));
-    if (remaining.length === requests.length) return;
+    const fulfilled = requests.filter((r) => !approving.has(r.id) && this.#fulfilled(actor, r));
+    if (!fulfilled.length) return;
 
-    await PlannerData.saveRequests(actor, remaining);
+    await PlannerData.saveRequests(actor, requests.filter((r) => !fulfilled.includes(r)));
+    for (const request of fulfilled) await this.#planTargetFW(actor, request);
   }
 
   static #fulfilled(actor, request) {
