@@ -110,4 +110,4 @@ Genehmigt oder lehnt der SL ab, bekommt der Spieler eine Benachrichtigung. Ein a
 
 ## Mitentwickeln
 
-Issues und Pull Requests sind willkommen.
+Issues und Pull Requests sind willkommen. Wie wir dabei arbeiten, steht in [CONTRIBUTING.md](CONTRIBUTING.md).
