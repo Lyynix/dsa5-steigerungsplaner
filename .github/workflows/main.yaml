@@ -113,6 +113,20 @@ jobs:
           DOWNLOAD: ${{ env.release_module_url }}
 
 
+      # The changelog always has a "## Unveröffentlicht" section collecting the
+      # entries since the last release. In the archive it becomes
+      # "## <version> – <release date>" (or goes, if it's empty), so the
+      # CHANGELOG.md there names the version - that file is what BBMM (Big Bad
+      # Module Manager) shows the GM after an update. The repository gets the
+      # same plus a fresh, empty section further down.
+      # See .github/scripts/stamp-changelog.mjs.
+      - name: Stamp Changelog With Release Version
+        env:
+          VERSION: ${{ steps.get_version.outputs.version-without-v }}
+          RELEASE_DATE: ${{ github.event.release.published_at }}
+        run: node .github/scripts/stamp-changelog.mjs "$VERSION" "${RELEASE_DATE:0:10}"
+
+
       # Create a "steigerungsplaner.zip" archive containing all the module's
       # required files. If you have other directories or files that will need
       # to be added to your packaged module, add them here.
@@ -128,6 +142,7 @@ jobs:
             `# The files that will be included.` \
             module.json                          \
             README.md                            \
+            CHANGELOG.md                         \
             LICENSE                              \
             templates/                           \
             scripts/                             \
@@ -150,6 +165,38 @@ jobs:
           artifacts: './module.json, ./steigerungsplaner.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
+
+
+      # Commit the stamped version heading back to the default branch, with a
+      # fresh, empty "## Unveröffentlicht" on top for the next entries. Only if
+      # the release was made from the branch's current head - had it moved on
+      # since, its "Unveröffentlicht" entries may already include changes that
+      # aren't part of this release, so it's left for a manual fix instead.
+      - name: Commit Stamped Changelog
+        env:
+          VERSION: ${{ steps.get_version.outputs.version-without-v }}
+          RELEASE_DATE: ${{ github.event.release.published_at }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch --quiet origin "$BRANCH"
+          if [ "$(git rev-parse "origin/$BRANCH")" != "$(git rev-parse HEAD)" ]; then
+            echo "::warning::$BRANCH has moved on since the release tag - stamp the changelog heading for $VERSION by hand."
+            exit 0
+          fi
+
+          # Fresh checkout of the branch: the working tree also holds the
+          # release-specific module.json, which must not be committed.
+          git checkout --quiet --force -B "$BRANCH" "origin/$BRANCH"
+          node .github/scripts/stamp-changelog.mjs "$VERSION" "${RELEASE_DATE:0:10}" --keep-unreleased
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "changelog for $VERSION" -- CHANGELOG.md
+          git push --quiet origin "$BRANCH"
 
 
       # Tell FoundryVTT's package admin about the new version, so it shows up
