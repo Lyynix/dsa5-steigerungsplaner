@@ -8,54 +8,54 @@
     <section class="overview-actor{{#if actor.collapsed}} collapsed{{/if}}" data-actor-id="{{actor.id}}">
         <header class="overview-actor-header">
             <a class="overview-toggle" data-action="toggleActor"><i class="fas {{#if actor.collapsed}}fa-caret-right{{else}}fa-caret-down{{/if}}"></i></a>
-            <img src="{{actor.img}}" alt="">
-            <a class="overview-actor-name" data-action="openSheet" data-tooltip="{{localize 'STEIGERUNGSPLANER.OverviewOpenSheet'}}">{{actor.name}}</a>
-            {{#if actor.openRequests.length}}<span class="overview-badge" data-tooltip="{{localize 'STEIGERUNGSPLANER.OverviewOpenRequests'}}"><i class="fas fa-envelope"></i> {{actor.openRequests.length}}</span>{{/if}}
-            <span class="overview-summary">{{actor.summary}}</span>
+            <img src="{{actor.img}}" alt="" onerror="this.onerror = null; this.src = 'icons/svg/mystery-man.svg';">
+            <h2 class="overview-actor-name"><a data-action="openSheet" data-tooltip="{{localize 'STEIGERUNGSPLANER.OverviewOpenSheet'}}">{{actor.name}}</a></h2>
+            <span class="overview-summary">{{actor.free}} · <span class="{{#if actor.overBudget}}over-budget{{/if}}">{{actor.planned}}</span></span>
         </header>
 
-        {{#unless actor.collapsed}}
+        {{!-- Waiting for the GM - shown even with the character collapsed. --}}
         {{#if actor.openRequests.length}}
-        <ol class="overview-requests">
+        <div class="overview-requests">
+            <div class="overview-requests-title"><i class="fas fa-envelope"></i> {{localize "STEIGERUNGSPLANER.OverviewOpenRequests"}}</div>
             {{#each actor.openRequests as |request|}}
-            <li class="overview-request" data-request-id="{{request.id}}">
-                <div class="overview-row">
-                    {{#if request.img}}<img src="{{request.img}}" alt="">{{/if}}
-                    <span class="overview-name">{{{request.link}}}</span>
-                    {{#if request.level}}<span class="overview-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>{{/if}}
-                    {{#if request.costUnknown}}
-                    <span class="overview-info overview-cost" data-tooltip="{{localize 'STEIGERUNGSPLANER.CostUnknown'}}">? AP</span>
-                    {{else}}
-                    <span class="overview-info overview-cost">{{request.cost}} AP</span>
-                    {{/if}}
-                    <a class="overview-approve" data-action="approve" data-tooltip="{{localize 'STEIGERUNGSPLANER.Approve'}}"><i class="fas fa-check"></i></a>
-                    <a class="overview-reject" data-action="reject" data-tooltip="{{localize 'STEIGERUNGSPLANER.Reject'}}"><i class="fas fa-ban"></i></a>
-                </div>
-                {{#if request.requirements}}
-                <p class="overview-requirements"><strong>{{localize "STEIGERUNGSPLANER.Requirements"}}:</strong> {{request.requirements}}</p>
+            <div class="overview-request" data-request-id="{{request.id}}">
+                {{#if request.img}}<img class="overview-icon" src="{{request.img}}" alt="">{{/if}}
+                <span class="overview-name">{{{request.link}}}</span>
+                {{#if request.level}}<span class="overview-chip">{{request.level}}</span>{{/if}}
+                {{#if request.costUnknown}}
+                <span class="overview-cost" data-tooltip="{{localize 'STEIGERUNGSPLANER.CostUnknown'}}">? AP</span>
+                {{else}}
+                <span class="overview-cost">{{request.cost}} AP</span>
                 {{/if}}
-            </li>
+                <button type="button" class="overview-approve" data-action="approve" data-tooltip="{{localize 'STEIGERUNGSPLANER.Approve'}}"><i class="fas fa-check"></i> {{localize "STEIGERUNGSPLANER.ApproveShort"}}</button>
+                <button type="button" class="overview-reject" data-action="reject" data-tooltip="{{localize 'STEIGERUNGSPLANER.Reject'}}"><i class="fas fa-ban"></i></button>
+                {{#if request.requirements}}
+                <div class="overview-requirements"><strong>{{localize "STEIGERUNGSPLANER.Requirements"}}:</strong> {{request.requirements}}</div>
+                {{/if}}
+            </div>
             {{/each}}
-        </ol>
+        </div>
         {{/if}}
 
-        {{#if actor.planned.length}}
-        <h4 class="overview-planned-label">{{localize "STEIGERUNGSPLANER.OverviewPlanned"}}</h4>
-        <ol class="overview-planned">
-            {{#each actor.planned as |entry|}}
-            <li class="overview-row">
-                {{#if entry.img}}<img src="{{entry.img}}" alt="">{{/if}}
-                <span class="overview-name">
-                    {{#if entry.request}}<i class="fas fa-scroll overview-request-icon" data-tooltip="{{localize 'STEIGERUNGSPLANER.OverviewFromCatalog'}}"></i>{{/if}}
-                    {{entry.label}}
-                    {{#if entry.rejected}}<span class="overview-rejected">{{localize "STEIGERUNGSPLANER.RequestRejected"}}</span>{{/if}}
+        {{#unless actor.collapsed}}
+        <div class="overview-sections">
+        {{#each actor.sections as |section|}}
+        <div class="overview-section skills {{section.cssClass}}">
+            <div class="overview-section-label">{{section.label}}</div>
+            <div class="overview-tiles">
+                {{#each section.entries as |entry|}}
+                <span class="overview-tile">
+                    {{#if entry.img}}<img class="overview-icon" src="{{entry.img}}" alt="">{{/if}}
+                    <span class="overview-name">{{entry.label}}</span>
+                    {{#if entry.detail}}<span class="overview-detail">{{entry.detail}}</span>{{/if}}
+                    {{#if entry.rejected}}<span class="overview-rejected" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestRejected'}}"><i class="fas fa-ban"></i></span>{{/if}}
+                    <span class="overview-cost">{{entry.cost}}</span>
                 </span>
-                {{#if entry.detail}}<span class="overview-info">{{entry.detail}}</span>{{/if}}
-                <span class="overview-info overview-cost">{{entry.cost}}</span>
-            </li>
-            {{/each}}
-        </ol>
-        {{/if}}
+                {{/each}}
+            </div>
+        </div>
+        {{/each}}
+        </div>
         {{/unless}}
     </section>
     {{else}}

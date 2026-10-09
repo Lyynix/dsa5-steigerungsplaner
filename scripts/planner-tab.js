@@ -65,6 +65,7 @@ export default class PlannerTab {
           }),
         },
         label: RequestController.label(request),
+        levelLabel: request.level ? this.romanNumeral(request.level) : '',
         requested: request.status === 'requested',
         rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
         // An extension can only be asked for once its spell/liturgy is there with a high enough FW.

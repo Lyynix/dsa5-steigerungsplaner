@@ -35,7 +35,7 @@
                 {{/each}}
             </span>
             {{else if request.level}}
-            <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.level}}</span>
+            <span class="planner-request-info">{{localize "STEIGERUNGSPLANER.RequestLevel" level=request.levelLabel}}</span>
             {{/if}}
             {{#if request.fw}}
             <label class="planner-request-fw" data-tooltip="{{request.fw.tooltip}}">

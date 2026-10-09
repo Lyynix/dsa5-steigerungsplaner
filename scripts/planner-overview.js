@@ -1,9 +1,26 @@
 import { FLAG_REQUESTS, MODULE_ID, PART_ID } from './module-config.js';
 import PlannerController from './planner-controller.js';
 import PlannerData from './planner-data.js';
+import PlannerTab from './planner-tab.js';
 import RequestController from './request-controller.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+// The plan's sections in a fixed order (the planner tab lists them as they were first planned),
+// see PlannerController.sectionFor. Anything else goes after them.
+const SECTION_ORDER = [
+  'characteristics',
+  'points',
+  'skill-body',
+  'skill-social',
+  'skill-nature',
+  'skill-knowledge',
+  'skill-trade',
+  'combat',
+  'magic',
+  'religion',
+  'other',
+];
 
 // The GM's window: what every player character has planned, with their open requests on top to
 // approve or reject. It opens by itself on login when there's something to decide and whenever a
@@ -13,7 +30,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
   static DEFAULT_OPTIONS = {
     id: 'steigerungsplaner-overview',
     classes: ['steigerungsplaner-overview'],
-    position: { width: 600, height: 'auto' },
+    position: { width: 640, height: 'auto' },
     window: { title: 'STEIGERUNGSPLANER.OverviewTitle', icon: 'fas fa-list-check', resizable: true },
     actions: {
       approve: PlannerOverview.#onApprove,
@@ -162,49 +179,73 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
           img: request.img,
           // A link to the item in its compendium, so the GM can read it up.
           link: await enrich(`@UUID[${request.uuid}]{${RequestController.label(request)}}`),
-          level: request.level,
+          level: request.level ? PlannerTab.romanNumeral(request.level) : null,
           cost,
           costUnknown: cost === null,
           requirements: doc?.system.requirements?.value ?? '',
         });
       }
 
-      // The plan: queued steps per target as start → end, then what's planned to be requested.
-      // Here the GM does see a spell's wanted FW - approving only leaves it out.
-      const planned = groups.map((group) => ({
-        img: PlannerController.iconFor(actor, group.type, group.key),
-        label: group.label,
-        detail: `${group.steps[0].from} → ${group.steps[group.steps.length - 1].to}`,
-        cost: `${group.totalCost} AP`,
-      }));
-      for (const request of requests.filter((r) => r.status !== 'requested')) {
+      // The plan in the planner tab's sections: queued steps per target as start → end, sorted by
+      // name. Then what's planned to be requested from the catalog, sorted like in the tab - here
+      // the GM does see a spell's wanted FW, approving only leaves it out.
+      const order = (id) => (SECTION_ORDER.includes(id) ? SECTION_ORDER.indexOf(id) : SECTION_ORDER.length);
+      const sections = PlannerTab.buildSections(actor)
+        .sort((a, b) => order(a.id) - order(b.id))
+        .map((section) => ({
+          label: section.label,
+          cssClass: section.cssClass,
+          entries: section.groups
+            .map((group) => ({
+              img: group.icon,
+              label: group.label,
+              detail: `${group.steps[0].from} » ${group.steps[group.steps.length - 1].to}`,
+              cost: `${group.totalCost} AP`,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label, game.i18n.lang)),
+        }));
+
+      const catalog = [];
+      const notRequested = requests
+        .filter((r) => r.status !== 'requested')
+        .map((request) => ({ request, label: RequestController.label(request) }))
+        .sort((a, b) => RequestController.listGroup(a.request) - RequestController.listGroup(b.request) || a.label.localeCompare(b.label, game.i18n.lang));
+      for (const { request, label } of notRequested) {
         const cost = RequestController.requestCost(actor, request);
         const fw = RequestController.requestFW(request);
         const steps = fw && fw.target > fw.start ? fw.stepsCost : null;
         const details = [];
-        if (request.level) details.push(game.i18n.format('STEIGERUNGSPLANER.RequestLevel', { level: request.level }));
+        // Written like on the sheet: "Adel III".
+        if (request.level) details.push(PlannerTab.romanNumeral(request.level));
         if (steps !== null) details.push(`${game.i18n.localize('STEIGERUNGSPLANER.TargetFW')} ${fw.target}`);
-        planned.push({
+        catalog.push({
           img: request.img,
-          label: RequestController.label(request),
+          label,
           detail: details.join(' · '),
-          request: true,
           rejected: !!request.rejected,
           cost: steps !== null ? `${cost ?? '?'} + ${steps} AP` : `${cost ?? '?'} AP`,
         });
       }
+      // First, like the requests section on top of the planner tab.
+      if (catalog.length) {
+        sections.unshift({ label: game.i18n.localize('STEIGERUNGSPLANER.AddRequest'), cssClass: 'steigerungsplaner-section-requests', entries: catalog });
+      }
+
+      const free = PlannerController.availableXP(actor);
+      const plannedCost = RequestController.plannedCost(actor);
 
       actors.push({
         id: actor.id,
         name: actor.name,
-        img: actor.img,
-        summary: game.i18n.format('STEIGERUNGSPLANER.Summary', {
-          free: PlannerController.availableXP(actor),
-          planned: RequestController.plannedCost(actor),
-        }),
+        img: actor.img || CONST.DEFAULT_TOKEN,
+        // Two parts, so the planned one alone can turn red: more planned than there's AP for yet -
+        // nothing wrong, but worth seeing at a glance.
+        free: game.i18n.format('STEIGERUNGSPLANER.SummaryFree', { free }),
+        planned: game.i18n.format('STEIGERUNGSPLANER.SummaryPlanned', { planned: plannedCost }),
+        overBudget: plannedCost > free,
         collapsed: this.#collapsed.has(actor.id),
         openRequests,
-        planned: this.#onlyOpen ? [] : planned,
+        sections: this.#onlyOpen ? [] : sections,
       });
     }
 
