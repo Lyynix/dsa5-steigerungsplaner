@@ -79,10 +79,7 @@ export default class PlannerTab {
       (a, b) => RequestController.listGroup(a) - RequestController.listGroup(b) || a.label.localeCompare(b.label, game.i18n.lang),
     );
 
-    // Requests count into the planned cost until the GM approves them - then the system charges them.
-    // A spell's wanted FW counts too, the GM approving it turns those into regular steps.
-    const requestCost = context.plannerRequests.reduce((sum, r) => sum + (r.cost ?? 0) + (r.fw?.stepsCost ?? 0), 0);
-    context.plannerTotalCost = context.plannerSections.reduce((sum, s) => sum + s.totalCost, 0) + requestCost;
+    context.plannerTotalCost = RequestController.plannedCost(actor);
     // The GM doesn't ask themselves - they get a check mark that buys the request right away.
     context.plannerIsGM = game.user.isGM;
     context.plannerEmpty =!context.plannerSections.length && !context.plannerRequests.length;

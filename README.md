@@ -72,8 +72,9 @@ Genehmigt oder lehnt der SL ab, bekommt der Spieler eine Benachrichtigung. Ein a
 
 ## Für den SL
 
-- Das Fenster **"Offene Anfragen"** listet alle angefragten Einträge aller Charaktere mit Variante, Stufe, geschätzten Kosten und Voraussetzungen. Es öffnet sich beim Login, wenn etwas offen ist, und sobald ein Spieler etwas anfragt, und schließt sich, wenn nichts mehr offen ist. Über den Button **"Anfragen"** im Akteure-Verzeichnis lässt es sich jederzeit öffnen.
-- **Haken**: genehmigt die Anfrage und kauft den Eintrag über die Funktionen des Systems, genau wie beim Ziehen auf den Bogen (AP-Prüfung, Abzug, AP-Tracker), nur ohne erneute Variantenauswahl.
+- Die **Übersicht** zeigt für jeden Spielercharakter, der etwas geplant hat, einen Block mit freien und verplanten AP. Oben stehen hervorgehoben seine offenen Anfragen mit Variante, Stufe, geschätzten Kosten und Voraussetzungen, darunter seine Planung: die geplanten Steigerungen mit Start- und Zielwert und die Einträge aus dem Katalog, die er noch nicht angefragt hat (inklusive Ziel-FW). Charaktere mit offenen Anfragen stehen oben, die Blöcke lassen sich einklappen, ein Klick auf den Namen öffnet den Charakterbogen im Steigerungsplaner-Tab.
+- Über den Button **"Planer"** im Akteure-Verzeichnis lässt sich die Übersicht jederzeit öffnen. Beim Login, wenn etwas offen ist, und sobald ein Spieler etwas anfragt, öffnet sie sich von selbst, dann mit dem Filter **"Nur offene Anfragen"**, und schließt sich wieder, wenn nichts mehr offen ist. Hat der SL sie selbst geöffnet oder den Filter umgestellt, bleibt sie offen.
+- **Haken** an einer offenen Anfrage: genehmigt sie und kauft den Eintrag über die Funktionen des Systems, genau wie beim Ziehen auf den Bogen (AP-Prüfung, Abzug, AP-Tracker), nur ohne erneute Variantenauswahl.
 - **Verbotsschild**: lehnt ab, optional mit Begründung.
 - Im Steigerungsplaner-Tab eines Charakters sieht der SL statt des Papierfliegers direkt den Haken und kann geplante Einträge ohne Umweg kaufen.
 - Werte direkt setzen: im Wertfeld mit **Strg+Enter** (siehe oben) oder über die Einstellung unten.

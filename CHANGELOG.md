@@ -4,6 +4,9 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 
 ## Unveröffentlicht
 
+### Hinzugefügt
+- **Übersicht für den SL:** Das Fenster „Offene Anfragen“ wird zur Übersicht über die Planung aller Spielercharaktere, mit freien und verplanten AP, geplanten Steigerungen und Einträgen aus dem Katalog. Offene Anfragen stehen weiter oben zum Genehmigen. Der Button im Akteure-Verzeichnis heißt jetzt „Planer“ ([#46](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/46)).
+
 ## 1.1.0 – 2026-10-08
 
 ### Hinzugefügt

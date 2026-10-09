@@ -585,20 +585,27 @@
   }
 }
 
-/* GM's approval window (request-approval.js): one block per character with their open requests. */
-.steigerungsplaner-request-approval {
+/* GM's overview (planner-overview.js): one block per player character, open requests highlighted on
+   top with approve/reject, the plan below. */
+.steigerungsplaner-overview {
   & .window-content {
     max-height: 80vh;
     overflow-y: auto;
   }
 
-  & .approval-list {
+  & .overview {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  & .approval-actor-header {
+  & .overview-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  & .overview-actor-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -613,19 +620,32 @@
     }
   }
 
-  & .approval-actor-name {
+  & .overview-toggle {
+    flex: 0 0 1rem;
+    text-align: center;
+  }
+
+  & .overview-actor-name {
     flex: 1 1 auto;
     font-weight: bold;
   }
 
-  & .approval-xp,
-  & .approval-request-info,
-  & .approval-empty {
+  & .overview-badge {
+    padding: 0 0.4rem;
+    border-radius: 0.6rem;
+    background: rgba(86, 168, 19, 0.35);
+    font-size: var(--font-size-12);
+    white-space: nowrap;
+  }
+
+  & .overview-summary,
+  & .overview-info,
+  & .overview-empty {
     opacity: 0.8;
     white-space: nowrap;
   }
 
-  & .approval-empty {
+  & .overview-empty {
     font-style: italic;
   }
 
@@ -635,18 +655,28 @@
     padding: 0;
   }
 
-  & .approval-request {
+  /* Waiting for the GM - set apart from the plan below. */
+  & .overview-requests {
+    margin-top: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    border-left: 3px solid rgb(86, 168, 19);
+    border-radius: 3px;
+    background: rgba(86, 168, 19, 0.1);
+  }
+
+  & .overview-request {
     padding: 0.25rem 0;
 
-    & + .approval-request {
+    & + .overview-request {
       border-top: 1px solid rgba(127, 127, 127, 0.2);
     }
   }
 
-  & .approval-request-main {
+  & .overview-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 1px 0;
 
     & img {
       flex: 0 0 auto;
@@ -657,29 +687,54 @@
     }
   }
 
-  & .approval-request-name {
+  & .overview-name {
     flex: 1 1 auto;
     min-width: 0;
   }
 
-  & .approval-approve,
-  & .approval-reject {
+  & .overview-cost {
+    min-width: 4.5em;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  & .overview-approve,
+  & .overview-reject {
     flex: 0 0 24px;
     text-align: center;
   }
 
-  & .approval-approve:hover {
+  & .overview-approve:hover {
     color: rgb(86, 168, 19);
   }
 
-  & .approval-reject:hover {
+  & .overview-reject:hover,
+  & .overview-rejected {
     color: var(--color-level-error, #c00);
   }
 
-  & .approval-requirements {
+  & .overview-rejected {
+    margin-left: 0.35rem;
+    font-size: var(--font-size-12);
+  }
+
+  & .overview-requirements {
     margin: 0.25rem 0 0 2rem;
     font-size: var(--font-size-12);
     opacity: 0.85;
+  }
+
+  & .overview-planned-label {
+    margin: 0.5rem 0 0.15rem;
+    border: none;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  & .overview-request-icon {
+    margin-right: 0.25rem;
+    opacity: 0.6;
   }
 }
 
