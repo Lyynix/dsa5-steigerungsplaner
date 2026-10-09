@@ -433,6 +433,18 @@ export default class RequestController {
     return entry;
   }
 
+  // Everything planned for a character in AP: the queued steps, plus the requests until the GM
+  // approves them (then the system charges them) including a spell's steps up to its wanted FW.
+  // The "… AP verplant" in the planner tab and the GM's overview.
+  static plannedCost(actor) {
+    let total = 0;
+    for (const group of PlannerData.getGroups(actor).values()) total += group.totalCost;
+    for (const request of PlannerData.getRequests(actor)) {
+      total += (this.requestCost(actor, request) ?? 0) + (this.requestFW(request)?.stepsCost ?? 0);
+    }
+    return total;
+  }
+
   // Which group of the planner tab's request list a request belongs to, see LIST_GROUPS. Extensions
   // planned before their source was stored with them count as magical.
   static listGroup(request) {

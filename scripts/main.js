@@ -1,7 +1,7 @@
 import { MODULE_ID, SETTING_INPUT_PLANS } from './module-config.js';
 import { registerCleanupHooks } from './planner-cleanup.js';
 import { registerSheetIntegration } from './sheet-integration.js';
-import RequestApproval from './request-approval.js';
+import PlannerOverview from './planner-overview.js';
 
 Hooks.once('init', () => {
   // On by default; switching it off makes the fields set values directly again, e.g. while
@@ -18,7 +18,7 @@ Hooks.once('init', () => {
 
 Hooks.once('ready', () => {
   registerCleanupHooks();
-  RequestApproval.register();
+  PlannerOverview.register();
 
   if (!game.modules.get('lib-wrapper')?.active) {
     console.error(`${MODULE_ID} | lib-wrapper needs to be installed and active.`);
