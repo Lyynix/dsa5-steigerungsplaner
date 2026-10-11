@@ -5,7 +5,7 @@
 /* Shared by the sheet's badges, the tab and the overview. */
 :root {
   /* Applying, planned, approving. */
-  --steigerungsplaner-green: rgb(86, 168, 19);
+  --steigerungsplaner-green: #56a813;
   /* Discarding - the system's own danger red. */
   --steigerungsplaner-discard: var(--dsa-danger, #8b0000);
   /* Above the maximum, reachable with planned attributes; gifts. */
@@ -475,9 +475,9 @@
   }
 
   /* Hovering a tile (not its X): green on it and the tiles before it, what "apply up to here" would
-     buy. Not while the phase is closed, applying doesn't work then. */
-  &:not(.planner-phase-locked) .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
-  &:not(.planner-phase-locked) .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+     buy. */
+  & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+  & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
     background-color: color-mix(in srgb, var(--steigerungsplaner-green) 30%, transparent);
   }
 
@@ -500,6 +500,12 @@
     /* Clicking a tile doesn't apply. */
     & .planner-step-inner {
       cursor: default;
+    }
+
+    /* No green preview, the red one for discarding stays. */
+    & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+    & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+      background-color: transparent;
     }
   }
 }
