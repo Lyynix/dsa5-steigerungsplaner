@@ -3,6 +3,7 @@ import PlannerBadges from './planner-badges.js';
 import PlannerController from './planner-controller.js';
 import PlannerHints from './planner-hints.js';
 import PlannerInput from './planner-input.js';
+import PlannerPhase from './planner-phase.js';
 import PlannerTab from './planner-tab.js';
 
 // Foundry registers sheets under `${scope}.${className}` - stable enough to rely on directly.
@@ -16,13 +17,26 @@ function findCharacterSheetClass() {
 // character-sheet.js declares its own static DEFAULT_OPTIONS, which completely shadows
 // (not merges with) the base class's - ownerActions.advanceWrapper only exists on whichever
 // ancestor class actually declares it as its own property. Walk up until we find it.
-function findOwnerActionsOwner(cls) {
+function findOwnerActionsOwner(cls, action = 'advanceWrapper') {
   let current = cls;
   while (current) {
-    if (Object.prototype.hasOwnProperty.call(current, 'DEFAULT_OPTIONS') && current.DEFAULT_OPTIONS?.ownerActions?.advanceWrapper) {
+    if (Object.prototype.hasOwnProperty.call(current, 'DEFAULT_OPTIONS') && current.DEFAULT_OPTIONS?.ownerActions?.[action]) {
       return current;
     }
     current = Object.getPrototypeOf(current);
+  }
+  return null;
+}
+
+// The item sheets' own "+"/"-" (a talent's or spell's sheet) are ownerActions of the system's base
+// item sheet, which every item sheet inherits - any registered dsa5 item sheet leads to it.
+function findItemAdvanceOwner() {
+  for (const sheets of Object.values(CONFIG.Item.sheetClasses ?? {})) {
+    for (const [id, { cls }] of Object.entries(sheets)) {
+      if (!id.startsWith('dsa5.')) continue;
+      const owner = findOwnerActionsOwner(cls, '_advanceStep');
+      if (owner) return owner;
+    }
   }
   return null;
 }
@@ -78,12 +92,43 @@ export function registerSheetIntegration() {
       `globalThis.__dsa5Steigerungsplaner.ownerActionsOwner.DEFAULT_OPTIONS.ownerActions.advanceWrapper`,
       function (wrapped, ev, target) {
         const fct = target?.dataset?.fct;
-        if (!ev.shiftKey || !fct) return wrapped(ev, target);
+        if (!ev.shiftKey || !fct) {
+          // Outside the advancement phase only planning works, not advancing for real.
+          if (fct in ALL_FCTS && PlannerPhase.locked) {
+            ev.preventDefault();
+            PlannerPhase.warn();
+            return;
+          }
+          return wrapped(ev, target);
+        }
         ev.preventDefault();
         PlannerController.handleShiftClick(this, fct, target.dataset.attr);
       },
       'MIXED',
     );
+  }
+
+  // The same for the item sheets' "+"/"-" - no planning there, they only advance for real.
+  const itemAdvanceOwner = findItemAdvanceOwner();
+  if (!itemAdvanceOwner) {
+    console.error(`${MODULE_ID} | Konnte ownerActions._advanceStep der Item-Bögen nicht finden - die Steigerungsphase sperrt dort nicht.`);
+  } else {
+    (globalThis.__dsa5Steigerungsplaner ??= {}).itemAdvanceOwner = itemAdvanceOwner;
+    for (const action of ['_advanceStep', '_refundStep']) {
+      libWrapper.register(
+        MODULE_ID,
+        `globalThis.__dsa5Steigerungsplaner.itemAdvanceOwner.DEFAULT_OPTIONS.ownerActions.${action}`,
+        function (wrapped, ev, target) {
+          if (this.item?.actor && PlannerPhase.locked) {
+            ev.preventDefault();
+            PlannerPhase.warn();
+            return;
+          }
+          return wrapped(ev, target);
+        },
+        'MIXED',
+      );
+    }
   }
 
   // Only owners (which includes the GM - actor.isOwner is always true for them) should even see

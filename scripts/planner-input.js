@@ -1,5 +1,6 @@
 import { MODULE_ID, SETTING_INPUT_PLANS } from './module-config.js';
 import PlannerController from './planner-controller.js';
+import PlannerPhase from './planner-phase.js';
 
 // The sheet's number fields for the same targets shift-click plans (talent values, attribute and
 // base stat advances, permanent AsP/KaP rebuys) normally just overwrite the value without any AP.
@@ -108,6 +109,12 @@ export default class PlannerInput {
   // What the system would have done with the value, then the plan is brought in line with it right
   // away instead of only when the sheet is opened next.
   static async #set(sheet, input, { type, key }) {
+    // Outside the advancement phase nothing is set for real - the field shows the value again.
+    if (PlannerPhase.locked) {
+      input.value = input.defaultValue;
+      return PlannerPhase.warn();
+    }
+
     const value = Number(input.value);
     if (!Number.isFinite(value)) return;
 

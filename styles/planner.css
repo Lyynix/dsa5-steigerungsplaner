@@ -602,10 +602,32 @@
     gap: 1rem;
   }
 
+  & .overview-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
   & .overview-filter {
     display: flex;
     align-items: center;
     gap: 0.35rem;
+  }
+
+  /* The advancement phase switch: green while open, neutral while closed. */
+  & .overview-phase {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+    padding: 0 0.75rem;
+    line-height: 1.8rem;
+
+    &.open {
+      border-color: var(--overview-green);
+      background: color-mix(in srgb, var(--overview-green) 25%, transparent);
+    }
   }
 
   & .overview-actor {
@@ -970,4 +992,31 @@
     font-style: italic;
     opacity: 0.75;
   }
+}
+
+/* Advancement phase closed (planner-phase.js): a hint on top of the tab, and for players the
+   controls that would advance for real look disabled. Removing planned steps still works, so only
+   the green "apply up to here" preview goes, not the red removal one. */
+.steigerungsplaner-tab .planner-phase-hint {
+  margin: 0.4rem 0;
+  padding: 0.25rem 0.5rem;
+  border-left: 3px solid var(--color-level-warning, #c90);
+  border-radius: 3px;
+  background: rgba(204, 153, 0, 0.12);
+}
+
+.steigerungsplaner-tab.planner-phase-locked {
+  & .planner-apply {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  & .planner-step-inner {
+    cursor: default;
+  }
+}
+
+.steigerungsplaner-tab.planner-phase-locked .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+.steigerungsplaner-tab.planner-phase-locked .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+  background-color: transparent;
 }

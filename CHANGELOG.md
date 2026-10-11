@@ -1,8 +1,14 @@
 # Changelog
 
-Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern an [Semantic Versioning](https://semver.org/lang/de/).
+Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/). Die erste Zahl der Version ist die Foundry-Version, für die das Modul entwickelt und getestet ist, die zweite steht für neue Funktionen, die dritte für Fehlerbehebungen.
 
 ## Unveröffentlicht
+
+### Hinzugefügt
+- **Steigerungsphase:** Auf Wunsch dürfen Spieler außerhalb der Steigerungsphase nur planen. Steigern und Anfragen senden geht erst, wenn der SL sie öffnet, per Schalter in der Übersicht oder in den Einstellungen ([#45](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/45)).
+
+### Geändert
+- Neues Versionsschema: Die erste Zahl entspricht der Foundry-Version, für die das Modul entwickelt und getestet ist (14 = Foundry v14).
 
 ## 1.2.0 – 2026-10-09
 

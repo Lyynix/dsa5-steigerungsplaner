@@ -1,4 +1,5 @@
 import { MODULE_ID, SETTING_INPUT_PLANS } from './module-config.js';
+import PlannerPhase from './planner-phase.js';
 import { registerCleanupHooks } from './planner-cleanup.js';
 import { registerSheetIntegration } from './sheet-integration.js';
 import PlannerOverview from './planner-overview.js';
@@ -14,6 +15,7 @@ Hooks.once('init', () => {
     type: Boolean,
     default: true,
   });
+  PlannerPhase.registerSettings();
 });
 
 Hooks.once('ready', () => {

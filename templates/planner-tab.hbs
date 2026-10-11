@@ -1,4 +1,4 @@
-<div class="tab steigerungsplaner-tab {{tabs.steigerungsplaner.cssClass}}" data-tab="steigerungsplaner" data-group="{{tabs.steigerungsplaner.group}}">
+<div class="tab steigerungsplaner-tab {{tabs.steigerungsplaner.cssClass}}{{#if plannerPhaseLocked}} planner-phase-locked{{/if}}" data-tab="steigerungsplaner" data-group="{{tabs.steigerungsplaner.group}}">
     <header class="planner-header">
         <h2>{{localize "STEIGERUNGSPLANER.Tab"}}</h2>
         <a class="planner-add-target" data-plan-add-target data-tooltip="{{localize 'STEIGERUNGSPLANER.AddTargetTooltip'}}">
@@ -11,6 +11,10 @@
             <span>{{localize "STEIGERUNGSPLANER.Summary" free=plannerAvailableXP planned=plannerTotalCost}}</span>
         </div>
     </header>
+
+    {{#if plannerPhaseHint}}
+    <p class="planner-phase-hint"><i class="fas fa-lock"></i> {{plannerPhaseHint}}</p>
+    {{/if}}
 
     {{#if plannerRequests.length}}
     <div>

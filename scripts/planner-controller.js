@@ -1,5 +1,6 @@
 import { ADVANCE_FCTS, REFUND_FCTS } from './module-config.js';
 import PlannerData from './planner-data.js';
+import PlannerPhase from './planner-phase.js';
 
 export default class PlannerController {
   // Entry point for a shift-click on any of the sheet's advance/refund "+"/"-" buttons.
@@ -520,6 +521,10 @@ export default class PlannerController {
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
     if (!actor.isOwner) return false;
+    if (PlannerPhase.locked) {
+      PlannerPhase.warn();
+      return false;
+    }
     await this.ensureFresh(actor, type, key);
 
     const plan = PlannerData.getPlan(actor);

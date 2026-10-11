@@ -1,8 +1,16 @@
 <div class="overview">
-    <label class="overview-filter">
-        <input type="checkbox" data-only-open {{#if onlyOpen}}checked{{/if}}>
-        {{localize "STEIGERUNGSPLANER.OverviewOnlyOpen"}}
-    </label>
+    <div class="overview-toolbar">
+        <label class="overview-filter">
+            <input type="checkbox" data-only-open {{#if onlyOpen}}checked{{/if}}>
+            {{localize "STEIGERUNGSPLANER.OverviewOnlyOpen"}}
+        </label>
+        {{#if phase}}
+        <button type="button" class="overview-phase{{#if phase.open}} open{{/if}}" data-action="togglePhase" data-tooltip="{{localize (ifThen phase.open 'STEIGERUNGSPLANER.PhaseCloseTooltip' 'STEIGERUNGSPLANER.PhaseOpenTooltip')}}">
+            <i class="fas {{#if phase.open}}fa-lock-open{{else}}fa-lock{{/if}}"></i>
+            {{localize (ifThen phase.open 'STEIGERUNGSPLANER.PhaseIsOpen' 'STEIGERUNGSPLANER.PhaseIsClosed')}}
+        </button>
+        {{/if}}
+    </div>
 
     {{#each actors as |actor|}}
     <section class="overview-actor{{#if actor.collapsed}} collapsed{{/if}}" data-actor-id="{{actor.id}}">

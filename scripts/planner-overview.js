@@ -1,6 +1,7 @@
 import { FLAG_REQUESTS, MODULE_ID, PART_ID } from './module-config.js';
 import PlannerController from './planner-controller.js';
 import PlannerData from './planner-data.js';
+import PlannerPhase from './planner-phase.js';
 import PlannerTab from './planner-tab.js';
 import RequestController from './request-controller.js';
 
@@ -37,6 +38,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
       reject: PlannerOverview.#onReject,
       openSheet: PlannerOverview.#onOpenSheet,
       toggleActor: PlannerOverview.#onToggleActor,
+      togglePhase: PlannerOverview.#onTogglePhase,
     },
   };
 
@@ -253,6 +255,8 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     actors.sort((a, b) => !!b.openRequests.length - !!a.openRequests.length || a.name.localeCompare(b.name, game.i18n.lang));
     context.actors = actors;
     context.onlyOpen = this.#onlyOpen;
+    // The advancement phase switch, only once the phase is switched on in the settings.
+    context.phase = PlannerPhase.enabled ? { open: PlannerPhase.open } : null;
     context.empty = game.i18n.localize(this.#onlyOpen ? 'STEIGERUNGSPLANER.ApprovalEmpty' : 'STEIGERUNGSPLANER.OverviewEmpty');
     return context;
   }
@@ -309,6 +313,11 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     if (!sheet) return;
     await sheet.render({ force: true });
     sheet.changeTab?.(PART_ID, 'sheet');
+  }
+
+  // The same world setting as in the module settings - its onChange re-renders and tells the players.
+  static async #onTogglePhase() {
+    await PlannerPhase.setOpen(!PlannerPhase.open);
   }
 
   static #onToggleActor(event, target) {
