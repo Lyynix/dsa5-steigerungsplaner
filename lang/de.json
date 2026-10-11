@@ -103,6 +103,8 @@
   "STEIGERUNGSPLANER.ApprovalEmpty": "Keine offenen Anfragen.",
   "STEIGERUNGSPLANER.Approve": "Genehmigen und kaufen",
   "STEIGERUNGSPLANER.ApproveShort": "Genehmigen",
+  "STEIGERUNGSPLANER.Gift": "Schenken: kaufen ohne AP-Kosten",
+  "STEIGERUNGSPLANER.RequestGiftedInfo": "Der SL hat dir {name} geschenkt.",
   "STEIGERUNGSPLANER.Reject": "Ablehnen",
   "STEIGERUNGSPLANER.RejectTitle": "Anfrage ablehnen",
   "STEIGERUNGSPLANER.RejectPrompt": "{name} für {actor} ablehnen?",

@@ -103,6 +103,8 @@
   "STEIGERUNGSPLANER.ApprovalEmpty": "No open requests.",
   "STEIGERUNGSPLANER.Approve": "Approve and buy",
   "STEIGERUNGSPLANER.ApproveShort": "Approve",
+  "STEIGERUNGSPLANER.Gift": "Gift: buy without AP cost",
+  "STEIGERUNGSPLANER.RequestGiftedInfo": "The GM gave you {name} as a gift.",
   "STEIGERUNGSPLANER.Reject": "Reject",
   "STEIGERUNGSPLANER.RejectTitle": "Reject request",
   "STEIGERUNGSPLANER.RejectPrompt": "Reject {name} for {actor}?",

@@ -207,14 +207,17 @@ export default class PlannerTab {
       });
     });
 
-    element.querySelectorAll('[data-request-approve]').forEach((el) => {
-      el.addEventListener('click', async (ev) => {
-        const target = ev.currentTarget;
-        target.style.pointerEvents = 'none';
-        await RequestController.approveRequest(sheet.actor, target.dataset.id);
-        sheet.render();
+    // The GM's check mark and gift: buy right away, the gift without AP cost.
+    for (const [selector, gift] of [['[data-request-approve]', false], ['[data-request-gift]', true]]) {
+      element.querySelectorAll(selector).forEach((el) => {
+        el.addEventListener('click', async (ev) => {
+          const target = ev.currentTarget;
+          target.style.pointerEvents = 'none';
+          await RequestController.approveRequest(sheet.actor, target.dataset.id, { gift });
+          sheet.render();
+        });
       });
-    });
+    }
 
     // The wanted FW of a spell/liturgy request. Handled on the field itself so the change doesn't
     // reach the sheet's form, Enter just commits the value instead of submitting the form.

@@ -496,7 +496,10 @@ export default class RequestController {
   // and picked the variant - so the AP check, deduction, item creation and the AP tracker work
   // exactly like that. The request is removed once the item is there at the wanted level. Returns
   // whether that worked; if not (usually not enough AP), the system has already said why.
-  static async approveRequest(actor, id) {
+  //
+  // gift: the GM grants it for free - bought the same way, so the system's rules on acquiring it
+  // still run, and the AP are given back afterwards (see #gift).
+  static async approveRequest(actor, id, { gift = false } = {}) {
     if (!actor.isOwner) return false;
 
     const request = PlannerData.getRequests(actor).find((r) => r.id === id);
@@ -510,18 +513,46 @@ export default class RequestController {
 
     approving.add(id);
     try {
-      const bought = await this.#buy(actor, source, request);
+      const bought = gift ? await this.#gift(actor, source, request) : await this.#buy(actor, source, request);
       if (!bought) {
         ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.ApproveFailed', { name: this.label(request), actor: actor.name }));
         return false;
       }
 
       await this.#planTargetFW(actor, request);
+      // Marked before it goes, so the player's client can tell a gift from an approval.
+      if (gift) await this.#setStatus(actor, id, 'gifted');
       await this.removeRequest(actor, id);
       return true;
     } finally {
       approving.delete(id);
     }
+  }
+
+  // Buys like an approval, but the character ends up paying nothing. The system's AP check would
+  // refuse a character short on AP, so the estimated cost is credited first; afterwards whatever
+  // the system really charged (free language points, a variant's StF, ...) is evened out exactly.
+  // The AP tracker gets one entry for the gift next to the purchase.
+  static async #gift(actor, source, request) {
+    const spent = () => Number(actor.system.details.experience.spent) || 0;
+    const before = spent();
+    const credit = Math.max(this.requestCost(actor, request) ?? 0, 0);
+    if (credit) await actor._updateAPs(-credit, {}, { render: false });
+
+    const bought = await this.#buy(actor, source, request);
+    const charged = spent() - (before - credit);
+    if (!bought) {
+      if (credit) await actor._updateAPs(credit, {}, { render: false });
+      return false;
+    }
+
+    const rest = spent() - before;
+    if (rest) await actor._updateAPs(-rest);
+    if (charged) {
+      const total = Number(actor.system.details.experience.total) || 0;
+      await game.dsa5.apps.APTracker?.track(actor, { type: 'sum', previous: total - before - charged, next: total - before }, -charged);
+    }
+    return true;
   }
 
   // Once a spell/liturgy is learned, the FW the player wanted becomes regular plan entries on the
