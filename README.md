@@ -40,7 +40,7 @@ Die Schritte eines Ziels bauen aufeinander auf (z. B. Kraftakt 5→6, dann 6→7
 - **Kästchen mit Plus** (5): hängt den nächsten Schritt an.
 - **Mülleimer** (6): verwirft alle geplanten Schritte für dieses Ziel (mit Rückfrage).
 
-Schritte, für die die verfügbaren AP gerade nicht reichen, werden abgedunkelt. Beim Überfahren zeigt der Tab vorher an, was ein Klick bewirkt: grün, was angewendet wird, rot, was verworfen wird.
+Schritte, für die die verfügbaren AP gerade nicht reichen, werden abgedunkelt. Liegt ein geplanter Schritt über dem Regel-Maximum, das das System beim Steigern prüft (Talente, Kampftechniken, Zauber, Liturgien, LeP/AsP/KaP), bekommt er ein Warndreieck: **gelb**, wenn er mit den geplanten Eigenschaftssteigerungen erreichbar wird, **rot**, wenn auch dann nicht. Der Tooltip nennt das Maximum, bei gelb die geplante Eigenschaftssteigerung, die es anhebt, und bei rot, welche Eigenschaft wie weit steigen müsste. Dieselbe Farbe zeigt das Badge im Charakterbogen und die Kachel in der SL-Übersicht. Planen wird dadurch nie gesperrt. Beim Überfahren zeigt der Tab vorher an, was ein Klick bewirkt: grün, was angewendet wird, rot, was verworfen wird.
 
 ![Steigerungsplaner-Tab: Schritte bis hier anwenden](assets/tab-apply.png)
 

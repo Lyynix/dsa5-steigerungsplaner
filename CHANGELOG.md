@@ -5,6 +5,7 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 ## Unveröffentlicht
 
 ### Hinzugefügt
+- **Hinweis auf Regel-Maxima:** Geplante Schritte über dem Maximum, das das System beim Steigern prüft, werden markiert, gelb wenn geplante Eigenschaftssteigerungen sie erreichbar machen, rot wenn nicht. Im Planer-Tab, am Badge im Bogen und in der SL-Übersicht ([#42](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/42)).
 - **Schenken:** Der SL kann Anfragen auch ohne AP-Kosten genehmigen, in der Übersicht und im Planer-Tab, z. B. als Belohnung ([#40](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/40)).
 - **Steigerungsphase:** Auf Wunsch dürfen Spieler außerhalb der Steigerungsphase nur planen. Steigern und Anfragen senden geht erst, wenn der SL sie öffnet, per Schalter in der Übersicht oder in den Einstellungen ([#45](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/45)).
 

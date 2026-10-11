@@ -1,5 +1,6 @@
 import { PART_ID } from './module-config.js';
 import PlannerData from './planner-data.js';
+import PlannerLimits from './planner-limits.js';
 import PlannerController from './planner-controller.js';
 import PlannerPhase from './planner-phase.js';
 import PlannerPicker from './planner-picker.js';
@@ -21,6 +22,8 @@ export default class PlannerTab {
     for (const group of PlannerData.getGroups(actor).values()) {
       group.icon = PlannerController.iconFor(actor, group.type, group.key);
       PlannerController.markAffordability(actor, group.steps);
+      // Steps above the rule maximum get a hint, see PlannerLimits - group.limit is the worst one.
+      group.limit = PlannerLimits.mark(actor, group.type, group.key, group.steps);
 
       const section = PlannerController.sectionFor(actor, group.type, group.key);
       if (!sections.has(section.id)) sections.set(section.id, { ...section, groups: [], totalCost: 0 });

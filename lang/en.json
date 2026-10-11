@@ -114,5 +114,11 @@
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
   "STEIGERUNGSPLANER.ColumnPlan": "Advancement list",
   "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} cannot be decreased any further.",
-  "STEIGERUNGSPLANER.NotEnoughXP": "Not enough XP to advance {label}."
+  "STEIGERUNGSPLANER.NotEnoughXP": "Not enough XP to advance {label}.",
+  "STEIGERUNGSPLANER.LimitAttributes": "Raising it to {target} goes above the current maximum ({current}). Reachable from {steps} on, which is already planned.",
+  "STEIGERUNGSPLANER.LimitAttributesAll": "Raising it to {target} goes above the current maximum ({current}). Reachable once the planned attribute steps are applied (maximum {planned} then).",
+  "STEIGERUNGSPLANER.LimitOverPlanned": "Raising it to {target} goes above the current maximum ({current}), and even with the planned attributes it's only {planned}.",
+  "STEIGERUNGSPLANER.LimitOverCurrent": "Raising it to {target} goes above the current maximum ({current}).",
+  "STEIGERUNGSPLANER.LimitNeeds": "That would take {needed}.",
+  "STEIGERUNGSPLANER.LimitNoAttribute": "Higher attributes don't help with that either."
 }
