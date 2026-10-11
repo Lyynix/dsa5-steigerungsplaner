@@ -45,9 +45,9 @@ export default class PlannerTab {
     context.plannerPhaseLocked = PlannerPhase.locked;
     context.plannerPhaseHint =
       PlannerPhase.enabled && !PlannerPhase.open
-        ? game.i18n.localize(game.user.isGM ? 'STEIGERUNGSPLANER.PhaseHintGM' : 'STEIGERUNGSPLANER.PhaseHint')
+        ? game.i18n.localize(game.user.isGM ? 'STEIGERUNGSPLANER.Phase.HintGM' : 'STEIGERUNGSPLANER.Phase.Hint')
         : '';
-    const phaseLockedText = game.i18n.localize('STEIGERUNGSPLANER.PhaseLocked');
+    const phaseLockedText = game.i18n.localize('STEIGERUNGSPLANER.Phase.Locked');
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
     // Each one is weighed against the available AP on its own, like each target's steps are.
@@ -70,7 +70,7 @@ export default class PlannerTab {
           ...fw,
           // Shown next to the field only once something is planned on top of learning it.
           hint: fw.target > fw.start ? (fw.stepsCost === null ? '+? AP' : `+${fw.stepsCost} AP`) : '',
-          tooltip: game.i18n.format('STEIGERUNGSPLANER.TargetFWTooltip', {
+          tooltip: game.i18n.format('STEIGERUNGSPLANER.TargetFW.Tooltip', {
             learn: cost ?? '?',
             fw: fw.target,
             steps: fw.stepsCost ?? '?',
@@ -79,7 +79,7 @@ export default class PlannerTab {
         label: RequestController.label(request),
         levelLabel: request.level ? this.romanNumeral(request.level) : '',
         requested: request.status === 'requested',
-        rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
+        rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.Request.RejectedNoReason'),
         // An extension can only be asked for once its spell/liturgy is there with a high enough FW.
         blockedReason: context.plannerPhaseLocked
           ? phaseLockedText
@@ -105,16 +105,16 @@ export default class PlannerTab {
 
   static extensionBlockedReason({ state, source, requiredFW, currentFW }) {
     const data = { source, required: requiredFW, current: currentFW };
-    if (state === 'missing') return game.i18n.format('STEIGERUNGSPLANER.ExtensionSourceMissing', data);
-    if (state === 'notLearned') return game.i18n.format('STEIGERUNGSPLANER.ExtensionSourceNotLearned', data);
-    return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWTooLow', data);
+    if (state === 'missing') return game.i18n.format('STEIGERUNGSPLANER.Extension.SourceMissing', data);
+    if (state === 'notLearned') return game.i18n.format('STEIGERUNGSPLANER.Extension.SourceNotLearned', data);
+    return game.i18n.format('STEIGERUNGSPLANER.Extension.FWTooLow', data);
   }
 
   // A level button's tooltip: how the planned cost changes when picking that level.
   static levelTooltip(level, planned) {
-    if (level.owned) return game.i18n.localize('STEIGERUNGSPLANER.LevelOwned');
-    if (level.value === planned) return game.i18n.localize('STEIGERUNGSPLANER.LevelPlanned');
-    if (level.delta === null) return game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+    if (level.owned) return game.i18n.localize('STEIGERUNGSPLANER.Level.Owned');
+    if (level.value === planned) return game.i18n.localize('STEIGERUNGSPLANER.Level.Planned');
+    if (level.delta === null) return game.i18n.localize('STEIGERUNGSPLANER.Cost.Unknown');
     return `${level.delta > 0 ? '+' : ''}${level.delta} AP`;
   }
 
@@ -176,7 +176,7 @@ export default class PlannerTab {
         if (!entry) return;
 
         if (entry.cost > 0 && PlannerController.availableXP(sheet.actor) < entry.cost) {
-          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.NotEnoughXP', { label: entry.label }));
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.NotEnoughXP', { label: entry.label }));
           return;
         }
 
@@ -272,8 +272,8 @@ export default class PlannerTab {
         if (!group) return;
 
         const confirmed = await foundry.applications.api.DialogV2.confirm({
-          window: { title: game.i18n.localize('STEIGERUNGSPLANER.Cancel') },
-          content: game.i18n.format('STEIGERUNGSPLANER.ConfirmDiscardAll', { count: group.steps.length, label: group.label }),
+          window: { title: game.i18n.localize('STEIGERUNGSPLANER.Plan.DiscardAll') },
+          content: game.i18n.format('STEIGERUNGSPLANER.Plan.ConfirmDiscardAll', { count: group.steps.length, label: group.label }),
           rejectClose: false,
           modal: true,
         });
@@ -303,7 +303,7 @@ export default class PlannerTab {
         const count = Math.min(siblings.indexOf(stepEl) + 1, affordableCount);
 
         if (count <= 0) {
-          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.NotEnoughXP', { label: group.label }));
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.NotEnoughXP', { label: group.label }));
           return;
         }
 

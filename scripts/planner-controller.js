@@ -96,7 +96,7 @@ export default class PlannerController {
     if (type === 'item') return actor.items.get(key)?.name ?? key;
     if (type === 'permanentLoss') {
       const abbrev = game.i18n.localize(key === 'astralenergy' ? 'CHARAbbrev.pAsP' : 'CHARAbbrev.pKaP');
-      return game.i18n.format('STEIGERUNGSPLANER.PermanentLossLabel', { label: abbrev });
+      return game.i18n.format('STEIGERUNGSPLANER.Plan.Rebuy', { label: abbrev });
     }
     return key;
   }
@@ -301,7 +301,7 @@ export default class PlannerController {
       const entry = this.buildEntry(actor, type, key, direction, from);
       if (!entry) {
         if (direction === 'decrease') {
-          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.CannotDecreaseFurther', { label: this.labelFor(actor, type, key) }));
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.CannotDecrease', { label: this.labelFor(actor, type, key) }));
         }
         break;
       }
@@ -317,7 +317,7 @@ export default class PlannerController {
     const entry = this.buildEntry(actor, type, key, direction);
     if (!entry) {
       if (direction === 'decrease') {
-        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.CannotDecreaseFurther', { label: this.labelFor(actor, type, key) }));
+        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.CannotDecrease', { label: this.labelFor(actor, type, key) }));
       }
       return;
     }
@@ -353,7 +353,7 @@ export default class PlannerController {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
     if (idx === -1) {
-      ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.NothingPlanned'));
+      ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.Plan.NothingPlanned'));
       return;
     }
     plan.splice(idx, 1);
@@ -430,7 +430,7 @@ export default class PlannerController {
 
     await PlannerData.savePlan(actor, remaining);
     if (!silent) {
-      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
+      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.Discarded', { label: this.labelFor(actor, type, key) }));
     }
   }
 

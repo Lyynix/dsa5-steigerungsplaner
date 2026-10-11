@@ -507,7 +507,7 @@ export default class RequestController {
 
     const source = await fromUuid(request.uuid);
     if (!source) {
-      ui.notifications.error(game.i18n.format('STEIGERUNGSPLANER.ApproveMissingItem', { name: this.label(request) }));
+      ui.notifications.error(game.i18n.format('STEIGERUNGSPLANER.Approval.MissingItem', { name: this.label(request) }));
       return false;
     }
 
@@ -515,7 +515,7 @@ export default class RequestController {
     try {
       const bought = gift ? await this.#gift(actor, source, request) : await this.#buy(actor, source, request);
       if (!bought) {
-        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.ApproveFailed', { name: this.label(request), actor: actor.name }));
+        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Approval.Failed', { name: this.label(request), actor: actor.name }));
         return false;
       }
 

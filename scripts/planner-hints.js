@@ -39,7 +39,7 @@ export default class PlannerHints {
 
         const tooltipEl = el.querySelector('[data-tooltip]') ?? el;
         const cost = game.i18n.localize(tooltipEl.dataset.tooltip ?? '');
-        tooltipEl.dataset.tooltip = `${cost}<br><br>${game.i18n.localize('STEIGERUNGSPLANER.ShiftClickHint')}`;
+        tooltipEl.dataset.tooltip = `${cost}<br><br>${game.i18n.localize('STEIGERUNGSPLANER.Plan.ShiftClickHint')}`;
         game.tooltip.activate(tooltipEl);
       });
     }

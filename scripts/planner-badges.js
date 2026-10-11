@@ -31,7 +31,7 @@ export default class PlannerBadges {
       badge.className = BADGE_CLASS;
       badge.classList.toggle(DECREASE_CLASS, !isIncrease);
       badge.textContent = `${isIncrease ? '+' : '-'}${group.steps.length}`;
-      badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Planned") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
+      badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Plan.Title") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
 
       // A planned step above the rule maximum - the badge gets the hint's color and a line on it.
       const limit = PlannerLimits.mark(sheet.actor, type, el.dataset.attr, group.steps);

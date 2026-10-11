@@ -61,7 +61,7 @@ export default class RequestIndex {
       (pack) => pack.documentName === 'Item' && (game.user.isGM || pack.visible) && !filter[pack.metadata.packageName],
     );
 
-    const progress = ui.notifications.info('STEIGERUNGSPLANER.IndexLoading', { localize: true, progress: true, console: false });
+    const progress = ui.notifications.info('STEIGERUNGSPLANER.Catalog.Loading', { localize: true, progress: true, console: false });
     const seen = new Map();
     const entries = [];
     const sourceNames = new Map();

@@ -32,7 +32,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     id: 'steigerungsplaner-overview',
     classes: ['steigerungsplaner-overview'],
     position: { width: 640, height: 'auto' },
-    window: { title: 'STEIGERUNGSPLANER.OverviewTitle', icon: 'fas fa-list-check', resizable: true },
+    window: { title: 'STEIGERUNGSPLANER.Overview.Title', icon: 'fas fa-list-check', resizable: true },
     actions: {
       approve: PlannerOverview.#onApprove,
       gift: PlannerOverview.#onGift,
@@ -103,7 +103,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
         const asked = [...after.values()].filter((r) => r.status === 'requested' && before.get(r.id)?.status !== 'requested');
         if (!asked.length) return;
         for (const request of asked) {
-          ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.ApprovalNew', { actor: actor.name, name: RequestController.label(request) }));
+          ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.Approval.New', { actor: actor.name, name: RequestController.label(request) }));
         }
         this.open({ auto: true });
       } else if (actor.isOwner && userId !== game.user.id) {
@@ -112,12 +112,12 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
           const name = RequestController.label(request);
           // A gift is marked 'gifted' right before it goes - also one the player hadn't sent yet.
           if (now?.status === 'gifted' && request.status !== 'gifted') {
-            ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.RequestGiftedInfo', { name }));
+            ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.Request.Notify.Gifted', { name }));
             continue;
           }
           if (request.status !== 'requested') continue;
-          if (!now) ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.RequestApprovedInfo', { name }));
-          else if (now.rejected) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestRejectedInfo', { name }));
+          if (!now) ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.Request.Notify.Approved', { name }));
+          else if (now.rejected) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Request.Notify.Rejected', { name }));
         }
       }
     });
@@ -139,7 +139,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'steigerungsplaner-overview-button';
-      button.innerHTML = `<i class="fas fa-list-check"></i> ${game.i18n.localize('STEIGERUNGSPLANER.OverviewButton')}`;
+      button.innerHTML = `<i class="fas fa-list-check"></i> ${game.i18n.localize('STEIGERUNGSPLANER.Overview.Button')}`;
       button.addEventListener('click', () => this.open());
       actions.append(button);
     });
@@ -226,7 +226,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
         const details = [];
         // Written like on the sheet: "Adel III".
         if (request.level) details.push(PlannerTab.romanNumeral(request.level));
-        if (steps !== null) details.push(`${game.i18n.localize('STEIGERUNGSPLANER.TargetFW')} ${fw.target}`);
+        if (steps !== null) details.push(`${game.i18n.localize('STEIGERUNGSPLANER.TargetFW.Label')} ${fw.target}`);
         catalog.push({
           img: request.img,
           label,
@@ -237,7 +237,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
       }
       // First, like the requests section on top of the planner tab.
       if (catalog.length) {
-        sections.unshift({ label: game.i18n.localize('STEIGERUNGSPLANER.AddRequest'), cssClass: 'steigerungsplaner-section-requests', entries: catalog });
+        sections.unshift({ label: game.i18n.localize('STEIGERUNGSPLANER.Catalog.Title'), cssClass: 'steigerungsplaner-section-requests', entries: catalog });
       }
 
       const free = PlannerController.availableXP(actor);
@@ -249,8 +249,8 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
         img: actor.img || CONST.DEFAULT_TOKEN,
         // Two parts, so the planned one alone can turn red: more planned than there's AP for yet -
         // nothing wrong, but worth seeing at a glance.
-        free: game.i18n.format('STEIGERUNGSPLANER.SummaryFree', { free }),
-        planned: game.i18n.format('STEIGERUNGSPLANER.SummaryPlanned', { planned: plannedCost }),
+        free: game.i18n.format('STEIGERUNGSPLANER.Summary.Free', { free }),
+        planned: game.i18n.format('STEIGERUNGSPLANER.Summary.Planned', { planned: plannedCost }),
         overBudget: plannedCost > free,
         collapsed: this.#collapsed.has(actor.id),
         openRequests,
@@ -264,7 +264,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     context.onlyOpen = this.#onlyOpen;
     // The advancement phase switch, only once the phase is switched on in the settings.
     context.phase = PlannerPhase.enabled ? { open: PlannerPhase.open } : null;
-    context.empty = game.i18n.localize(this.#onlyOpen ? 'STEIGERUNGSPLANER.ApprovalEmpty' : 'STEIGERUNGSPLANER.OverviewEmpty');
+    context.empty = game.i18n.localize(this.#onlyOpen ? 'STEIGERUNGSPLANER.Approval.Empty' : 'STEIGERUNGSPLANER.Overview.Empty');
     return context;
   }
 
@@ -306,11 +306,11 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
 
     const name = Handlebars.escapeExpression(RequestController.label(request));
     const reason = await foundry.applications.api.DialogV2.prompt({
-      window: { title: 'STEIGERUNGSPLANER.RejectTitle' },
-      content: `<p>${game.i18n.format('STEIGERUNGSPLANER.RejectPrompt', { name, actor: Handlebars.escapeExpression(actor.name) })}</p>
-        <input type="text" name="reason" placeholder="${game.i18n.localize('STEIGERUNGSPLANER.RejectReason')}" autofocus>`,
+      window: { title: 'STEIGERUNGSPLANER.Approval.RejectTitle' },
+      content: `<p>${game.i18n.format('STEIGERUNGSPLANER.Approval.RejectPrompt', { name, actor: Handlebars.escapeExpression(actor.name) })}</p>
+        <input type="text" name="reason" placeholder="${game.i18n.localize('STEIGERUNGSPLANER.Approval.RejectReason')}" autofocus>`,
       ok: {
-        label: 'STEIGERUNGSPLANER.Reject',
+        label: 'STEIGERUNGSPLANER.Approval.Reject',
         icon: 'fas fa-ban',
         callback: (event, button) => button.form.elements.reason.value.trim(),
       },

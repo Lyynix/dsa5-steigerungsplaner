@@ -37,7 +37,7 @@ export default class PlannerPicker {
 
     const search = document.createElement('input');
     search.type = 'search';
-    search.placeholder = game.i18n.localize('STEIGERUNGSPLANER.PickerSearch');
+    search.placeholder = game.i18n.localize('STEIGERUNGSPLANER.Picker.Search');
 
     const list = document.createElement('ol');
     list.className = 'picker-list';
@@ -69,7 +69,7 @@ export default class PlannerPicker {
 
     const empty = document.createElement('p');
     empty.className = 'picker-empty';
-    empty.textContent = game.i18n.localize('STEIGERUNGSPLANER.PickerEmpty');
+    empty.textContent = game.i18n.localize('STEIGERUNGSPLANER.Picker.Empty');
 
     el.append(search, list, empty);
     document.body.append(el);

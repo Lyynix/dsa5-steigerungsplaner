@@ -46,7 +46,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
   }
 
   get title() {
-    return `${game.i18n.localize('STEIGERUNGSPLANER.RequestPickerTitle')}: ${this.actor.name}`;
+    return `${game.i18n.localize('STEIGERUNGSPLANER.Catalog.Title')}: ${this.actor.name}`;
   }
 
   async _prepareContext(options) {
@@ -162,9 +162,9 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
 
   #extensionText({ source, requiredFW, currentFW, plannedFW }) {
     const data = { source, required: requiredFW, current: currentFW, planned: plannedFW };
-    if (currentFW === null) return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWRequested', data);
-    if (plannedFW > currentFW) return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWPlanned', data);
-    return game.i18n.format('STEIGERUNGSPLANER.ExtensionFW', data);
+    if (currentFW === null) return game.i18n.format('STEIGERUNGSPLANER.Extension.FWRequested', data);
+    if (plannedFW > currentFW) return game.i18n.format('STEIGERUNGSPLANER.Extension.FWPlanned', data);
+    return game.i18n.format('STEIGERUNGSPLANER.Extension.FW', data);
   }
 
   #detailsElement() {
@@ -200,7 +200,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
 
     const doc = (await this.#document(entry.uuid)) ?? entry;
     const { level, variant, targetFW } = this.#readChoice(entry);
-    const unknown = game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+    const unknown = game.i18n.localize('STEIGERUNGSPLANER.Cost.Unknown');
 
     const cost = RequestController.estimateCost(this.actor, doc, { level, variant });
     const costField = details.querySelector('.picker-cost');
@@ -261,11 +261,11 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     if (!entry) return;
 
     const { level, variant, targetFW, missingVariant } = this.#readChoice(entry);
-    if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
+    if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.Catalog.VariantMissing'));
 
     const item = (await this.#document(entry.uuid)) ?? entry;
     const added = await RequestController.addRequest(this.actor, item, { level, variant, targetFW });
-    if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestExists', { name: entry.name.replace(' ()', '') }));
+    if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Catalog.Exists', { name: entry.name.replace(' ()', '') }));
 
     // The list too: entries without a variant drop out of it once they're requested.
     this.#focusSearch = true;

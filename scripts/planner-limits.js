@@ -67,13 +67,13 @@ export default class PlannerLimits {
           if (target <= planned) {
             // No single planned step may raise it on its own, only several together.
             const steps = this.#helpingSteps(actor, compute, values, target);
-            return game.i18n.format(steps ? 'STEIGERUNGSPLANER.LimitAttributes' : 'STEIGERUNGSPLANER.LimitAttributesAll', { ...data, steps });
+            return game.i18n.format(steps ? 'STEIGERUNGSPLANER.Limit.Attributes' : 'STEIGERUNGSPLANER.Limit.AttributesAll', { ...data, steps });
           }
         } catch (err) {
           console.warn('dsa5-steigerungsplaner | attribute hint for', type, key, 'unavailable:', err);
         }
 
-        const over = game.i18n.format(planned > current ? 'STEIGERUNGSPLANER.LimitOverPlanned' : 'STEIGERUNGSPLANER.LimitOverCurrent', data);
+        const over = game.i18n.format(planned > current ? 'STEIGERUNGSPLANER.Limit.OverPlanned' : 'STEIGERUNGSPLANER.Limit.OverCurrent', data);
         let needed = '';
         try {
           needed = this.#neededAttributes(actor, compute, values, target);
@@ -81,7 +81,7 @@ export default class PlannerLimits {
           console.warn('dsa5-steigerungsplaner | attribute hint for', type, key, 'unavailable:', err);
           return over;
         }
-        const advice = needed ? game.i18n.format('STEIGERUNGSPLANER.LimitNeeds', { needed }) : game.i18n.localize('STEIGERUNGSPLANER.LimitNoAttribute');
+        const advice = needed ? game.i18n.format('STEIGERUNGSPLANER.Limit.Needs', { needed }) : game.i18n.localize('STEIGERUNGSPLANER.Limit.NoAttribute');
         return `${over} ${advice}`;
       },
     };

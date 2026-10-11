@@ -64,7 +64,7 @@ export function registerSheetIntegration() {
   cls.TABS = foundry.utils.deepClone(cls.TABS);
   cls.TABS.sheet.tabs.push({
     id: PlannerTab.partId,
-    label: 'STEIGERUNGSPLANER.Tab',
+    label: 'STEIGERUNGSPLANER.Title',
     icon: 'fas fa-list-check',
   });
 

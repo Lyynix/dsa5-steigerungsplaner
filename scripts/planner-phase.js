@@ -26,7 +26,7 @@ export default class PlannerPhase {
       onChange: (open) => {
         // Only worth telling the players if the phase is used at all.
         if (this.enabled && !game.user.isGM) {
-          ui.notifications.info(game.i18n.localize(open ? 'STEIGERUNGSPLANER.PhaseOpened' : 'STEIGERUNGSPLANER.PhaseClosed'));
+          ui.notifications.info(game.i18n.localize(open ? 'STEIGERUNGSPLANER.Phase.Opened' : 'STEIGERUNGSPLANER.Phase.Closed'));
         }
         this.#rerender();
       },
@@ -53,7 +53,7 @@ export default class PlannerPhase {
 
   // For every place that refuses because of it.
   static warn() {
-    ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.PhaseLocked'));
+    ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.Phase.Locked'));
   }
 
   // Character sheets (their planner tab shows the phase) and the GM's overview (its switch).
