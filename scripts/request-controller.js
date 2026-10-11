@@ -1,5 +1,6 @@
 import PlannerController from './planner-controller.js';
 import PlannerData from './planner-data.js';
+import PlannerPhase from './planner-phase.js';
 
 const GROUP_ORDER = [
   'advantage',
@@ -460,8 +461,10 @@ export default class RequestController {
     return `${request.name.replace(' ()', '')} (${name}${customEntry ? `, ${customEntry}` : ''})`;
   }
 
-  // Asking again clears an earlier rejection. Extensions only once they can be bought.
+  // Asking again clears an earlier rejection. Extensions only once they can be bought, and
+  // nothing outside the advancement phase.
   static async markRequested(actor, id) {
+    if (PlannerPhase.locked) return PlannerPhase.warn();
     const request = PlannerData.getRequests(actor).find((r) => r.id === id);
     const extension = request && this.extensionState(actor, request);
     if (extension && extension.state !== 'ready') return;

@@ -8,6 +8,10 @@ export const FLAG_REQUESTS = 'requests';
 export const PART_ID = 'steigerungsplaner';
 // World setting: typing a value into the sheet's input fields plans the steps instead of setting it.
 export const SETTING_INPUT_PLANS = 'inputPlans';
+// World settings for the advancement phase: whether it's used at all, and whether it's open right
+// now (the GM's switch in the overview sets the same setting) - see PlannerPhase.
+export const SETTING_PHASE_ENABLED = 'advancementPhase';
+export const SETTING_PHASE_OPEN = 'advancementPhaseOpen';
 
 // data-fct values used by the DSA5 "advanceWrapper" action, mapped to our internal target type
 export const ADVANCE_FCTS = {

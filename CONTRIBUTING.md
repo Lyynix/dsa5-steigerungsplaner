@@ -58,6 +58,6 @@ Die [README](README.md) ist die Anleitung für Spieler und SL, auf Deutsch. Änd
 
 ## Release
 
-- Ein Release ist ein GitHub-Release mit einem Tag `vX.Y.Z` nach [Semantic Versioning](https://semver.org/lang/de/).
+- Ein Release ist ein GitHub-Release mit einem Tag `vX.Y.Z`. `X` ist die Foundry-Version, für die das Modul entwickelt und getestet ist, `Y` steht für neue Funktionen, `Z` für Fehlerbehebungen. Mit einer neuen Foundry-Hauptversion wird das Modul darauf umgestellt, und die Version springt auf `<neue Version>.0.0`.
 - Den Rest erledigt der Workflow: Er setzt die Version in `module.json` (die `#{…}#`-Platzhalter bleiben im Repo stehen), stempelt den Changelog, baut `steigerungsplaner.zip` und meldet die Version im Foundry-Paketverzeichnis an.
 - Danach einmal `git pull`, weil der Workflow den Changelog auf `main` zurückschreibt.

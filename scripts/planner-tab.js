@@ -1,6 +1,7 @@
 import { PART_ID } from './module-config.js';
 import PlannerData from './planner-data.js';
 import PlannerController from './planner-controller.js';
+import PlannerPhase from './planner-phase.js';
 import PlannerPicker from './planner-picker.js';
 import { applyingIds } from './planner-state.js';
 import RequestController from './request-controller.js';
@@ -36,6 +37,14 @@ export default class PlannerTab {
     const actor = sheet.actor;
 
     context.plannerSections = this.buildSections(actor);
+    // Outside the advancement phase players can plan, but not apply or ask - the GM sees the hint
+    // too, just as information.
+    context.plannerPhaseLocked = PlannerPhase.locked;
+    context.plannerPhaseHint =
+      PlannerPhase.enabled && !PlannerPhase.open
+        ? game.i18n.localize(game.user.isGM ? 'STEIGERUNGSPLANER.PhaseHintGM' : 'STEIGERUNGSPLANER.PhaseHint')
+        : '';
+    const phaseLockedText = game.i18n.localize('STEIGERUNGSPLANER.PhaseLocked');
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
     // Each one is weighed against the available AP on its own, like each target's steps are.
@@ -69,7 +78,11 @@ export default class PlannerTab {
         requested: request.status === 'requested',
         rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
         // An extension can only be asked for once its spell/liturgy is there with a high enough FW.
-        blockedReason: extension && extension.state !== 'ready' ? this.extensionBlockedReason(extension) : '',
+        blockedReason: context.plannerPhaseLocked
+          ? phaseLockedText
+          : extension && extension.state !== 'ready'
+            ? this.extensionBlockedReason(extension)
+            : '',
         extensionMissing: extension?.state === 'missing',
         cost,
         costUnknown: cost === null,
@@ -148,6 +161,7 @@ export default class PlannerTab {
 
     element.querySelectorAll('[data-plan-apply]').forEach((el) => {
       el.addEventListener('click', (ev) => {
+        if (PlannerPhase.locked) return PlannerPhase.warn();
         const firstStepEl = ev.currentTarget.parentElement.querySelector('.planner-steps .planner-step:first-child');
 
         if (!firstStepEl) return;
@@ -270,6 +284,7 @@ export default class PlannerTab {
     // you saw highlighted on hover is exactly what happens on click.
     element.querySelectorAll('.planner-step-inner').forEach((el) => {
       el.addEventListener('click', (ev) => {
+        if (PlannerPhase.locked) return PlannerPhase.warn();
         const stepEl = ev.currentTarget.closest('.planner-step');
         if (!stepEl) return;
 

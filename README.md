@@ -78,9 +78,12 @@ Genehmigt oder lehnt der SL ab, bekommt der Spieler eine Benachrichtigung. Ein a
 - **Verbotsschild**: lehnt ab, optional mit Begründung.
 - Im Steigerungsplaner-Tab eines Charakters sieht der SL statt des Papierfliegers direkt den Haken und kann geplante Einträge ohne Umweg kaufen.
 - Werte direkt setzen: im Wertfeld mit **Strg+Enter** (siehe oben) oder über die Einstellung unten.
+- **Steigerungsphase** (wenn in den Einstellungen eingeschaltet): Der Schalter oben in der Übersicht öffnet und schließt sie für alle Charaktere. Solange sie geschlossen ist, können Spieler nur planen. Geplante Schritte anwenden, normales „+“/„-“ im Charakter- und Item-Bogen, Werte direkt setzen und Anfragen senden geht erst wieder, wenn der SL sie öffnet. Die Spieler sehen das als Hinweis im Planer-Tab, ausgegraute Buttons und bekommen beim Öffnen und Schließen eine Benachrichtigung.
 
 ## Einstellungen
 
+- **Steigerungsphase verwenden** (Welt, standardmäßig aus): Schaltet die Steigerungsphase ein (siehe „Für den SL“). Ist sie aus, können Spieler jederzeit steigern.
+- **Steigerungsphase offen** (Welt): Ob die Steigerungsphase gerade offen ist, derselbe Zustand wie der Schalter in der Übersicht.
 - **Eingabefelder planen Steigerungen** (Welt, standardmäßig an): Ist sie aus, setzen die Wertfelder den Wert wieder direkt, wie ohne das Modul. Bereits Geplantes wird dabei an den neuen Wert angepasst. Praktisch z. B. beim Erschaffen von Charakteren.
 
 ## Voraussetzungen
