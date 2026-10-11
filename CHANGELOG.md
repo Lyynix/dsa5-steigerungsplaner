@@ -5,6 +5,7 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 ## Unveröffentlicht
 
 ### Hinzugefügt
+- **Schenken:** Der SL kann Anfragen auch ohne AP-Kosten genehmigen, in der Übersicht und im Planer-Tab, z. B. als Belohnung ([#40](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/40)).
 - **Steigerungsphase:** Auf Wunsch dürfen Spieler außerhalb der Steigerungsphase nur planen. Steigern und Anfragen senden geht erst, wenn der SL sie öffnet, per Schalter in der Übersicht oder in den Einstellungen ([#45](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/45)).
 
 ### Geändert

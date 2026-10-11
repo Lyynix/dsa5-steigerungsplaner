@@ -35,6 +35,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     window: { title: 'STEIGERUNGSPLANER.OverviewTitle', icon: 'fas fa-list-check', resizable: true },
     actions: {
       approve: PlannerOverview.#onApprove,
+      gift: PlannerOverview.#onGift,
       reject: PlannerOverview.#onReject,
       openSheet: PlannerOverview.#onOpenSheet,
       toggleActor: PlannerOverview.#onToggleActor,
@@ -107,9 +108,14 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
         this.open({ auto: true });
       } else if (actor.isOwner && userId !== game.user.id) {
         for (const request of before.values()) {
-          if (request.status !== 'requested') continue;
           const now = after.get(request.id);
           const name = RequestController.label(request);
+          // A gift is marked 'gifted' right before it goes - also one the player hadn't sent yet.
+          if (now?.status === 'gifted' && request.status !== 'gifted') {
+            ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.RequestGiftedInfo', { name }));
+            continue;
+          }
+          if (request.status !== 'requested') continue;
           if (!now) ui.notifications.info(game.i18n.format('STEIGERUNGSPLANER.RequestApprovedInfo', { name }));
           else if (now.rejected) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestRejectedInfo', { name }));
         }
@@ -280,6 +286,14 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     if (!actor) return;
     target.disabled = true;
     await RequestController.approveRequest(actor, target.closest('[data-request-id]').dataset.requestId);
+    PlannerOverview.refresh();
+  }
+
+  static async #onGift(event, target) {
+    const actor = PlannerOverview.#actorFor(target);
+    if (!actor) return;
+    target.disabled = true;
+    await RequestController.approveRequest(actor, target.closest('[data-request-id]').dataset.requestId, { gift: true });
     PlannerOverview.refresh();
   }
 

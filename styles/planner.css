@@ -381,6 +381,7 @@
 .steigerungsplaner-tab .planner-send,
 .steigerungsplaner-tab .planner-withdraw,
 .steigerungsplaner-tab .planner-approve,
+.steigerungsplaner-tab .planner-gift,
 .steigerungsplaner-tab .planner-cancel {
   flex: 0 0 auto;
   width: 30px;
@@ -771,6 +772,17 @@
 
       &:hover {
         background: color-mix(in srgb, var(--overview-green) 80%, black);
+      }
+    }
+
+    /* Gold for a gift - a friendlier action than approve or reject. */
+    & .overview-gift {
+      border: 1px solid rgb(184, 134, 11);
+      background: transparent;
+      color: rgb(150, 105, 0);
+
+      &:hover {
+        background: rgba(184, 134, 11, 0.15);
       }
     }
 

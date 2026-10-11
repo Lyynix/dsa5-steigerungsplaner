@@ -36,6 +36,7 @@
                 <span class="overview-cost">{{request.cost}} AP</span>
                 {{/if}}
                 <button type="button" class="overview-approve" data-action="approve" data-tooltip="{{localize 'STEIGERUNGSPLANER.Approve'}}"><i class="fas fa-check"></i> {{localize "STEIGERUNGSPLANER.ApproveShort"}}</button>
+                <button type="button" class="overview-gift" data-action="gift" data-tooltip="{{localize 'STEIGERUNGSPLANER.Gift'}}"><i class="fas fa-gift"></i></button>
                 <button type="button" class="overview-reject" data-action="reject" data-tooltip="{{localize 'STEIGERUNGSPLANER.Reject'}}"><i class="fas fa-ban"></i></button>
                 {{#if request.requirements}}
                 <div class="overview-requirements"><strong>{{localize "STEIGERUNGSPLANER.Requirements"}}:</strong> {{request.requirements}}</div>
