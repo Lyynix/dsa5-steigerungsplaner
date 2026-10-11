@@ -1,4 +1,20 @@
 /* =================================================================================================
+   Colors
+   ================================================================================================= */
+
+/* Shared by the sheet's badges, the tab and the overview. */
+:root {
+  /* Applying, planned, approving. */
+  --steigerungsplaner-green: rgb(86, 168, 19);
+  /* Discarding - the system's own danger red. */
+  --steigerungsplaner-discard: var(--dsa-danger, #8b0000);
+  /* Above the maximum, reachable with planned attributes; gifts. */
+  --steigerungsplaner-amber: #b7860b;
+  /* Above the maximum even then. */
+  --steigerungsplaner-over: #b22222;
+}
+
+/* =================================================================================================
    Character sheet
    ================================================================================================= */
 
@@ -28,12 +44,12 @@
 /* Badge for a step above the maximum that the planned attributes make reachable
    (planner-limits.js). */
 .steigerungsplaner-badge-limit-attributes {
-  background: #b7860b;
+  background: var(--steigerungsplaner-amber);
 }
 
 /* Badge for a step above the maximum even with the planned attributes. */
 .steigerungsplaner-badge-limit-over {
-  background: #b22222;
+  background: var(--steigerungsplaner-over);
 }
 
 /* Room above the attributes' "+" for their badge. */
@@ -119,12 +135,12 @@
 
   /* Reachable with the planned attributes. */
   &.planner-limit-attributes {
-    color: #b7860b;
+    color: var(--steigerungsplaner-amber);
   }
 
   /* Not reachable even then. */
   &.planner-limit-over {
-    color: #b22222;
+    color: var(--steigerungsplaner-over);
   }
 }
 
@@ -163,14 +179,10 @@
     cursor: pointer;
   }
 
-  /* Pushes the AP summary to the right. */
-  & .planner-add-request {
-    margin-right: auto;
-  }
-
-  /* AP free and planned. */
+  /* AP free and planned, pushed to the right. */
   & .planner-summary {
     display: flex;
+    margin-left: auto;
     gap: 1rem;
     font-size: 0.9em;
   }
@@ -239,7 +251,7 @@
       opacity: 0;
       padding-top: 0;
       padding-bottom: 0;
-      background-color: rgba(139, 0, 0, 0.5);
+      background-color: color-mix(in srgb, var(--steigerungsplaner-discard) 50%, transparent);
     }
   }
 
@@ -319,13 +331,13 @@
 
     /* Planned. */
     &.selected {
-      border-color: rgb(86, 168, 19);
-      background: rgba(86, 168, 19, 0.35);
+      border-color: var(--steigerungsplaner-green);
+      background: color-mix(in srgb, var(--steigerungsplaner-green) 35%, transparent);
     }
 
     /* Clickable level. */
     &:is(a):hover {
-      border-color: rgb(86, 168, 19);
+      border-color: var(--steigerungsplaner-green);
     }
   }
 
@@ -411,12 +423,12 @@
 
     /* Green while being applied. */
     &.planner-step-applying {
-      background-color: #56a8137f;
+      background-color: color-mix(in srgb, var(--steigerungsplaner-green) 50%, transparent);
     }
 
     /* Red while being discarded. */
     &.planner-step-cancelling {
-      background-color: rgba(139, 0, 0, 0.5);
+      background-color: color-mix(in srgb, var(--steigerungsplaner-discard) 50%, transparent);
     }
   }
 
@@ -463,10 +475,10 @@
   }
 
   /* Hovering a tile (not its X): green on it and the tiles before it, what "apply up to here" would
-     buy. */
-  & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
-  & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
-    background-color: rgba(86, 168, 19, 0.3);
+     buy. Not while the phase is closed, applying doesn't work then. */
+  &:not(.planner-phase-locked) .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+  &:not(.planner-phase-locked) .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+    background-color: color-mix(in srgb, var(--steigerungsplaner-green) 30%, transparent);
   }
 
   /* Hovering an X: red on its tile and the ones after it, what would be discarded. */
@@ -488,12 +500,6 @@
     /* Clicking a tile doesn't apply. */
     & .planner-step-inner {
       cursor: default;
-    }
-
-    /* No green preview, the red one for discarding stays. */
-    & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
-    & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
-      background-color: transparent;
     }
   }
 }
@@ -819,8 +825,6 @@
 
 /* GM overview (planner-overview.js). */
 .steigerungsplaner-overview {
-  --overview-green: rgb(86, 168, 19);
-
   /* Toolbar ------------------------------------------------------------------------------------ */
 
   /* Scrolls once it gets too tall. */
@@ -862,8 +866,8 @@
 
     /* Green while open. */
     &.open {
-      border-color: var(--overview-green);
-      background: color-mix(in srgb, var(--overview-green) 25%, transparent);
+      border-color: var(--steigerungsplaner-green);
+      background: color-mix(in srgb, var(--steigerungsplaner-green) 25%, transparent);
     }
   }
 
@@ -963,10 +967,10 @@
     flex-direction: column;
     gap: 2px;
     padding: 0.3rem 0.5rem 0.4rem;
-    border: 1px solid color-mix(in srgb, var(--overview-green) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--steigerungsplaner-green) 60%, transparent);
     border-left-width: 4px;
     border-radius: 4px;
-    background: color-mix(in srgb, var(--overview-green) 12%, transparent);
+    background: color-mix(in srgb, var(--steigerungsplaner-green) 12%, transparent);
   }
 
   /* Card heading. */
@@ -975,7 +979,7 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: color-mix(in srgb, var(--overview-green) 70%, black);
+    color: color-mix(in srgb, var(--steigerungsplaner-green) 70%, black);
   }
 
   /* One request. Requirements wrap onto their own line. */
@@ -988,7 +992,7 @@
 
     /* Line between requests. */
     & + .overview-request {
-      border-top: 1px solid color-mix(in srgb, var(--overview-green) 30%, transparent);
+      border-top: 1px solid color-mix(in srgb, var(--steigerungsplaner-green) 30%, transparent);
     }
 
     /* Larger icon. */
@@ -1022,25 +1026,25 @@
 
     /* Approve: green. */
     & .overview-approve {
-      border: 1px solid var(--overview-green);
-      background: var(--overview-green);
+      border: 1px solid var(--steigerungsplaner-green);
+      background: var(--steigerungsplaner-green);
       color: white;
 
       /* Darker. */
       &:hover {
-        background: color-mix(in srgb, var(--overview-green) 80%, black);
+        background: color-mix(in srgb, var(--steigerungsplaner-green) 80%, black);
       }
     }
 
     /* Gift: gold. */
     & .overview-gift {
-      border: 1px solid rgb(184, 134, 11);
+      border: 1px solid var(--steigerungsplaner-amber);
       background: transparent;
-      color: rgb(150, 105, 0);
+      color: color-mix(in srgb, var(--steigerungsplaner-amber) 80%, black);
 
       /* Tinted. */
       &:hover {
-        background: rgba(184, 134, 11, 0.15);
+        background: color-mix(in srgb, var(--steigerungsplaner-amber) 15%, transparent);
       }
     }
 
