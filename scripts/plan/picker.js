@@ -1,5 +1,12 @@
-import PlannerController from './planner-controller.js';
+/**
+ * @file The "Plan value" dropdown: a popover at the mouse listing the targets with nothing planned
+ * yet, grouped by section and searchable. Not Foundry's ContextMenu - it has no search field, and
+ * ~80 skills without one would be unusable.
+ */
 
+import PlannerController from './controller.js';
+
+/** Section ids in the sheet's order; unknown ones go last. */
 const SECTION_ORDER = [
   'characteristics',
   'points',
@@ -13,15 +20,24 @@ const SECTION_ORDER = [
   'religion',
   'other',
 ];
+
+/** Minimum distance to the window's edges, in px. */
 const MARGIN = 8;
 
-// Context-menu-like popover at the mouse for adding a new target to the plan. Not Foundry's own
-// ContextMenu: it has no search field, and ~80 talents without one would be unusable.
+/** The dropdown. Only one is open at a time. */
 export default class PlannerPicker {
+  /** @type {?HTMLElement} */
   static #element = null;
+  /** @type {?function(PointerEvent)} */
   static #onPointerDown = null;
+  /** @type {?function(KeyboardEvent)} */
   static #onKeyDown = null;
 
+  /**
+   * Opens the dropdown at the mouse. Picking a target plans its first step.
+   * @param {ActorSheet} sheet
+   * @param {MouseEvent} event   The click that opened it.
+   */
   static open(sheet, event) {
     this.close();
     if (!sheet.actor.isOwner) return;
@@ -37,7 +53,7 @@ export default class PlannerPicker {
 
     const search = document.createElement('input');
     search.type = 'search';
-    search.placeholder = game.i18n.localize('STEIGERUNGSPLANER.PickerSearch');
+    search.placeholder = game.i18n.localize('STEIGERUNGSPLANER.Picker.Search');
 
     const list = document.createElement('ol');
     list.className = 'picker-list';
@@ -69,7 +85,7 @@ export default class PlannerPicker {
 
     const empty = document.createElement('p');
     empty.className = 'picker-empty';
-    empty.textContent = game.i18n.localize('STEIGERUNGSPLANER.PickerEmpty');
+    empty.textContent = game.i18n.localize('STEIGERUNGSPLANER.Picker.Empty');
 
     el.append(search, list, empty);
     document.body.append(el);
@@ -105,6 +121,7 @@ export default class PlannerPicker {
     search.focus();
   }
 
+  /** Closes the dropdown, if open. */
   static close() {
     this.#element?.remove();
     this.#element = null;
@@ -112,7 +129,11 @@ export default class PlannerPicker {
     document.removeEventListener('keydown', this.#onKeyDown);
   }
 
-  // [section, targets][] in the sheet's own order, unknown sections last.
+  /**
+   * Groups the targets by section, in SECTION_ORDER.
+   * @param {object[]} targets   From PlannerController.candidateTargets.
+   * @returns {Array<[object, object[]]>} [section, targets] pairs.
+   */
   static #group(targets) {
     const sections = new Map();
     for (const target of targets) {
@@ -127,7 +148,11 @@ export default class PlannerPicker {
     return [...sections.values()].sort((a, b) => rank(a[0].id) - rank(b[0].id));
   }
 
-  // Matches either the target's own name or its section's, so "Kampf" lists all combat techniques.
+  /**
+   * Hides what doesn't match. A target matches by its own name or its section's, so "Kampf" lists
+   * all combat techniques.
+   * @param {string} query
+   */
   static #filter(query) {
     const q = query.trim().toLowerCase();
     let heading = null;
@@ -155,8 +180,13 @@ export default class PlannerPicker {
     this.#element.querySelector('.picker-empty').hidden = anyVisible;
   }
 
-  // At the mouse, but kept inside the window: shifted left at the right edge, flipped above the
-  // cursor at the bottom edge.
+  /**
+   * Places the dropdown at the mouse, but inside the window: shifted left at the right edge,
+   * flipped above the cursor at the bottom edge.
+   * @param {HTMLElement} el
+   * @param {number} x
+   * @param {number} y
+   */
   static #position(el, x, y) {
     const { width, height } = el.getBoundingClientRect();
     const left = Math.max(MARGIN, Math.min(x, window.innerWidth - width - MARGIN));

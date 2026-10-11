@@ -1,12 +1,17 @@
-import { MODULE_ID } from './module-config.js';
-import RequestController from './request-controller.js';
-import RequestIndex from './request-index.js';
+/**
+ * @file The catalog window a player picks things to plan from (special abilities, spells, ...): the
+ * list on the left, the selected entry's details on the right. It stays open so several things can
+ * be added in a row - after adding, the search field gets focus with its text selected, so typing
+ * replaces it.
+ */
+
+import { MODULE_ID } from '../config.js';
+import RequestController from './controller.js';
+import RequestIndex from './compendium-index.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-// The window a player picks things to request from (special abilities, spells, ...): the list on
-// the left, the selected entry's details on the right. It stays open so several things can be added
-// in a row - after adding, the search field gets focus with its text selected, so typing replaces it.
+/** The catalog window, one per character. */
 export default class RequestPicker extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     classes: ['steigerungsplaner-request-picker'],
@@ -23,32 +28,65 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     details: { template: `modules/${MODULE_ID}/templates/request-picker-details.hbs` },
   };
 
-  // One window per character, a second click brings the open one to the front.
+  /**
+   * Opens the character's catalog, or brings the open one to the front.
+   * @param {Actor} actor
+   * @returns {Promise<RequestPicker>}
+   */
   static open(actor) {
     const id = `steigerungsplaner-request-picker-${actor.id}`;
     const app = foundry.applications.instances.get(id) ?? new RequestPicker(actor, { id });
     return app.render({ force: true });
   }
 
+  /**
+
+   * The catalog's groups, see RequestController.catalog.
+
+   * @type {object[]}
+
+   */
   #catalog = [];
+  /**
+   * Full items loaded so far, by uuid.
+   * @type {Map<string, Item>}
+   */
   #documents = new Map();
+  /**
+   * The catalog's entries by uuid.
+   * @type {Map<string, object>}
+   */
   #entries = new Map();
+  /**
+   * The selected entry's uuid.
+   * @type {?string}
+   */
   #selected = null;
+  /** The search text. */
   #query = '';
+  /** The book filter, '' for all. */
   #book = '';
+  /** The category filter, '' for all. */
   #group = '';
+  /** Whether the next render focuses the search field. */
   #focusSearch = true;
 
-  // The actor is kept out of the options on purpose - ApplicationV2 merges and freezes those.
+  /**
+   * The actor is kept out of the options on purpose - ApplicationV2 merges and freezes those.
+   * @param {Actor} actor
+   * @param {object} options
+   */
   constructor(actor, options) {
     super(options);
     this.actor = actor;
   }
 
+  /** @type {string} */
   get title() {
-    return `${game.i18n.localize('STEIGERUNGSPLANER.RequestPickerTitle')}: ${this.actor.name}`;
+    return `${game.i18n.localize('STEIGERUNGSPLANER.Catalog.Title')}: ${this.actor.name}`;
   }
 
+  /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     this.#catalog = RequestController.catalog(this.actor, await RequestIndex.get());
@@ -76,6 +114,10 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     return context;
   }
 
+  /**
+   * Wires the search and filters of the list, and the fields of the details to the cost.
+   * @override
+   */
   async _onRender(context, options) {
     await super._onRender(context, options);
     const search = this.element.querySelector('.picker-search');
@@ -114,6 +156,10 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     }
   }
 
+  /**
+   * The selected catalog entry with its group's label.
+   * @returns {?object}
+   */
   #selectedEntry() {
     for (const group of this.#catalog) {
       const entry = group.entries.find((e) => e.uuid === this.#selected);
@@ -122,12 +168,21 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     return null;
   }
 
-  // The full item from its compendium, for what the index doesn't have (description, rules text).
+  /**
+   * The full item from its compendium, for what the index doesn't have (description, rules text).
+   * Loaded once per window.
+   * @param {string} uuid
+   * @returns {Promise<?Item>}
+   */
   async #document(uuid) {
     if (!this.#documents.has(uuid)) this.#documents.set(uuid, await fromUuid(uuid));
     return this.#documents.get(uuid);
   }
 
+  /**
+   * The render context of the details part.
+   * @returns {Promise<?object>} null while nothing is selected.
+   */
   async #details() {
     const entry = this.#selectedEntry();
     if (!entry) return null;
@@ -160,19 +215,30 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     };
   }
 
+  /**
+   * The line about an extension's required FW.
+   * @param {{source: string, requiredFW: number, currentFW: ?number, plannedFW: number}} extension
+   * @returns {string}
+   */
   #extensionText({ source, requiredFW, currentFW, plannedFW }) {
     const data = { source, required: requiredFW, current: currentFW, planned: plannedFW };
-    if (currentFW === null) return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWRequested', data);
-    if (plannedFW > currentFW) return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWPlanned', data);
-    return game.i18n.format('STEIGERUNGSPLANER.ExtensionFW', data);
+    if (currentFW === null) return game.i18n.format('STEIGERUNGSPLANER.Extension.FWRequested', data);
+    if (plannedFW > currentFW) return game.i18n.format('STEIGERUNGSPLANER.Extension.FWPlanned', data);
+    return game.i18n.format('STEIGERUNGSPLANER.Extension.FW', data);
   }
 
+  /** @returns {HTMLElement} */
   #detailsElement() {
     return this.element.querySelector('[data-application-part="details"]');
   }
 
-  // The level, variant and wanted FW currently chosen in the details. `missingVariant` is set when
-  // a variant is needed but none is entered, the cost can still be shown without it for most items.
+  /**
+   * The level, variant and wanted FW chosen in the details.
+   * @param {object} entry
+   * @returns {{level: ?number, variant: ?object, targetFW: ?number, missingVariant: boolean}}
+   *   missingVariant if one is needed but none is entered - the cost can still be shown without it
+   *   for most items.
+   */
   #readChoice(entry) {
     const details = this.#detailsElement();
     const level = entry.level ? Number(details.querySelector('[name="level"]').value) : null;
@@ -193,6 +259,11 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     return { level, variant, targetFW, missingVariant: !!entry.variant && !variant };
   }
 
+  /**
+   * Updates the costs in the details to what's chosen: the cost, the per-level costs and the
+   * target FW's steps.
+   * @returns {Promise<void>}
+   */
   async #updateCost() {
     const entry = this.#selectedEntry();
     const details = this.#detailsElement();
@@ -200,7 +271,7 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
 
     const doc = (await this.#document(entry.uuid)) ?? entry;
     const { level, variant, targetFW } = this.#readChoice(entry);
-    const unknown = game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+    const unknown = game.i18n.localize('STEIGERUNGSPLANER.Cost.Unknown');
 
     const cost = RequestController.estimateCost(this.actor, doc, { level, variant });
     const costField = details.querySelector('.picker-cost');
@@ -221,9 +292,12 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     }
   }
 
-  // The search matches an entry's name or its group's, so "Kampf" lists all combat special
-  // abilities. From three letters on it also looks into the descriptions - those hits are dimmed and
-  // come last in their group. The book and category filters narrow all of that down further.
+  /**
+   * Hides the entries that don't match. The search matches an entry's name or its group's, so
+   * "Kampf" lists all combat special abilities. From three letters on it also looks into the
+   * descriptions - those hits are dimmed and come last in their group. The book and category
+   * filters narrow all of that down further.
+   */
   #filter() {
     const q = this.#query.trim().toLowerCase();
     const searchDescriptions = q.length >= 3;
@@ -249,23 +323,34 @@ export default class RequestPicker extends HandlebarsApplicationMixin(Applicatio
     this.element.querySelector('.picker-empty').hidden = anyVisible;
   }
 
-  // Only the details are re-rendered, so the list keeps its scroll position and search.
+  /**
+   * Selects an entry. Only the details are re-rendered, so the list keeps its scroll position and
+   * search.
+   * @this {RequestPicker}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
   static #onSelectEntry(event, target) {
     this.#selected = target.dataset.uuid;
     for (const li of this.element.querySelectorAll('.picker-entry')) li.classList.toggle('selected', li === target);
     this.render({ parts: ['details'] });
   }
 
+  /**
+   * Adds the selected entry to the plan with what's chosen in the details.
+   * @this {RequestPicker}
+   * @returns {Promise<void>}
+   */
   static async #onAddRequest() {
     const entry = this.#selectedEntry();
     if (!entry) return;
 
     const { level, variant, targetFW, missingVariant } = this.#readChoice(entry);
-    if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.VariantMissing'));
+    if (missingVariant) return ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.Catalog.VariantMissing'));
 
     const item = (await this.#document(entry.uuid)) ?? entry;
     const added = await RequestController.addRequest(this.actor, item, { level, variant, targetFW });
-    if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.RequestExists', { name: entry.name.replace(' ()', '') }));
+    if (!added) ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Catalog.Exists', { name: entry.name.replace(' ()', '') }));
 
     // The list too: entries without a variant drop out of it once they're requested.
     this.#focusSearch = true;

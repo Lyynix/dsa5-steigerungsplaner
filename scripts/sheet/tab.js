@@ -1,21 +1,35 @@
-import { PART_ID } from './module-config.js';
-import PlannerData from './planner-data.js';
-import PlannerLimits from './planner-limits.js';
-import PlannerController from './planner-controller.js';
-import PlannerPhase from './planner-phase.js';
-import PlannerPicker from './planner-picker.js';
-import { applyingIds } from './planner-state.js';
-import RequestController from './request-controller.js';
-import RequestPicker from './request-picker.js';
+/**
+ * @file The planner tab on the character sheet: its render context and its listeners. The template
+ * is templates/planner-tab.hbs, added as a part of the sheet by sheet/integration.js.
+ */
 
+import { PART_ID } from '../config.js';
+import PlannerData from '../plan/data.js';
+import PlannerLimits from '../plan/limits.js';
+import PlannerController from '../plan/controller.js';
+import PlannerPhase from '../phase.js';
+import PlannerPicker from '../plan/picker.js';
+import { applyingIds } from '../plan/state.js';
+import RequestController from '../requests/controller.js';
+import RequestPicker from '../requests/picker.js';
+
+/** The tab. */
 export default class PlannerTab {
+  /**
+   * The tab's part id on the sheet.
+   * @type {string}
+   */
   static get partId() {
     return PART_ID;
   }
 
-  // Groups target-groups (one per attribute/point/item, from PlannerData.getGroups) a second
-  // time by display section (Körpertalente, Kampftechniken, Eigenschaften, ...) for the tab's
-  // layout. Sections appear in the order their first member was first encountered.
+  /**
+   * The plan's targets grouped by section (attributes, body skills, combat techniques, ...), each
+   * with its icon and its steps marked for affordability and maximum. Sections come in the order
+   * their first target was planned.
+   * @param {Actor} actor
+   * @returns {object[]} The sections, each with its groups and total cost.
+   */
   static buildSections(actor) {
     const sections = new Map();
 
@@ -36,6 +50,12 @@ export default class PlannerTab {
     return Array.from(sections.values());
   }
 
+  /**
+   * Adds the tab's data to the sheet's render context, all prefixed with `planner`.
+   * @param {ActorSheet} sheet
+   * @param {object} context
+   * @returns {Promise<object>}
+   */
   static async prepareContext(sheet, context) {
     const actor = sheet.actor;
 
@@ -45,9 +65,9 @@ export default class PlannerTab {
     context.plannerPhaseLocked = PlannerPhase.locked;
     context.plannerPhaseHint =
       PlannerPhase.enabled && !PlannerPhase.open
-        ? game.i18n.localize(game.user.isGM ? 'STEIGERUNGSPLANER.PhaseHintGM' : 'STEIGERUNGSPLANER.PhaseHint')
+        ? game.i18n.localize(game.user.isGM ? 'STEIGERUNGSPLANER.Phase.HintGM' : 'STEIGERUNGSPLANER.Phase.Hint')
         : '';
-    const phaseLockedText = game.i18n.localize('STEIGERUNGSPLANER.PhaseLocked');
+    const phaseLockedText = game.i18n.localize('STEIGERUNGSPLANER.Phase.Locked');
     context.plannerAvailableXP = PlannerController.availableXP(actor);
 
     // Each one is weighed against the available AP on its own, like each target's steps are.
@@ -70,7 +90,7 @@ export default class PlannerTab {
           ...fw,
           // Shown next to the field only once something is planned on top of learning it.
           hint: fw.target > fw.start ? (fw.stepsCost === null ? '+? AP' : `+${fw.stepsCost} AP`) : '',
-          tooltip: game.i18n.format('STEIGERUNGSPLANER.TargetFWTooltip', {
+          tooltip: game.i18n.format('STEIGERUNGSPLANER.TargetFW.Tooltip', {
             learn: cost ?? '?',
             fw: fw.target,
             steps: fw.stepsCost ?? '?',
@@ -79,7 +99,7 @@ export default class PlannerTab {
         label: RequestController.label(request),
         levelLabel: request.level ? this.romanNumeral(request.level) : '',
         requested: request.status === 'requested',
-        rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.RequestRejectedNoReason'),
+        rejectedReason: request.rejected?.reason || game.i18n.localize('STEIGERUNGSPLANER.Request.RejectedNoReason'),
         // An extension can only be asked for once its spell/liturgy is there with a high enough FW.
         blockedReason: context.plannerPhaseLocked
           ? phaseLockedText
@@ -99,26 +119,41 @@ export default class PlannerTab {
     context.plannerTotalCost = RequestController.plannedCost(actor);
     // The GM doesn't ask themselves - they get a check mark that buys the request right away.
     context.plannerIsGM = game.user.isGM;
-    context.plannerEmpty =!context.plannerSections.length && !context.plannerRequests.length;
+    context.plannerEmpty = !context.plannerSections.length && !context.plannerRequests.length;
     return context;
   }
 
+  /**
+   * The tooltip of an extension's blocked send button.
+   * @param {{state: string, source: string, requiredFW: number, currentFW: ?number}} extension
+   *   From RequestController.extensionState.
+   * @returns {string}
+   */
   static extensionBlockedReason({ state, source, requiredFW, currentFW }) {
     const data = { source, required: requiredFW, current: currentFW };
-    if (state === 'missing') return game.i18n.format('STEIGERUNGSPLANER.ExtensionSourceMissing', data);
-    if (state === 'notLearned') return game.i18n.format('STEIGERUNGSPLANER.ExtensionSourceNotLearned', data);
-    return game.i18n.format('STEIGERUNGSPLANER.ExtensionFWTooLow', data);
+    if (state === 'missing') return game.i18n.format('STEIGERUNGSPLANER.Extension.SourceMissing', data);
+    if (state === 'notLearned') return game.i18n.format('STEIGERUNGSPLANER.Extension.SourceNotLearned', data);
+    return game.i18n.format('STEIGERUNGSPLANER.Extension.FWTooLow', data);
   }
 
-  // A level button's tooltip: how the planned cost changes when picking that level.
+  /**
+   * A level button's tooltip: how the planned cost changes when picking that level.
+   * @param {{value: number, owned: boolean, delta: ?number}} level
+   * @param {number} planned   The level planned now.
+   * @returns {string}
+   */
   static levelTooltip(level, planned) {
-    if (level.owned) return game.i18n.localize('STEIGERUNGSPLANER.LevelOwned');
-    if (level.value === planned) return game.i18n.localize('STEIGERUNGSPLANER.LevelPlanned');
-    if (level.delta === null) return game.i18n.localize('STEIGERUNGSPLANER.CostUnknown');
+    if (level.owned) return game.i18n.localize('STEIGERUNGSPLANER.Level.Owned');
+    if (level.value === planned) return game.i18n.localize('STEIGERUNGSPLANER.Level.Planned');
+    if (level.delta === null) return game.i18n.localize('STEIGERUNGSPLANER.Cost.Unknown');
     return `${level.delta > 0 ? '+' : ''}${level.delta} AP`;
   }
 
-  // Levels are written as roman numerals on the sheet ("Reich II"), so the level buttons are too.
+  /**
+   * A level as a roman numeral, the way the sheet writes them ("Reich II").
+   * @param {number} value
+   * @returns {string}
+   */
   static romanNumeral(value) {
     const numerals = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
     let result = '';
@@ -131,22 +166,27 @@ export default class PlannerTab {
     return result;
   }
 
-  // sheet.hbs (the root part template) hardcodes a <template data-application-part="X">
-  // placeholder for every part it knows about - ours isn't one of them, so Foundry's fallback
-  // appends our rendered element to the end of the whole sheet instead of into the actual
-  // tab-content container. Move it next to the "notes" part, which is guaranteed to exist and
-  // sits in that same container. Safe to call on every render: if already in place, this is a
-  // no-op (inserting a node immediately after its own current position doesn't move anything).
+  /**
+   * Moves the tab into the sheet's tab container, next to the notes part. The sheet's root template
+   * only has placeholders for the system's own parts, so Foundry appends ours at the end of the
+   * whole sheet. A no-op if it's in place already.
+   * @param {ActorSheet} sheet
+   * @param {HTMLElement} element   The tab.
+   */
   static relocate(sheet, element) {
     const notes = sheet.element.querySelector('[data-application-part="notes"]');
     if (!notes?.parentElement) return;
     notes.parentElement.insertBefore(element, notes.nextSibling);
   }
 
-  // Adds .planner-step-cancelling to every tile in `tiles` simultaneously (they share the same
-  // transition duration, so one fold plays instead of N sequential ones), then runs `action` once
-  // the last tile's fold finishes and re-renders. Shared by the trash icon (all of a group's
-  // tiles) and the per-step X (a tile and everything queued after it).
+  /**
+   * Folds the tiles or rows away in red, all at once, then runs `action` and re-renders. For the
+   * trash icon (all of a row's tiles), the X (a tile and the ones after it) and discarding a request.
+   * @param {ActorSheet} sheet
+   * @param {HTMLElement} element   The tab - no clicks while it folds.
+   * @param {HTMLElement[]} tiles
+   * @param {function(): Promise} action
+   */
   static foldThenRun(sheet, element, tiles, action) {
     if (!tiles.length) return;
 
@@ -159,9 +199,16 @@ export default class PlannerTab {
     tiles.forEach((el) => el.classList.add('planner-step-cancelling'));
   }
 
+  /**
+   * Moves the tab into place and wires its buttons, fields and tiles. Called on every render of the
+   * part.
+   * @param {ActorSheet} sheet
+   * @param {HTMLElement} element   The tab.
+   */
   static attachListeners(sheet, element) {
     this.relocate(sheet, element);
 
+    // Apply: the first step folds away in green, then the system applies it.
     element.querySelectorAll('[data-plan-apply]').forEach((el) => {
       el.addEventListener('click', (ev) => {
         if (PlannerPhase.locked) return PlannerPhase.warn();
@@ -176,7 +223,7 @@ export default class PlannerTab {
         if (!entry) return;
 
         if (entry.cost > 0 && PlannerController.availableXP(sheet.actor) < entry.cost) {
-          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.NotEnoughXP', { label: entry.label }));
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.NotEnoughXP', { label: entry.label }));
           return;
         }
 
@@ -262,6 +309,7 @@ export default class PlannerTab {
       });
     });
 
+    // The trash icon of a row: all of its steps, after asking.
     element.querySelectorAll('[data-plan-cancel]').forEach((el) => {
       el.addEventListener('click', async (ev) => {
         const { type, key } = ev.currentTarget.dataset;
@@ -272,8 +320,8 @@ export default class PlannerTab {
         if (!group) return;
 
         const confirmed = await foundry.applications.api.DialogV2.confirm({
-          window: { title: game.i18n.localize('STEIGERUNGSPLANER.Cancel') },
-          content: game.i18n.format('STEIGERUNGSPLANER.ConfirmDiscardAll', { count: group.steps.length, label: group.label }),
+          window: { title: game.i18n.localize('STEIGERUNGSPLANER.Plan.DiscardAll') },
+          content: game.i18n.format('STEIGERUNGSPLANER.Plan.ConfirmDiscardAll', { count: group.steps.length, label: group.label }),
           rejectClose: false,
           modal: true,
         });
@@ -283,11 +331,9 @@ export default class PlannerTab {
       });
     });
 
-    // Buying multiple steps in one click: click a step's own content (not the X, which stops
-    // propagation before this ever fires) to buy the front of the queue through that step. Capped
-    // by how many are currently affordable - the same .planner-step-unaffordable marking the CSS
-    // preview already respects, read straight back out of the DOM rather than recomputed, so what
-    // you saw highlighted on hover is exactly what happens on click.
+    // A click on a tile (not its X) applies the steps up to it - as many of them as are affordable,
+    // read from the same .planner-step-unaffordable the hover preview uses, so the click does
+    // exactly what the preview showed.
     element.querySelectorAll('.planner-step-inner').forEach((el) => {
       el.addEventListener('click', (ev) => {
         if (PlannerPhase.locked) return PlannerPhase.warn();
@@ -303,7 +349,7 @@ export default class PlannerTab {
         const count = Math.min(siblings.indexOf(stepEl) + 1, affordableCount);
 
         if (count <= 0) {
-          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.NotEnoughXP', { label: group.label }));
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.NotEnoughXP', { label: group.label }));
           return;
         }
 
@@ -323,6 +369,7 @@ export default class PlannerTab {
       });
     });
 
+    // The X on a tile: that step and the ones after it.
     element.querySelectorAll('.planner-step-remove').forEach((el) => {
       el.addEventListener('click', (ev) => {
         ev.stopPropagation();

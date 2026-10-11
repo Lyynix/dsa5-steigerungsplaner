@@ -1,8 +1,13 @@
-import { MODULE_ID, SETTING_INPUT_PLANS } from './module-config.js';
-import PlannerPhase from './planner-phase.js';
-import { registerCleanupHooks } from './planner-cleanup.js';
-import { registerSheetIntegration } from './sheet-integration.js';
-import PlannerOverview from './planner-overview.js';
+/**
+ * @file Entry point of the module. Registers the settings on init and hooks everything else in on
+ * ready: the cleanup hooks, the GM's overview and - if libWrapper is active - the character sheet.
+ */
+
+import { MODULE_ID, SETTING_INPUT_PLANS } from './config.js';
+import PlannerPhase from './phase.js';
+import { registerCleanupHooks } from './cleanup.js';
+import { registerSheetIntegration } from './sheet/integration.js';
+import PlannerOverview from './overview.js';
 
 Hooks.once('init', () => {
   // On by default; switching it off makes the fields set values directly again, e.g. while

@@ -37,10 +37,11 @@ Die [README](README.md) ist die Anleitung für Spieler und SL, auf Deutsch. Änd
 
 ## Code
 
-- **Sprache:** Code, Kommentare und Bezeichner auf Englisch. Texte für Nutzer gehören nie in den Code, sondern als Schlüssel `STEIGERUNGSPLANER.…` in **beide** Sprachdateien, [`lang/de.json`](lang/de.json) und [`lang/en.json`](lang/en.json).
+- **Sprache:** Code, Kommentare und Bezeichner auf Englisch. Texte für Nutzer gehören nie in den Code, sondern als Schlüssel `STEIGERUNGSPLANER.…` in **beide** Sprachdateien, [`lang/de.json`](lang/de.json) und [`lang/en.json`](lang/en.json). Die Schlüssel sind nach Bereich verschachtelt (`Plan`, `Catalog`, `Request`, `Overview`, `Limit` …), neue Texte kommen in die passende Gruppe.
 - **Stil:** So schreiben wie der Code drumherum. ES-Module, Controller als Klassen mit statischen Methoden, private Hilfen als `#methode`. Kommentare erklären, *warum* etwas so ist, nicht, was die Zeile tut.
+- **Dokumentation:** Jede Datei beginnt mit einem Kommentar, wofür sie da ist (in Skripten als `/** @file … */`). Klassen, Methoden und Konstanten bekommen JSDoc mit kurzer Beschreibung, `@param` und `@returns`. In CSS hat jeder Selektor einen kurzen Kommentar, wofür er da ist.
 - **Foundry:** Fenster als ApplicationV2 mit `HandlebarsApplicationMixin`. In den Charakterbogen greifen wir nur über [libWrapper](https://foundryvtt.com/packages/lib-wrapper) ein, nie durch Überschreiben von Methoden.
-- **Daten:** Der Plan liegt in Flags des Akteurs (siehe [`scripts/planner-data.js`](scripts/planner-data.js)). Neue Felder müssen mit älteren, gespeicherten Daten ohne das Feld zurechtkommen.
+- **Daten:** Der Plan liegt in Flags des Akteurs (siehe [`scripts/plan/data.js`](scripts/plan/data.js)). Neue Felder müssen mit älteren, gespeicherten Daten ohne das Feld zurechtkommen.
 
 ## Grundsätze
 

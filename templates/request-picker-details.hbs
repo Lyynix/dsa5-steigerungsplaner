@@ -1,3 +1,7 @@
+{{!--
+    The catalog's right side: the selected entry with level, variant, target FW, costs and
+    description. The costs are filled in by requests/picker.js as the fields change.
+--~}}
 <div class="picker-details">
     {{#if entry}}
     <header class="picker-details-header">
@@ -15,7 +19,7 @@
 
         {{#if entry.levels.length}}
         <label class="picker-field">
-            <span>{{localize "STEIGERUNGSPLANER.Level"}}</span>
+            <span>{{localize "STEIGERUNGSPLANER.Level.Label"}}</span>
             <select name="level">
                 {{#each entry.levels as |level|}}<option value="{{level}}">{{level}}</option>{{/each}}
             </select>
@@ -24,7 +28,7 @@
 
         {{#if entry.variant}}
         <label class="picker-field">
-            <span>{{localize "STEIGERUNGSPLANER.Variant"}}</span>
+            <span>{{localize "STEIGERUNGSPLANER.Catalog.Variant"}}</span>
             {{#if entry.variantText}}
             <input type="text" name="variant">
             {{else}}
@@ -35,7 +39,7 @@
         </label>
         {{#if entry.variant.allowCustom}}
         <label class="picker-field">
-            <span>{{localize "STEIGERUNGSPLANER.VariantCustom"}}</span>
+            <span>{{localize "STEIGERUNGSPLANER.Catalog.VariantCustom"}}</span>
             <input type="text" name="custom">
         </label>
         {{/if}}
@@ -43,23 +47,23 @@
 
         {{#if entry.stf}}
         <label class="picker-field">
-            <span>{{localize "STEIGERUNGSPLANER.TargetFW"}}</span>
+            <span>{{localize "STEIGERUNGSPLANER.TargetFW.Label"}}</span>
             <input type="number" name="targetFW" value="{{entry.startFW}}" min="{{entry.startFW}}" step="1">
             <span class="picker-fw-hint"></span>
         </label>
         {{/if}}
 
         <div class="picker-costs">
-            {{#if entry.stf}}<span><strong>{{localize "STEIGERUNGSPLANER.StF"}}:</strong> {{entry.stf}}</span>{{/if}}
-            {{#if entry.leveled}}<span><strong>{{localize "STEIGERUNGSPLANER.CostPerLevel"}}:</strong> <span class="picker-level-costs"></span></span>{{/if}}
-            <span><strong>{{localize "STEIGERUNGSPLANER.Cost"}}:</strong> <span class="picker-cost"></span></span>
+            {{#if entry.stf}}<span><strong>{{localize "STEIGERUNGSPLANER.Catalog.StF"}}:</strong> {{entry.stf}}</span>{{/if}}
+            {{#if entry.leveled}}<span><strong>{{localize "STEIGERUNGSPLANER.Cost.PerLevel"}}:</strong> <span class="picker-level-costs"></span></span>{{/if}}
+            <span><strong>{{localize "STEIGERUNGSPLANER.Cost.Label"}}:</strong> <span class="picker-cost"></span></span>
         </div>
 
-        <button type="button" data-action="addRequest"><i class="fas fa-plus"></i> {{localize "STEIGERUNGSPLANER.RequestAdd"}}</button>
+        <button type="button" data-action="addRequest"><i class="fas fa-plus"></i> {{localize "STEIGERUNGSPLANER.Catalog.Add"}}</button>
     </div>
 
     {{#if entry.requirements}}
-    <p><strong>{{localize "STEIGERUNGSPLANER.Requirements"}}:</strong> {{entry.requirements}}</p>
+    <p><strong>{{localize "STEIGERUNGSPLANER.Catalog.Requirements"}}:</strong> {{entry.requirements}}</p>
     {{/if}}
 
     {{#if entry.properties}}
@@ -70,6 +74,6 @@
     <div class="picker-description">{{{entry.description}}}</div>
     {{/if}}
     {{else}}
-    <p class="picker-hint">{{localize "STEIGERUNGSPLANER.RequestPickerHint"}}</p>
+    <p class="picker-hint">{{localize "STEIGERUNGSPLANER.Catalog.Hint"}}</p>
     {{/if}}
 </div>

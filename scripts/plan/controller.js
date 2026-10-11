@@ -1,14 +1,23 @@
-import { ADVANCE_FCTS, REFUND_FCTS } from './module-config.js';
-import PlannerData from './planner-data.js';
-import PlannerPhase from './planner-phase.js';
+/**
+ * @file Logic of the plan: building, queueing, removing and applying steps, and keeping the plan in
+ * line with real advances and refunds. A target is an attribute, a base stat, an item with a value
+ * (skill, combat technique, spell, liturgy) or the rebuy of a permanent AsP/KaP loss.
+ */
 
+import { ADVANCE_FCTS, REFUND_FCTS } from '../config.js';
+import PlannerData from './data.js';
+import PlannerPhase from '../phase.js';
+
+/** The plan's logic. All methods are static and work on the actor's flags. */
 export default class PlannerController {
-  // Entry point for a shift-click on any of the sheet's advance/refund "+"/"-" buttons.
-  //
-  // Queues can now hold both increase and decrease steps (planning "unlevel this, level that"
-  // respec-style moves), so +/- are symmetric: clicking a direction cancels the last queued step
-  // if it happens to be the *opposite* direction (undoing what the previous click just queued),
-  // otherwise it queues one more step in the clicked direction.
+  /**
+   * A shift-click on one of the sheet's "+"/"-" buttons. Clicking against the queue's direction
+   * takes its last step back, otherwise one more step is queued.
+   * @param {ActorSheet} sheet
+   * @param {string} fct   The button's data-fct, see ADVANCE_FCTS and REFUND_FCTS.
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async handleShiftClick(sheet, fct, key) {
     const actor = sheet.actor;
     if (!actor.isOwner) return;
@@ -37,19 +46,21 @@ export default class PlannerController {
     sheet.render();
   }
 
-  // The actor's current spendable XP - what the system's own checkEnoughXP (called by every real
-  // advance method) compares a step's cost against, and what the tab's "Verfügbare AP" summary
-  // shows. Used up front to check whether applying the front step would actually succeed, so the
-  // fold animation isn't played only to have to be reverted a moment later.
+  /**
+   * The actor's spendable AP - what the system's checkEnoughXP compares a step's cost against.
+   * @param {Actor} actor
+   * @returns {number}
+   */
   static availableXP(actor) {
     return Number(actor.system.details.experience.total) - Number(actor.system.details.experience.spent);
   }
 
-  // Marks each step in a target's queue with `unaffordable: true/false`, walking front-to-back
-  // and running down the available XP as it goes. Once a step doesn't fit anymore, every step
-  // after it is unaffordable too, regardless of its own individual cost - the queue is a chain,
-  // so nothing after an unreachable step can be reached without it either. Mutates `steps` in
-  // place (called once per group while building the tab's render context in PlannerTab).
+  /**
+   * Sets step.unaffordable on a target's steps, front to back with the AP running down. Once one
+   * doesn't fit, all after it are unaffordable too - they can't be reached without it.
+   * @param {Actor} actor
+   * @param {PlanEntry[]} steps   Changed in place.
+   */
   static markAffordability(actor, steps) {
     let remaining = this.availableXP(actor);
     let affordable = true;
@@ -61,7 +72,13 @@ export default class PlannerController {
     }
   }
 
-  // The target's actual current value, independent of anything queued in the plan.
+  /**
+   * The target's real current value, ignoring the plan.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?number} null if the target doesn't exist.
+   */
   static rawCurrentValue(actor, type, key) {
     if (type === 'attribute') {
       const ch = actor.system.characteristics[key];
@@ -82,6 +99,13 @@ export default class PlannerController {
     return null;
   }
 
+  /**
+   * The target's improvement cost (A-E). Animals use other ones for attributes and base stats.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?string} null for rebuys, they have a flat cost.
+   */
   static categoryFor(actor, type, key) {
     const isAnimal = actor.system.isPet || actor.system.isFamiliar;
     if (type === 'attribute') return isAnimal ? 'C' : 'E';
@@ -90,30 +114,38 @@ export default class PlannerController {
     return null;
   }
 
+  /**
+   * The target's display name.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {string}
+   */
   static labelFor(actor, type, key) {
     if (type === 'attribute') return game.i18n.localize(`CHAR.${key.toUpperCase()}`);
     if (type === 'point') return game.i18n.localize(key);
     if (type === 'item') return actor.items.get(key)?.name ?? key;
     if (type === 'permanentLoss') {
       const abbrev = game.i18n.localize(key === 'astralenergy' ? 'CHARAbbrev.pAsP' : 'CHARAbbrev.pKaP');
-      return game.i18n.format('STEIGERUNGSPLANER.PermanentLossLabel', { label: abbrev });
+      return game.i18n.format('STEIGERUNGSPLANER.Plan.Rebuy', { label: abbrev });
     }
     return key;
   }
 
-  // The tab's display grouping (Körpertalente, Kampftechniken, Eigenschaften, ...) - distinct
-  // from categoryFor()'s A-E advancement-cost category. For skill items this mirrors the exact
-  // grouping DSA5's own talent list uses (item.system.group.value), `cssClass` reuses the
-  // system's own .skills.<group> gradient classes so the colors match what's already on the
-  // talent tab. Sections without a system equivalent (characteristics, points, combat, magic,
-  // religion) get their own gradient defined in our own stylesheet.
+  /**
+   * The section a target is listed under in the tab, the overview and the value picker. Skills use
+   * the system's own groups and gradient classes, the rest get ours (see the stylesheet).
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {{id: string, label: string, cssClass: string}}
+   */
   static sectionFor(actor, type, key) {
     if (type === 'attribute') {
       return { id: 'characteristics', label: game.i18n.localize('STEIGERUNGSPLANER.Section.characteristics'), cssClass: 'steigerungsplaner-section-characteristics' };
     }
-    // permanentLoss shares the "points" section with the regular AsP/KaP advances - a character
-    // is never both magical and clerical, so there's never more than one permanentLoss group to
-    // show at once anyway; a dedicated section would be overkill for that.
+    // Rebuys share the section with the base stats - a character is never both magical and
+    // clerical, so there's at most one of them.
     if (type === 'point' || type === 'permanentLoss') {
       return { id: 'points', label: game.i18n.localize('STEIGERUNGSPLANER.Section.points'), cssClass: 'steigerungsplaner-section-points' };
     }
@@ -136,9 +168,13 @@ export default class PlannerController {
     return { id: 'other', label: game.i18n.localize('STEIGERUNGSPLANER.Section.other'), cssClass: 'steigerungsplaner-section-other' };
   }
 
-  // Per-target icon shown next to its entry in the planner tab. Items already carry their own
-  // icon; characteristics get the matching d20 die; the three advanceable base stats don't have
-  // a system icon for this context, so they're hand-picked.
+  /**
+   * The target's icon: the item's own, the attribute's d20, or a hand-picked one for base stats.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?string}
+   */
   static iconFor(actor, type, key) {
     if (type === 'attribute') return `systems/dsa5/icons/dice/d20${key}.svg`;
     if (type === 'point' || type === 'permanentLoss') {
@@ -152,16 +188,26 @@ export default class PlannerController {
     return null;
   }
 
-  // Where this target's queue currently "ends" - the value the next queued step (in either
-  // direction) would start from. That's either the last queued entry's `to`, or, if nothing is
-  // queued yet, the actual current value.
+  /**
+   * Where the target's queue ends - the value its next step starts from.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?number} The last step's `to`, or the current value if nothing is queued.
+   */
   static chainEnd(actor, type, key) {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
     return idx === -1 ? this.rawCurrentValue(actor, type, key) : plan[idx].to;
   }
 
-  // 'increase' or 'decrease', taken from the last queued entry - null if nothing is queued.
+  /**
+   * The direction of the target's queue, taken from its last step.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?('increase'|'decrease')} null if nothing is queued.
+   */
   static queueDirection(actor, type, key) {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
@@ -169,10 +215,14 @@ export default class PlannerController {
     return plan[idx].to > plan[idx].from ? 'increase' : 'decrease';
   }
 
-  // The lowest value a real refund is allowed to bring this target down to - mirrors the guards
-  // the system's own _refundAttributeAdvance/_refundPointsAdvance (`advances > 0`) and
-  // AdvancableSkill._refundStep (`value > advanceMin`) already enforce, expressed in the same
-  // terms rawCurrentValue/chainEnd use (the full displayed value, not just the raw advances count).
+  /**
+   * The lowest value a real refund may bring the target down to - the same guards the system's
+   * refund methods have, as a full value like rawCurrentValue.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {number}
+   */
   static minValue(actor, type, key) {
     if (type === 'attribute') return actor.system.characteristics[key]?.initial ?? 0;
     if (type === 'point') return 0;
@@ -181,26 +231,26 @@ export default class PlannerController {
     return 0;
   }
 
-  // Mirrors the cost calculation the system itself uses (DSA5_Utility._calculateAdvCost),
-  // continuing from wherever this target's queue currently ends rather than its actual live value.
-  // planTo passes `from` itself while it builds several steps before saving any of them.
+  /**
+   * Builds the target's next step, with the cost the system's _calculateAdvCost would charge.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {('increase'|'decrease')} direction
+   * @param {?number} [from]   Defaults to the queue's end; planTo passes it while building several.
+   * @returns {?PlanEntry} null if there's no such step (below the minimum, nothing to rebuy, ...).
+   */
   static buildEntry(actor, type, key, direction, from = this.chainEnd(actor, type, key)) {
     if (from === null) return null;
 
-    // Permanent-loss rebuy doesn't go through the A-E cost table at all - _rebuyPC/_refundPC
-    // charge a flat 2 AP regardless of the current rebuy count, so this bypasses categoryFor and
-    // _calculateAdvCost entirely rather than trying to force it through that machinery.
+    // Rebuys don't go through the cost table: _rebuyPC/_refundPC charge a flat 2 AP.
     if (type === 'permanentLoss') {
       if (direction === 'decrease') {
         if (from <= this.minValue(actor, type, key)) return null;
         return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from - 1, cost: -2, category: null };
       }
-      // permanentLossSum is a live derived value (permanentLoss - rebuy + permanentGear, see
-      // baseactor.js _permanentEnergyLoss) computed from the actor's actually-applied rebuy count -
-      // it doesn't know about steps already queued but not yet bought for real, so checking it
-      // directly would let every queued step see the same "remaining" loss as the first. Project
-      // what it would be if rebuy were `from` (this target's queue-tracked value) instead, so
-      // planning several rebuys ahead correctly stops once the full loss is accounted for.
+      // permanentLossSum only knows the rebuys bought for real. Worked out from `from` instead, so
+      // planning several ahead stops once the whole loss is covered.
       const status = actor.system.status[key];
       if (!status || !(status.permanentLoss - from + status.permanentGear > 0)) return null;
       return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to: from + 1, cost: 2, category: null };
@@ -223,11 +273,14 @@ export default class PlannerController {
     return { id: foundry.utils.randomID(), type, key, label: this.labelFor(actor, type, key), from, to, cost, category };
   }
 
-  // If this target already has a queue whose oldest entry no longer starts from the actual
-  // current value (e.g. someone typed directly into the "Advances" field), it can't be trusted -
-  // discard it before acting. Checked at the top of every click-driven entry point rather than on
-  // a render sweep, so drift is caught the next time this target is touched instead of only when
-  // the sheet is reopened.
+  /**
+   * Discards the target's queue if its first step no longer starts from the current value, e.g.
+   * after the value was typed in directly. Called before every click-driven change.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async ensureFresh(actor, type, key) {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.firstIndex(plan, type, key);
@@ -236,8 +289,11 @@ export default class PlannerController {
     }
   }
 
-  // Targets that aren't in the plan yet and could get a first increase - the tab's add-target
-  // picker. Spell extensions also have a talentValue, but as a plain number, hence `.value`.
+  /**
+   * Targets with nothing planned yet that could be increased - for the value picker.
+   * @param {Actor} actor
+   * @returns {{type: string, key: string, label: string, icon: ?string, section: object}[]}
+   */
   static candidateTargets(actor) {
     const planned = new Set(PlannerData.getPlan(actor).map((e) => `${e.type}:${e.key}`));
     const targets = Object.keys(actor.system.characteristics).map((key) => ['attribute', key]);
@@ -247,6 +303,7 @@ export default class PlannerController {
     if (actor.system.characteristics[magical]) targets.push(['point', 'astralenergy'], ['permanentLoss', 'astralenergy']);
     if (actor.system.characteristics[clerical]) targets.push(['point', 'karmaenergy'], ['permanentLoss', 'karmaenergy']);
 
+    // Spell extensions have a talentValue too, but as a plain number - hence `.value`.
     const items = actor.items.filter((item) => item.system.talentValue?.value !== undefined);
     items.sort((a, b) => a.name.localeCompare(b.name));
     for (const item of items) targets.push(['item', item.id]);
@@ -262,7 +319,13 @@ export default class PlannerController {
       }));
   }
 
-  // The tab's add-step button: one more step in the direction the queue already goes.
+  /**
+   * The tab's "+" on a row: one more step in the queue's direction.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async appendStep(actor, type, key) {
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
@@ -272,9 +335,16 @@ export default class PlannerController {
     await this.planStep(actor, type, key, direction);
   }
 
-  // A value typed into the sheet's input field: plan this target so it ends at `target`. Queued
-  // steps that already lead there are kept, steps past it or going the other way are dropped, the
-  // missing ones are added - all saved at once. The target being the current value clears its queue.
+  /**
+   * Plans the target so it ends at `target` - a value typed into the sheet. Steps already leading
+   * there stay, steps past it or the other way go, missing ones are added, all saved at once. The
+   * current value as target clears the queue.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {number} target
+   * @returns {Promise<void>}
+   */
   static async planTo(actor, type, key, target) {
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
@@ -301,7 +371,7 @@ export default class PlannerController {
       const entry = this.buildEntry(actor, type, key, direction, from);
       if (!entry) {
         if (direction === 'decrease') {
-          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.CannotDecreaseFurther', { label: this.labelFor(actor, type, key) }));
+          ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.CannotDecrease', { label: this.labelFor(actor, type, key) }));
         }
         break;
       }
@@ -313,11 +383,19 @@ export default class PlannerController {
     if (dropped.size || next.length !== plan.length) await PlannerData.savePlan(actor, next);
   }
 
+  /**
+   * Queues one step. Warns if a decrease isn't possible.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {('increase'|'decrease')} direction
+   * @returns {Promise<void>}
+   */
   static async planStep(actor, type, key, direction) {
     const entry = this.buildEntry(actor, type, key, direction);
     if (!entry) {
       if (direction === 'decrease') {
-        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.CannotDecreaseFurther', { label: this.labelFor(actor, type, key) }));
+        ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.CannotDecrease', { label: this.labelFor(actor, type, key) }));
       }
       return;
     }
@@ -328,10 +406,15 @@ export default class PlannerController {
     await PlannerData.savePlan(actor, plan);
   }
 
-  // Removes a specific queued entry and everything queued after it for that target (in this
-  // target's own sub-sequence, not the flat plan array's index) - chain-consistent, unlike
-  // removing only the clicked entry: nothing queued after it could stay valid without it anyway
-  // (see the trash icon and per-step X in planner-tab.js).
+  /**
+   * Removes a step and all of the target's steps after it - they can't stay valid without it. The
+   * X on a step tile and the trash icon of a row.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {string} entryId
+   * @returns {Promise<void>}
+   */
   static async cancelFrom(actor, type, key, entryId) {
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
@@ -346,6 +429,13 @@ export default class PlannerController {
     await PlannerData.savePlan(actor, remaining);
   }
 
+  /**
+   * Removes the target's last step.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async cancelLast(actor, type, key) {
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
@@ -353,29 +443,27 @@ export default class PlannerController {
     const plan = PlannerData.getPlan(actor);
     const idx = PlannerData.lastIndex(plan, type, key);
     if (idx === -1) {
-      ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.NothingPlanned'));
+      ui.notifications.warn(game.i18n.localize('STEIGERUNGSPLANER.Plan.NothingPlanned'));
       return;
     }
     plan.splice(idx, 1);
     await PlannerData.savePlan(actor, plan);
   }
 
-  // Called whenever a real advance OR refund succeeded for real, whether triggered from here or
-  // from a normal, un-shifted sheet click (see the six ADVANCE_FCTS/REFUND_FCTS method wraps in
-  // sheet-integration.js). `valueAfterChange` is the target's actual value right after that
-  // real change. Three possibilities, checked in order:
-  //
-  //   1. The front of the queue (oldest, next thing due) expected exactly this transition
-  //      (`front.to === valueAfterChange`) - consume it: pop it off the plan and push it onto a
-  //      per-target LIFO "consumed" stack, regardless of whether it was an increase or decrease.
-  //   2. Nothing in the queue matched, but the most recently consumed step for this target
-  //      started at exactly this value (`top.from === valueAfterChange`) - the player just undid
-  //      that step for real (a real refund undoing a consumed increase, or a real advance undoing
-  //      a consumed decrease). Put it back at the front of the plan.
-  //   3. Neither matches - whatever's still queued assumes a baseline that no longer holds (e.g.
-  //      de-leveling directly via "-" without ever having applied anything from the plan first -
-  //      DSA5 lets you do this even though it's not "legal" by the rules). Discard it rather than
-  //      silently tracking increasingly wrong from/to numbers.
+  /**
+   * Brings the plan in line after a real advance or refund - from the planner or a normal click on
+   * the sheet (see the wraps in sheet/integration.js). Checked in order:
+   * 1. The queue's first step expected exactly this change: it's consumed - taken off the plan and
+   *    put on the target's consumed stack.
+   * 2. The last consumed step started at this value: the player undid it for real, it goes back to
+   *    the front of the plan.
+   * 3. Neither: the queue assumes a value that no longer holds and is discarded.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {number} valueAfterChange   The target's real value right after the change.
+   * @returns {Promise<void>}
+   */
   static async reconcile(actor, type, key, valueAfterChange) {
     const plan = PlannerData.getPlan(actor);
     const frontIdx = PlannerData.firstIndex(plan, type, key);
@@ -414,13 +502,16 @@ export default class PlannerController {
     await this.discardQueue(actor, type, key);
   }
 
-  // silent: true skips the warning notification - used when the removal was a deliberate user
-  // action (the tab's "discard all" trash icon) rather than an automatic desync safety net, where
-  // the default PlanDiscarded wording ("changed outside the planner") wouldn't make sense.
-  //
-  // The target's consumed history goes too: once its tracking is reset, undoing a step from before
-  // would have to match a value chain that no longer exists. Also when nothing was queued anymore -
-  // a real change nothing in the plan or history expected is exactly that kind of break.
+  /**
+   * Discards the target's queue and its consumed steps - undoing an older step would have to match
+   * values that no longer exist. Warns that the value changed outside the planner.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {object} [options]
+   * @param {boolean} [options.silent=false]   No warning, for a deliberate discard by the user.
+   * @returns {Promise<void>}
+   */
   static async discardQueue(actor, type, key, { silent = false } = {}) {
     await this.#dropConsumed(actor, type, key);
 
@@ -430,21 +521,33 @@ export default class PlannerController {
 
     await PlannerData.savePlan(actor, remaining);
     if (!silent) {
-      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.PlanDiscarded', { label: this.labelFor(actor, type, key) }));
+      ui.notifications.warn(game.i18n.format('STEIGERUNGSPLANER.Plan.Discarded', { label: this.labelFor(actor, type, key) }));
     }
   }
 
+  /**
+   * Removes the target's consumed steps.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async #dropConsumed(actor, type, key) {
     const consumed = PlannerData.getConsumed(actor);
     const remaining = consumed.filter((e) => !(e.type === type && e.key === key));
     if (remaining.length !== consumed.length) await PlannerData.saveConsumed(actor, remaining);
   }
 
-  // After a value was set directly (the GM's Ctrl+Enter, or the input fields with planning
-  // switched off): queued steps the new value already covers are done and go quietly, the rest
-  // stays if it continues from the new value. Only a value off the planned chain discards the
-  // queue, with the usual warning. The consumed history goes either way - a direct set isn't a step
-  // that undoing could restore.
+  /**
+   * After a value was set directly (the GM's Ctrl+Enter, or the fields with planning off): steps the
+   * new value covers are done and go quietly, the rest stays if it continues from there. A value
+   * off the planned chain discards the queue with the usual warning. The consumed steps go either
+   * way - a direct set isn't a step that undoing could restore.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async rebaseQueue(actor, type, key) {
     if (!actor.isOwner) return;
 
@@ -462,12 +565,14 @@ export default class PlannerController {
     if (done.size) await PlannerData.savePlan(actor, plan.filter((e) => !done.has(e.id)));
   }
 
-  // Called when the sheet closes. A target's consumed history is only kept while the player is
-  // still working through what they had planned at the last consume - then undoing a step must
-  // keep working, even after reopening the sheet. It's dropped once that's over:
-  // - nothing is queued for the target anymore (everything planned got applied), or
-  // - something was planned on top since the last consume (a fresh commitment).
-  // Plans from before sinceConsume existed don't have it and count as remainder - left alone.
+  /**
+   * When the sheet closes: drops a target's consumed steps once undoing them no longer makes sense -
+   * nothing is queued anymore, or something was planned on top since the last consume. Until then
+   * undoing works, even after reopening the sheet. Steps without sinceConsume (older versions)
+   * count as remainder.
+   * @param {Actor} actor
+   * @returns {Promise<void>}
+   */
   static async pruneConsumed(actor) {
     if (!actor.isOwner) return;
 
@@ -484,9 +589,14 @@ export default class PlannerController {
     if (remaining.length !== consumed.length) await PlannerData.saveConsumed(actor, remaining);
   }
 
-  // Removes every plan/consumed entry for a target, no questions asked - for when the target
-  // itself is gone (deleted item) rather than merely out of sync. No notification: the player
-  // just deleted the thing themselves, so losing its plan isn't surprising.
+  /**
+   * Removes everything planned and consumed for a target that's gone, e.g. a deleted item. No
+   * notification - the player deleted it themselves.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<void>}
+   */
   static async purgeTarget(actor, type, key) {
     const plan = PlannerData.getPlan(actor);
     const remainingPlan = plan.filter((e) => !(e.type === type && e.key === key));
@@ -497,13 +607,13 @@ export default class PlannerController {
     if (remainingConsumed.length !== consumed.length) await PlannerData.saveConsumed(actor, remainingConsumed);
   }
 
-  // Safety net for desyncs none of the targeted advance/refund checks catch - most notably
-  // editing the "Advances" number field directly, which bypasses every wrapped method entirely.
-  // Called once when a sheet is first opened (see the _onFirstRender wrap): if a target's oldest
-  // queued step no longer starts from its actual current value, the queue can't be trusted -
-  // discard it. Deliberately not run on every render: it would race against our own multi-step
-  // reconcile() updates, which each trigger their own re-render before the plan flag has caught
-  // up with the real advance/refund that just happened.
+  /**
+   * When a sheet is first opened: discards every queue whose first step no longer starts from the
+   * current value - e.g. after the "Advances" field was edited, which no wrap sees. Not on every
+   * render, that would race against reconcile()'s own updates.
+   * @param {Actor} actor
+   * @returns {Promise<void>}
+   */
   static async validateQueues(actor) {
     for (const group of PlannerData.getGroups(actor).values()) {
       if (!group.steps.length) continue;
@@ -513,11 +623,14 @@ export default class PlannerController {
     }
   }
 
-  // Applies the oldest (front) queued step for a target by invoking the matching real system
-  // method - the real advance method if the front step is an increase, the real refund method if
-  // it's a decrease (identical to a normal, un-shifted click either way) - reconcile() runs as a
-  // side effect of that call via the wraps in sheet-integration.js, so no separate bookkeeping is
-  // needed here.
+  /**
+   * Applies the target's first step through the system's own advance or refund method, like a
+   * normal click. reconcile() then runs through the wraps in sheet/integration.js.
+   * @param {ActorSheet} sheet
+   * @param {string} type
+   * @param {string} key
+   * @returns {Promise<boolean>} Whether the system applied it.
+   */
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
     if (!actor.isOwner) return false;
@@ -531,8 +644,8 @@ export default class PlannerController {
     const idx = PlannerData.firstIndex(plan, type, key);
     if (idx === -1) return false;
 
-    // Guards against a crash in the system's own _advanceItem/_refundItemAdvance if the item was
-    // deleted but its plan entry survived somehow (e.g. the deleteItem cleanup hook hasn't run yet).
+    // The system's _advanceItem would crash on a deleted item, e.g. if the cleanup hook hasn't run
+    // yet.
     if (type === 'item' && !actor.items.get(key)) {
       await this.purgeTarget(actor, type, key);
       sheet.render();
@@ -551,12 +664,15 @@ export default class PlannerController {
     return !!result;
   }
 
-  // Applies the front `count` queued steps for a target in sequence - the multi-buy interaction in
-  // planner-tab.js has already worked out how many are currently affordable before calling this, so
-  // failures here are only the rare case where the real, live-recomputed cost turns out higher than
-  // what was estimated at planning time (see markAffordability). Stops immediately on the first
-  // failure rather than trying the rest - the system's own checkEnoughXP already shows an error
-  // notification for it, so no need to raise our own or keep hammering a queue that won't go through.
+  /**
+   * Applies the target's first `count` steps one after the other and stops at the first that fails -
+   * the system's checkEnoughXP has already shown why.
+   * @param {ActorSheet} sheet
+   * @param {string} type
+   * @param {string} key
+   * @param {number} count
+   * @returns {Promise<void>}
+   */
   static async applyUpTo(sheet, type, key, count) {
     for (let i = 0; i < count; i++) {
       const success = await this.applyFirst(sheet, type, key);

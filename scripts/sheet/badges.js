@@ -1,17 +1,23 @@
-import { ADVANCE_FCTS } from './module-config.js';
-import PlannerData from './planner-data.js';
-import PlannerLimits from './planner-limits.js';
+/**
+ * @file Count badges on the sheet's "+" buttons for targets with planned steps, e.g. "+2" or "-1",
+ * with the steps in the tooltip. A queue only ever goes one direction (see
+ * PlannerController.handleShiftClick), so one badge with a sign is enough. Works for attributes,
+ * base stats and items alike - they all use the system's data-fct/data-attr buttons.
+ */
+
+import { ADVANCE_FCTS } from '../config.js';
+import PlannerData from '../plan/data.js';
+import PlannerLimits from '../plan/limits.js';
 
 const BADGE_CLASS = 'steigerungsplaner-badge';
 const DECREASE_CLASS = 'steigerungsplaner-badge-decrease';
 
-// Decorates the "+" button for each target that has queued plan steps with a small count badge
-// (e.g. "+2" or "-1"). A target's queue is always homogeneous - the same direction throughout,
-// since clicking the opposite of the last queued step cancels it rather than appending (see
-// PlannerController.handleShiftClick) - so a single badge with a sign is enough; no need to
-// decorate "-" separately. Generic across characteristics, points and items since they all share
-// the same data-action="advanceWrapper"/data-fct/data-attr convention - no per-template changes needed.
+/** The badges. */
 export default class PlannerBadges {
+  /**
+   * Replaces the sheet's badges with ones for the current plan. Called after every render.
+   * @param {ActorSheet} sheet
+   */
   static decorate(sheet) {
     sheet.element.querySelectorAll(`.${BADGE_CLASS}`).forEach((el) => el.remove());
 
@@ -31,7 +37,7 @@ export default class PlannerBadges {
       badge.className = BADGE_CLASS;
       badge.classList.toggle(DECREASE_CLASS, !isIncrease);
       badge.textContent = `${isIncrease ? '+' : '-'}${group.steps.length}`;
-      badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Planned") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
+      badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Plan.Title") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
 
       // A planned step above the rule maximum - the badge gets the hint's color and a line on it.
       const limit = PlannerLimits.mark(sheet.actor, type, el.dataset.attr, group.steps);
@@ -41,9 +47,8 @@ export default class PlannerBadges {
       }
 
       if (type === 'attribute' || type === 'point' || type === 'permanentLoss') {
-        // The characteristics header row (and, it turns out, the LeP/AsP/KaP row) is too narrow
-        // for inline badge text next to "+" - float it above the icon instead, in headroom
-        // .char-row-header .header-label reserves for it.
+        // The attribute and base stat rows have no room next to the "+" - the badge floats above
+        // the icon, in the room .char-row-header .header-label keeps free for it.
         badge.classList.add('steigerungsplaner-badge-above');
         el.style.position = 'relative';
         el.appendChild(badge);

@@ -1,22 +1,37 @@
-import { ALL_FCTS, MODULE_ID } from './module-config.js';
-import PlannerBadges from './planner-badges.js';
-import PlannerController from './planner-controller.js';
-import PlannerHints from './planner-hints.js';
-import PlannerInput from './planner-input.js';
-import PlannerPhase from './planner-phase.js';
-import PlannerTab from './planner-tab.js';
+/**
+ * @file Hooks the planner into the system's character sheet with libWrapper: adds the tab, makes
+ * shift-click on "+"/"-" plan instead of advance, keeps the plan in line with real advances and
+ * refunds, decorates the sheet and holds advancing back outside the advancement phase.
+ */
 
-// Foundry registers sheets under `${scope}.${className}` - stable enough to rely on directly.
+import { ALL_FCTS, MODULE_ID } from '../config.js';
+import PlannerBadges from './badges.js';
+import PlannerController from '../plan/controller.js';
+import PlannerHints from './hints.js';
+import PlannerInput from './input.js';
+import PlannerPhase from '../phase.js';
+import PlannerTab from './tab.js';
+
+/** Foundry registers sheets under `${scope}.${className}` - stable enough to rely on directly. */
 const CHARACTER_SHEET_ID = 'dsa5.ActorSheetdsa5Character';
 
+/**
+ * The system's character sheet class.
+ * @returns {?{id: string, cls: typeof ActorSheet}}
+ */
 function findCharacterSheetClass() {
   const cls = CONFIG.Actor.sheetClasses?.character?.[CHARACTER_SHEET_ID]?.cls;
   return cls ? { id: CHARACTER_SHEET_ID, cls } : null;
 }
 
-// character-sheet.js declares its own static DEFAULT_OPTIONS, which completely shadows
-// (not merges with) the base class's - ownerActions.advanceWrapper only exists on whichever
-// ancestor class actually declares it as its own property. Walk up until we find it.
+/**
+ * The class in the hierarchy that declares an owner action in its own DEFAULT_OPTIONS. A subclass's
+ * DEFAULT_OPTIONS shadows its parent's instead of merging with it, so the action only exists on the
+ * class that declares it.
+ * @param {Function} cls
+ * @param {string} [action]
+ * @returns {?Function}
+ */
 function findOwnerActionsOwner(cls, action = 'advanceWrapper') {
   let current = cls;
   while (current) {
@@ -28,8 +43,11 @@ function findOwnerActionsOwner(cls, action = 'advanceWrapper') {
   return null;
 }
 
-// The item sheets' own "+"/"-" (a talent's or spell's sheet) are ownerActions of the system's base
-// item sheet, which every item sheet inherits - any registered dsa5 item sheet leads to it.
+/**
+ * The class with the item sheets' own "+"/"-" (a skill's or spell's sheet): the system's base item
+ * sheet, which every dsa5 item sheet inherits.
+ * @returns {?Function}
+ */
 function findItemAdvanceOwner() {
   for (const sheets of Object.values(CONFIG.Item.sheetClasses ?? {})) {
     for (const [id, { cls }] of Object.entries(sheets)) {
@@ -41,6 +59,7 @@ function findItemAdvanceOwner() {
   return null;
 }
 
+/** Registers the tab and all wraps. Called once on ready, with libWrapper active. */
 export function registerSheetIntegration() {
   const found = findCharacterSheetClass();
   if (!found) {
@@ -57,34 +76,26 @@ export function registerSheetIntegration() {
     scrollable: [''],
   };
 
-  // TABS, however, is NOT redeclared by character-sheet.js (or creature-sheet.js/npc-sheet.js) -
-  // they all inherit the exact same TABS object from the ActorSheetDsa5 base class. Mutating it
-  // in place would leak our tab button into creature/NPC sheets too, which have no matching PART
-  // for it. Clone it into an own property on the character class first, like PARTS already is.
+  // TABS is inherited from the base class, shared with the creature and NPC sheets - changed in
+  // place, our tab would show up there too. Cloned into an own property first.
   cls.TABS = foundry.utils.deepClone(cls.TABS);
   cls.TABS.sheet.tabs.push({
     id: PlannerTab.partId,
-    label: 'STEIGERUNGSPLANER.Tab',
+    label: 'STEIGERUNGSPLANER.Title',
     icon: 'fas fa-list-check',
   });
 
   const basePath = `CONFIG.Actor.sheetClasses.character["${id}"].cls`;
 
-  // Shift-click on any advance/refund "+"/"-" button plans/cancels a step instead of
-  // executing it; a normal click falls through to the original behaviour unchanged.
-  //
-  // NOTE: `_advanceWrapper` itself is captured by reference into DEFAULT_OPTIONS.ownerActions
-  // once, when the owning class body evaluates - wrapping the class method after the fact would
-  // patch a property nobody reads again. We wrap the actual object property Foundry re-reads on
-  // every new sheet instance instead. That property only exists on whichever ancestor class
-  // declares it (see findOwnerActionsOwner), which isn't reachable via the sheet registry, so we
-  // park a reference to it on our own module's api for libWrapper's string-path resolver to find.
+  // Shift-click on "+"/"-" plans or takes back a step instead; a normal click goes through
+  // unchanged. advanceWrapper is read from DEFAULT_OPTIONS.ownerActions for every new sheet, so
+  // that property is wrapped, not the class method - on the ancestor class that declares it.
   const ownerActionsOwner = findOwnerActionsOwner(cls);
   if (!ownerActionsOwner) {
     console.error(`${MODULE_ID} | Konnte ownerActions.advanceWrapper in der Klassenhierarchie nicht finden - Shift-Klick bleibt inaktiv.`);
   } else {
-    // libWrapper's target string only supports property/bracket-index paths, not method calls
-    // like `game.modules.get(...)` - so we need a plain, global, string-indexable anchor.
+    // libWrapper's target string only supports property paths, not calls like
+    // `game.modules.get(...)` - so a global anchor it can resolve.
     globalThis.__dsa5Steigerungsplaner = { ownerActionsOwner };
 
     libWrapper.register(
@@ -131,8 +142,7 @@ export function registerSheetIntegration() {
     }
   }
 
-  // Only owners (which includes the GM - actor.isOwner is always true for them) should even see
-  // the tab button, matching how the system itself hides magic/religion tabs conditionally here.
+  // The tab only for owners (the GM always is one), like the system hides its magic/religion tabs.
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._prepareTabs`,
@@ -144,6 +154,7 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
+  // The tab's render context.
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._preparePartContext`,
@@ -155,6 +166,7 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
+  // The tab's listeners.
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._attachPartListeners`,
@@ -165,12 +177,7 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
-  // _onFirstRender fires exactly once, when a sheet is (re)opened - not on every subsequent
-  // render, unlike _onRender. That matters here: this is a safety net for desyncs no targeted
-  // wrap catches (most notably editing the "Advances" number field directly), and running it on
-  // every render would race against our own reconcile() calls, which each trigger their own
-  // re-render before the plan flag has caught up with the real advance/refund that just happened.
-  // Once per sheet-open is early enough to catch drift while staying out of that race.
+  // Once per opened sheet, not per render: see PlannerController.validateQueues.
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._onFirstRender`,
@@ -181,8 +188,8 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
-  // Closing the sheet is when old consumed history gets cleaned up - not earlier, the player might
-  // still want to undo something while it's open (see PlannerController.pruneConsumed).
+  // Old consumed steps are cleaned up when the sheet closes - while it's open, the player might
+  // still want to undo something (see PlannerController.pruneConsumed).
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._onClose`,
@@ -194,9 +201,8 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
-  // _onRender fires once per full sheet render, after every part has been inserted - the right
-  // moment to decorate every "+" button across the whole sheet (characteristics, points, items)
-  // that has queued plan steps, regardless of which tab is currently active.
+  // After every full render, with all parts in place: badges, hints and the input fields across the
+  // whole sheet, whichever tab is active.
   libWrapper.register(
     MODULE_ID,
     `${basePath}.prototype._onRender`,
@@ -209,11 +215,8 @@ export function registerSheetIntegration() {
     'MIXED',
   );
 
-  // All six advance/refund methods are normal prototype methods (unlike advanceWrapper, not
-  // captured by value anywhere) and resolve to true when the change was actually carried out for
-  // real. Whenever that happens - via a normal un-shifted click OR via our own "apply" button in
-  // the planner tab - reconcile the plan against it (consume a matching queued step, restore a
-  // matching consumed one, or discard a stale queue - see PlannerController.reconcile).
+  // The six advance/refund methods resolve to true when the change was carried out. Then the plan is
+  // brought in line - from a normal click or the tab's apply alike, see PlannerController.reconcile.
   for (const [methodName, type] of Object.entries(ALL_FCTS)) {
     libWrapper.register(
       MODULE_ID,
