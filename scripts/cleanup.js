@@ -1,5 +1,5 @@
-import PlannerController from './planner-controller.js';
-import RequestController from './request-controller.js';
+import PlannerController from './plan/controller.js';
+import RequestController from './requests/controller.js';
 
 // If a talent/spell/combat-skill item with queued plan steps gets deleted (player removes it,
 // a wizard replaces it, ...), its plan entries would otherwise survive pointing at a dead item

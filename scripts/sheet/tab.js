@@ -1,12 +1,12 @@
-import { PART_ID } from './module-config.js';
-import PlannerData from './planner-data.js';
-import PlannerLimits from './planner-limits.js';
-import PlannerController from './planner-controller.js';
-import PlannerPhase from './planner-phase.js';
-import PlannerPicker from './planner-picker.js';
-import { applyingIds } from './planner-state.js';
-import RequestController from './request-controller.js';
-import RequestPicker from './request-picker.js';
+import { PART_ID } from '../config.js';
+import PlannerData from '../plan/data.js';
+import PlannerLimits from '../plan/limits.js';
+import PlannerController from '../plan/controller.js';
+import PlannerPhase from '../phase.js';
+import PlannerPicker from '../plan/picker.js';
+import { applyingIds } from '../plan/state.js';
+import RequestController from '../requests/controller.js';
+import RequestPicker from '../requests/picker.js';
 
 export default class PlannerTab {
   static get partId() {

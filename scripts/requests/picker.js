@@ -1,6 +1,6 @@
-import { MODULE_ID } from './module-config.js';
-import RequestController from './request-controller.js';
-import RequestIndex from './request-index.js';
+import { MODULE_ID } from '../config.js';
+import RequestController from './controller.js';
+import RequestIndex from './compendium-index.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 

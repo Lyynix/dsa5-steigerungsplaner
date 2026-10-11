@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTING_PHASE_ENABLED, SETTING_PHASE_OPEN } from './module-config.js';
+import { MODULE_ID, SETTING_PHASE_ENABLED, SETTING_PHASE_OPEN } from './config.js';
 
 // The advancement phase: many groups only advance at certain points, e.g. after an adventure. With
 // the world setting on, players can plan anytime, but applying planned steps, the sheet's normal

@@ -1,6 +1,6 @@
-import { MODULE_ID, SETTING_INPUT_PLANS } from './module-config.js';
-import PlannerController from './planner-controller.js';
-import PlannerPhase from './planner-phase.js';
+import { MODULE_ID, SETTING_INPUT_PLANS } from '../config.js';
+import PlannerController from '../plan/controller.js';
+import PlannerPhase from '../phase.js';
 
 // The sheet's number fields for the same targets shift-click plans (talent values, attribute and
 // base stat advances, permanent AsP/KaP rebuys) normally just overwrite the value without any AP.

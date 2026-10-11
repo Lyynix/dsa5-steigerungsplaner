@@ -1,6 +1,6 @@
-import PlannerController from './planner-controller.js';
-import PlannerData from './planner-data.js';
-import PlannerPhase from './planner-phase.js';
+import PlannerController from '../plan/controller.js';
+import PlannerData from '../plan/data.js';
+import PlannerPhase from '../phase.js';
 
 const GROUP_ORDER = [
   'advantage',

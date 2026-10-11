@@ -1,5 +1,5 @@
-import { FLAG_CONSUMED, FLAG_PLAN, FLAG_REQUESTS, MODULE_ID } from './module-config.js';
-import { applyingIds } from './planner-state.js';
+import { FLAG_CONSUMED, FLAG_PLAN, FLAG_REQUESTS, MODULE_ID } from '../config.js';
+import { applyingIds } from './state.js';
 
 // Reads/writes the plan as an actor flag. The plan is a flat, ordered array of entries;
 // entries belonging to the same target (type+key) form an implicit FIFO/LIFO queue.
@@ -41,7 +41,7 @@ export default class PlannerData {
 
   // Groups the flat plan array by target (type+key), preserving queue order within each group.
   // Shared by the planner tab (full list) and the inline sheet badges (counts/tooltips). Entries
-  // mid-apply (see planner-state.js) are left out so they don't flash back into an intermediate
+  // mid-apply (see plan/state.js) are left out so they don't flash back into an intermediate
   // render while the plan flag is momentarily stale.
   static getGroups(actor) {
     const groups = new Map();

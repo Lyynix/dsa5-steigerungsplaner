@@ -1,4 +1,4 @@
-import PlannerController from './planner-controller.js';
+import PlannerController from './controller.js';
 
 // Hints when a planned step goes above the rule maximum the system checks when advancing for real
 // ("Maximum erreicht"). No rules of our own: the maxima come from the system's own methods -

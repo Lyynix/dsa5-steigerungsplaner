@@ -1,6 +1,6 @@
-import { ADVANCE_FCTS } from './module-config.js';
-import PlannerData from './planner-data.js';
-import PlannerLimits from './planner-limits.js';
+import { ADVANCE_FCTS } from '../config.js';
+import PlannerData from '../plan/data.js';
+import PlannerLimits from '../plan/limits.js';
 
 const BADGE_CLASS = 'steigerungsplaner-badge';
 const DECREASE_CLASS = 'steigerungsplaner-badge-decrease';

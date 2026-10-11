@@ -1,4 +1,4 @@
-import PlannerController from './planner-controller.js';
+import PlannerController from './controller.js';
 
 const SECTION_ORDER = [
   'characteristics',

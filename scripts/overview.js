@@ -1,9 +1,9 @@
-import { FLAG_REQUESTS, MODULE_ID, PART_ID } from './module-config.js';
-import PlannerController from './planner-controller.js';
-import PlannerData from './planner-data.js';
-import PlannerPhase from './planner-phase.js';
-import PlannerTab from './planner-tab.js';
-import RequestController from './request-controller.js';
+import { FLAG_REQUESTS, MODULE_ID, PART_ID } from './config.js';
+import PlannerController from './plan/controller.js';
+import PlannerData from './plan/data.js';
+import PlannerPhase from './phase.js';
+import PlannerTab from './sheet/tab.js';
+import RequestController from './requests/controller.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 

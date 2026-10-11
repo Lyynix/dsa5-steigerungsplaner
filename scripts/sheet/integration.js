@@ -1,10 +1,10 @@
-import { ALL_FCTS, MODULE_ID } from './module-config.js';
-import PlannerBadges from './planner-badges.js';
-import PlannerController from './planner-controller.js';
-import PlannerHints from './planner-hints.js';
-import PlannerInput from './planner-input.js';
-import PlannerPhase from './planner-phase.js';
-import PlannerTab from './planner-tab.js';
+import { ALL_FCTS, MODULE_ID } from '../config.js';
+import PlannerBadges from './badges.js';
+import PlannerController from '../plan/controller.js';
+import PlannerHints from './hints.js';
+import PlannerInput from './input.js';
+import PlannerPhase from '../phase.js';
+import PlannerTab from './tab.js';
 
 // Foundry registers sheets under `${scope}.${className}` - stable enough to rely on directly.
 const CHARACTER_SHEET_ID = 'dsa5.ActorSheetdsa5Character';

@@ -18,7 +18,7 @@
    Character sheet
    ================================================================================================= */
 
-/* Count badge on the sheet's "+" for planned steps (planner-badges.js). In rem, so it's the same
+/* Count badge on the sheet's "+" for planned steps (sheet/badges.js). In rem, so it's the same
    size in every row. */
 .steigerungsplaner-badge {
   display: inline-block;
@@ -42,7 +42,7 @@
 }
 
 /* Badge for a step above the maximum that the planned attributes make reachable
-   (planner-limits.js). */
+   (plan/limits.js). */
 .steigerungsplaner-badge-limit-attributes {
   background: var(--steigerungsplaner-amber);
 }
@@ -148,7 +148,7 @@
    Planner tab
    ================================================================================================= */
 
-/* Planner tab on the character sheet (planner-tab.js). Hidden by default, so Foundry's .active
+/* Planner tab on the character sheet (sheet/tab.js). Hidden by default, so Foundry's .active
    decides. */
 .steigerungsplaner-tab {
   display: none;
@@ -187,7 +187,7 @@
     font-size: 0.9em;
   }
 
-  /* Hint while the advancement phase is closed (planner-phase.js). */
+  /* Hint while the advancement phase is closed (phase.js). */
   & .planner-phase-hint {
     margin: 0.4rem 0;
     padding: 0.25rem 0.5rem;
@@ -514,7 +514,7 @@
    "Plan value" dropdown
    ================================================================================================= */
 
-/* "Plan value" dropdown (planner-picker.js). On document.body above all windows, colors like
+/* "Plan value" dropdown (plan/picker.js). On document.body above all windows, colors like
    Foundry's context menu. */
 .steigerungsplaner-picker {
   --picker-background: var(--color-cool-5);
@@ -606,7 +606,7 @@
    Catalog
    ================================================================================================= */
 
-/* Catalog window (request-picker.js). */
+/* Catalog window (requests/picker.js). */
 .steigerungsplaner-request-picker {
   /* Layout ------------------------------------------------------------------------------------- */
 
@@ -829,7 +829,7 @@
    GM overview
    ================================================================================================= */
 
-/* GM overview (planner-overview.js). */
+/* GM overview (overview.js). */
 .steigerungsplaner-overview {
   /* Toolbar ------------------------------------------------------------------------------------ */
 

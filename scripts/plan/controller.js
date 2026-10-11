@@ -1,6 +1,6 @@
-import { ADVANCE_FCTS, REFUND_FCTS } from './module-config.js';
-import PlannerData from './planner-data.js';
-import PlannerPhase from './planner-phase.js';
+import { ADVANCE_FCTS, REFUND_FCTS } from '../config.js';
+import PlannerData from './data.js';
+import PlannerPhase from '../phase.js';
 
 export default class PlannerController {
   // Entry point for a shift-click on any of the sheet's advance/refund "+"/"-" buttons.
@@ -331,7 +331,7 @@ export default class PlannerController {
   // Removes a specific queued entry and everything queued after it for that target (in this
   // target's own sub-sequence, not the flat plan array's index) - chain-consistent, unlike
   // removing only the clicked entry: nothing queued after it could stay valid without it anyway
-  // (see the trash icon and per-step X in planner-tab.js).
+  // (see the trash icon and per-step X in sheet/tab.js).
   static async cancelFrom(actor, type, key, entryId) {
     if (!actor.isOwner) return;
     await this.ensureFresh(actor, type, key);
@@ -362,7 +362,7 @@ export default class PlannerController {
 
   // Called whenever a real advance OR refund succeeded for real, whether triggered from here or
   // from a normal, un-shifted sheet click (see the six ADVANCE_FCTS/REFUND_FCTS method wraps in
-  // sheet-integration.js). `valueAfterChange` is the target's actual value right after that
+  // sheet/integration.js). `valueAfterChange` is the target's actual value right after that
   // real change. Three possibilities, checked in order:
   //
   //   1. The front of the queue (oldest, next thing due) expected exactly this transition
@@ -516,7 +516,7 @@ export default class PlannerController {
   // Applies the oldest (front) queued step for a target by invoking the matching real system
   // method - the real advance method if the front step is an increase, the real refund method if
   // it's a decrease (identical to a normal, un-shifted click either way) - reconcile() runs as a
-  // side effect of that call via the wraps in sheet-integration.js, so no separate bookkeeping is
+  // side effect of that call via the wraps in sheet/integration.js, so no separate bookkeeping is
   // needed here.
   static async applyFirst(sheet, type, key) {
     const actor = sheet.actor;
@@ -552,7 +552,7 @@ export default class PlannerController {
   }
 
   // Applies the front `count` queued steps for a target in sequence - the multi-buy interaction in
-  // planner-tab.js has already worked out how many are currently affordable before calling this, so
+  // sheet/tab.js has already worked out how many are currently affordable before calling this, so
   // failures here are only the rare case where the real, live-recomputed cost turns out higher than
   // what was estimated at planning time (see markAffordability). Stops immediately on the first
   // failure rather than trying the rest - the system's own checkEnoughXP already shows an error
