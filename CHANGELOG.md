@@ -4,6 +4,8 @@ Alle wichtigen Änderungen am Steigerungsplaner. Das Format orientiert sich an [
 
 ## Unveröffentlicht
 
+## 14.0.0 – 2026-10-11
+
 ### Hinzugefügt
 - **Hinweis auf Regel-Maxima:** Geplante Schritte über dem Maximum, das das System beim Steigern prüft, werden markiert, gelb wenn geplante Eigenschaftssteigerungen sie erreichbar machen, rot wenn nicht. Im Planer-Tab, am Badge im Bogen und in der SL-Übersicht ([#42](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/42)).
 - **Schenken:** Der SL kann Anfragen auch ohne AP-Kosten genehmigen, in der Übersicht und im Planer-Tab, z. B. als Belohnung ([#40](https://github.com/Lyynix/dsa5-steigerungsplaner/issues/40)).
