@@ -1,3 +1,8 @@
+/**
+ * @file Entry point of the module. Registers the settings on init and hooks everything else in on
+ * ready: the cleanup hooks, the GM's overview and - if libWrapper is active - the character sheet.
+ */
+
 import { MODULE_ID, SETTING_INPUT_PLANS } from './config.js';
 import PlannerPhase from './phase.js';
 import { registerCleanupHooks } from './cleanup.js';

@@ -1,22 +1,31 @@
+/**
+ * @file Hints when a planned step goes above the rule maximum the system checks when advancing for
+ * real ("Maximum erreicht"). No rules of our own: the maxima come from the system's own methods -
+ * _maxAllowedAdvancement of the item sheets (skills, combat techniques, spells, liturgies, incl.
+ * bonuses like exceptional skill) and pointAdvancementLimit (LeP/AsP/KaP). The system doesn't check
+ * attributes or rebuys, so they get no hint either.
+ *
+ * Two levels: 'attributes' - above the current maximum, but reachable with the attribute steps
+ * planned; 'over' - above it even then. Which planned attribute step helps, and which attribute
+ * would have to go how high, is found the same way: by asking the system's methods with stand-in
+ * attribute values. Only ever a hint, planning is never held back.
+ */
+
 import PlannerController from './controller.js';
 
-// Hints when a planned step goes above the rule maximum the system checks when advancing for real
-// ("Maximum erreicht"). No rules of our own: the maxima come from the system's own methods -
-// _maxAllowedAdvancement of the item sheets (skills, combat techniques, spells, liturgies, incl.
-// bonuses like exceptional skill) and pointAdvancementLimit (LeP/AsP/KaP). The system doesn't check
-// attributes or rebuys, so they get no hint either.
-//
-// Two levels: 'attributes' - above the current maximum, but reachable with the attribute steps
-// planned; 'over' - above it even then. Which planned attribute step helps, and which attribute
-// would have to go how high, is found the same way: by asking the system's methods with stand-in
-// attribute values. Only ever a hint, planning is never held back.
-
-// How far an attribute is tried above its planned value when looking for what would help.
+/** How far an attribute is tried above its planned value when looking for what would help. */
 const SEARCH_RANGE = 10;
 
+/** Works out the maximum hints for the tab, the overview and the badges. */
 export default class PlannerLimits {
-  // Marks a target's steps: step.limit = 'attributes' | 'over' | null and step.limitHint, for
-  // increases only. Returns { limit, hint } of the worst one, null if none.
+  /**
+   * Marks a target's increases with step.limit ('attributes' | 'over' | null) and step.limitHint.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @param {PlanEntry[]} steps   Changed in place.
+   * @returns {?{limit: string, hint: string}} The worst step's, null if none is above.
+   */
   static mark(actor, type, key, steps) {
     const limits = steps.some((s) => s.to > s.from) ? this.#limitsOf(actor, type, key) : null;
     let worst = null;
@@ -32,8 +41,15 @@ export default class PlannerLimits {
     return worst ? { limit: worst.limit, hint: worst.limitHint } : null;
   }
 
-  // The target's maxima - current and with the planned attribute steps - plus hint(value), the
-  // tooltip for a step up to that value. null where the system has no maximum or it can't be told.
+  /**
+   * The target's maxima, current and with the planned attribute steps, plus the tooltip for a step
+   * up to a given value.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?{current: number, planned: number, hint: function(number): string}} null where the
+   *   system has no maximum or it can't be worked out.
+   */
   static #limitsOf(actor, type, key) {
     let compute;
     let current;
@@ -87,8 +103,13 @@ export default class PlannerLimits {
     };
   }
 
-  // A function working out the target's maximum for a given actor (the real one or a stand-in),
-  // null where the system has none.
+  /**
+   * A function working out the target's maximum for a given actor - the real one or a stand-in.
+   * @param {Actor} actor
+   * @param {string} type
+   * @param {string} key
+   * @returns {?function(Actor): number} null where the system has no maximum.
+   */
   static #maximumOf(actor, type, key) {
     if (type === 'point') {
       const limit = actor.system.pointAdvancementLimit;
@@ -110,8 +131,12 @@ export default class PlannerLimits {
     };
   }
 
-  // { current, planned } attribute values, keyed like system.characteristics - planned being the
-  // current value plus whatever steps are queued for it.
+  /**
+   * The attribute values now and with the queued steps.
+   * @param {Actor} actor
+   * @returns {{current: Object<string, number>, planned: Object<string, number>}} Keyed like
+   *   system.characteristics.
+   */
   static #attributeValues(actor) {
     const current = {};
     const planned = {};
@@ -123,9 +148,14 @@ export default class PlannerLimits {
     return { current, planned };
   }
 
-  // The actor with other attribute values - only what the maximum methods read
-  // (system.characteristics) differs, everything else is the real actor. items as a plain property
-  // too, for the same reason as the sheet's actor and item above.
+  /**
+   * The actor with other attribute values. Only what the maximum methods read
+   * (system.characteristics) differs, everything else is the real actor - items as a plain
+   * property, for the same reason as the sheet's actor and item in #maximumOf.
+   * @param {Actor} actor
+   * @param {Object<string, number>} values
+   * @returns {Actor}
+   */
   static #standIn(actor, values) {
     const characteristics = {};
     for (const [key, ch] of Object.entries(actor.system.characteristics ?? {})) {
@@ -135,9 +165,15 @@ export default class PlannerLimits {
     return Object.create(actor, { system: { value: system }, items: { value: actor.items } });
   }
 
-  // "KO 14": for each attribute with planned steps, the lowest value on the way that's enough for
-  // target on its own - which can be short of the planned end ("KO 13 » 15" planned, KO 14 enough).
-  // '' if only several planned attribute steps together are enough.
+  /**
+   * For each attribute with planned steps, the lowest value on the way that's enough for `target`
+   * on its own - which can be short of the planned end ("KO 13 » 15" planned, KO 14 enough).
+   * @param {Actor} actor
+   * @param {function(Actor): number} compute
+   * @param {{current: object, planned: object}} values
+   * @param {number} target
+   * @returns {string} "KO 14", '' if only several planned steps together are enough.
+   */
   static #helpingSteps(actor, compute, values, target) {
     const helping = [];
     for (const [key, planned] of Object.entries(values.planned)) {
@@ -151,8 +187,15 @@ export default class PlannerLimits {
     return this.#orList(helping);
   }
 
-  // "KO 16 oder KK 16": per attribute, the lowest value (starting from the planned ones) at which
-  // the maximum reaches target. '' if no single attribute does within SEARCH_RANGE.
+  /**
+   * Per attribute, the lowest value - starting from the planned ones - at which the maximum reaches
+   * `target`. Cheapest first.
+   * @param {Actor} actor
+   * @param {function(Actor): number} compute
+   * @param {{current: object, planned: object}} values
+   * @param {number} target
+   * @returns {string} "KO 16 oder KK 16", '' if no single attribute does within SEARCH_RANGE.
+   */
   static #neededAttributes(actor, compute, values, target) {
     const options = [];
     for (const [key, planned] of Object.entries(values.planned)) {
@@ -168,11 +211,20 @@ export default class PlannerLimits {
     return this.#orList(options.map(({ key, value }) => `${this.#abbr(key)} ${value}`));
   }
 
-  // "IN 16, KO 16 oder CH 16" - the browser knows how lists read in the user's language.
+  /**
+   * "IN 16, KO 16 oder CH 16", in Foundry's language.
+   * @param {string[]} items
+   * @returns {string}
+   */
   static #orList(items) {
     return new Intl.ListFormat(game.i18n.lang, { type: 'disjunction' }).format(items);
   }
 
+  /**
+   * The attribute's abbreviation, e.g. "KO".
+   * @param {string} key
+   * @returns {string}
+   */
   static #abbr(key) {
     return game.i18n.localize(`CHARAbbrev.${key.toUpperCase()}`);
   }

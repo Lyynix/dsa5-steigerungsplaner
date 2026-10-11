@@ -1,19 +1,40 @@
+/**
+ * @file Constants shared across the module: ids, flag and setting keys, and the sheet's advance and
+ * refund functions mapped to our target types.
+ */
+
+/** The module's id, also the flag scope. */
 export const MODULE_ID = 'dsa5-steigerungsplaner';
+
+/** Actor flag with the plan: a flat, ordered array of steps, see PlannerData. */
 export const FLAG_PLAN = 'plan';
-// LIFO stack per target of plan entries that were consumed by a real advance - lets a matching
-// real refund restore the exact step it just undid instead of leaving the plan stale.
+
+/**
+ * Actor flag with the plan steps a real advance used up, per target, last one first. A matching
+ * real refund puts the exact step back instead of leaving the plan stale.
+ */
 export const FLAG_CONSUMED = 'consumed';
-// Items that need GM approval instead of being bought step by step - see RequestController.
+
+/** Actor flag with the catalog entries and requests, see RequestController. */
 export const FLAG_REQUESTS = 'requests';
+
+/** Id of the planner tab's part on the character sheet. */
 export const PART_ID = 'steigerungsplaner';
-// World setting: typing a value into the sheet's input fields plans the steps instead of setting it.
+
+/** World setting: a value typed into the sheet's fields plans the steps instead of setting it. */
 export const SETTING_INPUT_PLANS = 'inputPlans';
-// World settings for the advancement phase: whether it's used at all, and whether it's open right
-// now (the GM's switch in the overview sets the same setting) - see PlannerPhase.
+
+/** World setting: whether the advancement phase is used at all, see PlannerPhase. */
 export const SETTING_PHASE_ENABLED = 'advancementPhase';
+
+/** World setting: whether the advancement phase is open right now - the switch in the overview. */
 export const SETTING_PHASE_OPEN = 'advancementPhaseOpen';
 
-// data-fct values used by the DSA5 "advanceWrapper" action, mapped to our internal target type
+/**
+ * The sheet's "+" functions (data-fct of the system's advanceWrapper action) mapped to our target
+ * types.
+ * @type {Record<string, string>}
+ */
 export const ADVANCE_FCTS = {
   _advanceAttribute: 'attribute',
   _advancePoints: 'point',
@@ -21,6 +42,10 @@ export const ADVANCE_FCTS = {
   _rebuyPC: 'permanentLoss',
 };
 
+/**
+ * The sheet's "-" functions mapped to our target types.
+ * @type {Record<string, string>}
+ */
 export const REFUND_FCTS = {
   _refundAttributeAdvance: 'attribute',
   _refundPointsAdvance: 'point',
@@ -28,6 +53,8 @@ export const REFUND_FCTS = {
   _refundPC: 'permanentLoss',
 };
 
-// Combined lookup for places that don't care whether a button is the "+" or "-" one, just which
-// target it belongs to (e.g. badge decoration, since queues can now contain both directions).
+/**
+ * Both, for places that only care which target a button belongs to, e.g. the badges.
+ * @type {Record<string, string>}
+ */
 export const ALL_FCTS = { ...ADVANCE_FCTS, ...REFUND_FCTS };

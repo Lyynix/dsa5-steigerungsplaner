@@ -1,12 +1,15 @@
+/**
+ * @file Hooks that keep the plan and the requests in line with the actor's items, no matter which
+ * sheet - if any - is open.
+ */
+
 import PlannerController from './plan/controller.js';
 import RequestController from './requests/controller.js';
 
-// If a talent/spell/combat-skill item with queued plan steps gets deleted (player removes it,
-// a wizard replaces it, ...), its plan entries would otherwise survive pointing at a dead item
-// id - and clicking "apply" on one would crash inside the system's own _advanceItem. Purge them
-// as soon as the item is gone. Not tied to any particular sheet, so this only needs registering
-// once, independent of whether/which actor sheet is currently open.
+/** Registers the hooks. Called once on ready. */
 export function registerCleanupHooks() {
+  // Planned steps of a deleted item would point at a dead id, and applying one would crash inside
+  // the system's own _advanceItem.
   Hooks.on('deleteItem', async (item) => {
     const actor = item.actor;
     if (!actor) return;

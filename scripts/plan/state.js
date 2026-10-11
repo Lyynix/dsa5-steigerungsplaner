@@ -1,6 +1,12 @@
-// Entry ids currently mid-"apply": the real advance/refund method's own actor.update() triggers
-// a sheet re-render before PlannerController.reconcile() has removed the entry from the plan
-// flag, so a queued step would otherwise flash back to full size for that render before vanishing
-// for good on the next one. Kept here (rather than on PlannerController) to avoid a circular
-// import with plan/data.js, which needs to read this set too.
+/**
+ * @file Runtime state of the plan. Its own file so plan/data.js can read it without importing
+ * sheet/tab.js, which sets it - that would be a circular import.
+ */
+
+/**
+ * Ids of plan steps being applied right now. The real advance's actor.update() re-renders the sheet
+ * before PlannerController.reconcile() has removed the step from the flag - without this, the step
+ * would flash back for that one render.
+ * @type {Set<string>}
+ */
 export const applyingIds = new Set();

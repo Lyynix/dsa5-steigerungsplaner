@@ -1,7 +1,15 @@
+/**
+ * @file Catalog entries and requests: items that need the GM's approval instead of being bought step
+ * by step (special abilities, advantages, spells, liturgies, ...). Builds the catalog, estimates
+ * costs the way the system charges them, and buys an approved request through the system's own
+ * functions.
+ */
+
 import PlannerController from '../plan/controller.js';
 import PlannerData from '../plan/data.js';
 import PlannerPhase from '../phase.js';
 
+/** The catalog's groups, in order. */
 const GROUP_ORDER = [
   'advantage',
   'disadvantage',
@@ -18,8 +26,11 @@ const GROUP_ORDER = [
   'spellextension',
 ];
 
-// Own labels throughout: the system's TYPES.Item.* are singular, the special ability groups are our
-// own split, and "Zaubererweiterung" would be wrong for liturgy/ceremony extensions.
+/**
+ * Labels of the catalog's groups. Our own throughout: the system's TYPES.Item.* are singular, the
+ * special ability groups are our own split, and "Zaubererweiterung" would be wrong for liturgy
+ * extensions.
+ */
 const GROUP_LABELS = {
   advantage: 'STEIGERUNGSPLANER.Group.advantage',
   disadvantage: 'STEIGERUNGSPLANER.Group.disadvantage',
@@ -36,13 +47,17 @@ const GROUP_LABELS = {
   spellextension: 'STEIGERUNGSPLANER.Group.extensions',
 };
 
+/** Types only magical characters can request. */
 const MAGICAL_TYPES = new Set(['spell', 'ritual', 'magictrick']);
+/** Types only blessed characters can request. */
 const CLERICAL_TYPES = new Set(['liturgy', 'ceremony', 'blessing']);
-// Types with a FW, which can get planned steps on top of learning them.
+/** Types with a FW, which can get planned steps on top of learning them. */
 const FW_TYPES = new Set(['spell', 'ritual', 'liturgy', 'ceremony']);
 
-// Order of the request list in the planner tab: advantages, disadvantages, special abilities, then
-// everything magical and everything clerical. Extensions go with the spell/liturgy they extend.
+/**
+ * Order of the request list in the planner tab: advantages, disadvantages, special abilities, then
+ * everything magical and everything clerical. Extensions go with the spell/liturgy they extend.
+ */
 const LIST_GROUPS = {
   advantage: 0,
   disadvantage: 1,
@@ -55,34 +70,51 @@ const LIST_GROUPS = {
   blessing: 4,
 };
 
-// Requests being approved on this client right now - pruneFulfilled leaves them to approveRequest,
-// which turns the wanted FW into plan steps itself once the item is bought.
+/**
+ * Ids of requests being approved on this client right now - pruneFulfilled leaves them to
+ * approveRequest, which turns the wanted FW into plan steps itself once the item is bought.
+ * @type {Set<string>}
+ */
 const approving = new Set();
 
-// Requests for items that need GM approval instead of being bought step by step (special
-// abilities, spells, liturgies, ...). An entry looks like
-//   { id, uuid, name, type, img, level, variant, targetFW, extensionOf, costData, status }
-// - uuid/name/type/img: taken from the request index
-// - level: the wanted level for leveled special abilities/advantages, otherwise null
-// - variant: the chosen variant (adoption), e.g. { name: 'Klettern', itemId: '...' }, otherwise
-//   null. itemId is set when the variant is an item of the character - the system needs the real
-//   item on approval, its StF can change the cost
-// - targetFW: for spells, rituals, liturgies and ceremonies the FW the player wants to raise it to
-//   after learning it, otherwise null. Only the player's own planning: the GM approves learning
-//   it, then the steps up to it become regular plan entries
-// - extensionOf: for extensions { type, name, requiredFW } of the spell/liturgy they extend,
-//   otherwise null - see extensionState
-// - costData: the item's cost fields (APValue, StF, ...) for the estimate, see requestCost
-// - status: 'planned' or 'requested'
+/**
+ * A catalog entry or request, stored in the FLAG_REQUESTS flag.
+ * @typedef {object} Request
+ * @property {string} id
+ * @property {string} uuid       The compendium item.
+ * @property {string} name
+ * @property {string} type
+ * @property {string} img
+ * @property {?number} level     The wanted level of a leveled special ability or advantage.
+ * @property {?{name: string, itemId?: string, customEntry?: string}} variant   The chosen variant.
+ *   itemId if it's an item of the character - the system needs it on approval, its StF can
+ *   change the cost.
+ * @property {?number} targetFW  For spells, rituals, liturgies and ceremonies: the FW to raise it
+ *   to after learning. Only the player's planning - the GM approves learning it, then the steps
+ *   become regular plan steps.
+ * @property {?{type: string, name: string, requiredFW: number}} extensionOf  For extensions: the
+ *   spell/liturgy they extend, see extensionState.
+ * @property {?object} costData  The item's cost fields, see requestCost. Missing on older entries.
+ * @property {('planned'|'requested'|'gifted')} status   'gifted' only for the moment before it's
+ *   removed, so the player's client can tell a gift from an approval.
+ * @property {?{reason: string}} [rejected]  Set when the GM sent it back.
+ */
+
+/** Catalog entries and requests. All methods are static and work on the actor's flags. */
 export default class RequestController {
-  // What this character can request, from the request index: [{ id, label, entries }] in the picker's
-  // order, empty groups left out. Each entry gets
-  // - level: { min, max } for leveled special abilities/advantages, otherwise null
-  // - variant: { kind: 'text' | 'list' | 'item', options, allowCustom } if it needs one, otherwise null
-  // - extension: { source, requiredFW, currentFW, plannedFW } for extensions, otherwise null.
-  //   The source is the spell/liturgy it extends, owned or only requested - currentFW is null for
-  //   a requested one, plannedFW the FW it gets to with what's planned
-  // - requirements: the item's requirements text, the system doesn't check it, the GM does
+  /**
+   * What the character can request, in the catalog's groups. Each entry gets
+   * - level: { min, max } for leveled special abilities/advantages, otherwise null
+   * - variant: { kind: 'text' | 'list' | 'item', options, allowCustom } if it needs one,
+   *   otherwise null
+   * - extension: { source, requiredFW, currentFW, plannedFW } for extensions, otherwise null. The
+   *   source is the spell/liturgy it extends, owned or only requested - currentFW is null for a
+   *   requested one, plannedFW the FW it gets to with what's planned
+   * - requirements: the item's requirements text - the system doesn't check it, the GM does
+   * @param {Actor} actor
+   * @param {IndexEntry[]} entries   From RequestIndex.
+   * @returns {{id: string, label: string, entries: object[]}[]} Empty groups left out.
+   */
   static catalog(actor, entries) {
     const owned = new Map(actor.items.map((item) => [`${item.type}:${item.name}`, item]));
     const requests = PlannerData.getRequests(actor);
@@ -138,8 +170,13 @@ export default class RequestController {
     }));
   }
 
-  // The system groups special ability categories itself (SpecialabilityData.sortedSpecs). It files
-  // staff and ceremonial under "unused", but those are plainly magical and clerical.
+  /**
+   * The catalog group of an entry. Special abilities use the system's own grouping of their
+   * categories (SpecialabilityData.sortedSpecs) - except staff and ceremonial, which it files under
+   * "unused" but are plainly magical and clerical.
+   * @param {IndexEntry} entry
+   * @returns {string}
+   */
   static #groupFor(entry) {
     if (entry.type !== 'specialability') return entry.type;
 
@@ -151,9 +188,15 @@ export default class RequestController {
     return 'sf-general';
   }
 
-  // Magical things only for magical characters, clerical ones only for blessed ones - the same
-  // flags that decide whether the sheet shows its magic/religion tab. Advantages and disadvantages
-  // stay open to everyone, otherwise nobody could ever request becoming a spellcaster.
+  /**
+   * Magical things only for magical characters, clerical ones only for blessed ones - the same flags
+   * that decide whether the sheet shows its magic/religion tab. Advantages and disadvantages stay
+   * open to everyone, otherwise nobody could ever request becoming a spellcaster.
+   * @param {Actor} actor
+   * @param {IndexEntry} entry
+   * @param {string} group
+   * @returns {boolean}
+   */
   static #allowedFor(actor, entry, group) {
     const category = entry.type === 'spellextension' ? entry.system.category : null;
     const magical = MAGICAL_TYPES.has(entry.type) || group === 'sf-magical' || ['spell', 'ritual'].includes(category);
@@ -163,15 +206,26 @@ export default class RequestController {
     return true;
   }
 
+  /**
+   * The highest level of a special ability, advantage or disadvantage.
+   * @param {{type: string, system: object}} entry
+   * @returns {number} 0 for anything without levels.
+   */
   static #maxLevel(entry) {
     if (entry.type === 'specialability') return Number(entry.system.maxRank?.value) || 0;
     if (entry.type === 'advantage' || entry.type === 'disadvantage') return Number(entry.system.max?.value) || 0;
     return 0;
   }
 
-  // Which items need a variant is registered at runtime by the content modules (dsa5-core etc.) in
-  // the same tables the system's own adoption dialog reads. `items` is ["text"], ["array"] or a
-  // list of item types - the system compares it loosely against 'text'/'array', so do we.
+  /**
+   * The variant an entry needs, from the tables the content modules (dsa5-core etc.) fill at runtime
+   * for the system's own variant dialog. `items` there is ["text"], ["array"] or a list of item
+   * types - the system compares it loosely against 'text'/'array', so do we.
+   * @param {Actor} actor
+   * @param {IndexEntry} entry
+   * @returns {?{kind: ('text'|'list'|'item'), options: object[], allowCustom: boolean}} null if it
+   *   needs none.
+   */
   static #variantFor(actor, entry) {
     const config = game.dsa5.config;
     const table = entry.type === 'specialability' ? config.AbilitiesNeedingAdaption : ['advantage', 'disadvantage'].includes(entry.type) ? config.vantagesNeedingAdaption : null;
@@ -189,10 +243,17 @@ export default class RequestController {
     return { kind: 'item', options, allowCustom: !!rule.area };
   }
 
-  // What buying the item would cost in AP, the way the system charges it: for leveled items from the
-  // level the character has up to `level`, for spells and liturgies their activation. null if it
-  // can't be told yet, e.g. a cost by StF while the variant isn't one of the character's items.
-  // `item` is anything with type, name and system - an index entry or the full item.
+  /**
+   * What buying the item would cost in AP, the way the system charges it: for leveled items from
+   * the level the character has up to `level`, for spells and liturgies their activation.
+   * @param {Actor} actor
+   * @param {{type: string, name: string, system: object}} item   An index entry or the full item.
+   * @param {object} [options]
+   * @param {?number} [options.level]
+   * @param {?object} [options.variant]
+   * @returns {?number} null if it can't be told yet, e.g. a cost by StF while the variant isn't one
+   *   of the character's items.
+   */
   static estimateCost(actor, item, { level = null, variant = null } = {}) {
     const system = item.system;
     switch (item.type) {
@@ -225,10 +286,15 @@ export default class RequestController {
     return sum;
   }
 
-  // AP cost of each level of a special ability/advantage/disadvantage, [level 1, level 2, ...], or
-  // null if it can't be told yet. APValue can be "10" (every level), "10;20;30" (per level),
-  // "4/8/12/16" (by the variant's StF) or "5,10" (the first, second ... of that item) - the system
-  // resolves them in this order when buying.
+  /**
+   * AP cost of each level of a special ability, advantage or disadvantage. APValue can be "10"
+   * (every level), "10;20;30" (per level), "4/8/12/16" (by the variant's StF) or "5,10" (the first,
+   * second ... of that item) - the system resolves them in this order when buying.
+   * @param {Actor} actor
+   * @param {{type: string, name: string, system: object}} item
+   * @param {?object} [variant]
+   * @returns {?number[]} [level 1, level 2, ...], null if it can't be told yet.
+   */
   static levelCosts(actor, item, variant = null) {
     let value = String(item.system.APValue?.value ?? '').trim();
     const base = item.name.replace(' ()', '');
@@ -256,7 +322,13 @@ export default class RequestController {
     return Array(Math.max(this.#maxLevel(item), 1)).fill(cost);
   }
 
-  // The level the character already has of this item (with this variant), 0 if none.
+  /**
+   * The level the character already has of this item, with this variant.
+   * @param {Actor} actor
+   * @param {{type: string, name: string}} item
+   * @param {?object} variant
+   * @returns {number} 0 if none.
+   */
   static #ownedLevel(actor, item, variant) {
     const base = item.name.replace(' ()', '');
     const name = variant ? `${base} (${variant.name}${variant.customEntry ? `, ${variant.customEntry}` : ''})` : item.name;
@@ -264,23 +336,36 @@ export default class RequestController {
     return owned ? Number(owned.system.step?.value) || 0 : 0;
   }
 
+  /**
+   * @param {*} value
+   * @returns {?number} null for an empty or non-numeric value.
+   */
   static #number(value) {
     const text = String(value ?? '').trim();
     const number = Number(text);
     return !text || Number.isNaN(number) ? null : number;
   }
 
-  // The estimated cost of a planned request, see estimateCost. null for requests planned before
-  // the cost data was stored with them.
+  /**
+   * The estimated cost of a request, see estimateCost.
+   * @param {Actor} actor
+   * @param {Request} request
+   * @returns {?number} null for requests planned before the cost data was stored with them.
+   */
   static requestCost(actor, request) {
     if (!request.costData) return null;
     return this.estimateCost(actor, { type: request.type, name: request.name, system: request.costData }, request);
   }
 
-  // The level buttons of a leveled request: [{ value, owned, selected, delta }] for every level up
-  // to the item's max, or null if it has no levels (or was planned before the max was stored).
-  // delta is how the planned cost would change if that level became the wanted one - positive above
-  // it, negative below, null if the cost can't be told yet.
+  /**
+   * The level buttons of a leveled request, one for every level up to the item's max. delta is how
+   * the planned cost would change if that level became the wanted one - positive above it, negative
+   * below, null if the cost can't be told yet.
+   * @param {Actor} actor
+   * @param {Request} request
+   * @returns {?{value: number, owned: boolean, selected: boolean, delta: ?number}[]} null without
+   *   levels, or if planned before the max was stored.
+   */
   static requestLevels(actor, request) {
     if (!request.level || !request.costData) return null;
 
@@ -312,9 +397,16 @@ export default class RequestController {
     });
   }
 
-  // Where an extension's spell/liturgy stands: { currentFW, plannedFW } if the character has it
-  // (plannedFW including the steps planned for it) or requested it (currentFW null, plannedFW the
-  // request's target FW), null if neither.
+  /**
+   * Where an extension's spell/liturgy stands.
+   * @param {Actor} actor
+   * @param {{type: string, name: string}} source
+   * @param {Request[]} [requests]
+   * @param {?Map<string, Item>} [owned]   The actor's items by "type:name", if already at hand.
+   * @returns {?{currentFW: ?number, plannedFW: number}} plannedFW includes the planned steps; for a
+   *   requested one currentFW is null and plannedFW its target FW. null if neither owned nor
+   *   requested.
+   */
   static #extensionSource(actor, { type, name }, requests = PlannerData.getRequests(actor), owned = null) {
     const item = owned ? owned.get(`${type}:${name}`) : actor.items.find((i) => i.type === type && i.name === name);
     if (item) {
@@ -325,12 +417,16 @@ export default class RequestController {
     return request ? { currentFW: null, plannedFW: this.requestFW(request)?.target ?? 0 } : null;
   }
 
-  // Whether an extension request can be sent to the GM - the system only buys an extension when the
-  // spell/liturgy is there with a high enough FW, so there's no point in asking before. One of
-  //   'ready', 'fwTooLow' (owned, FW below the requirement), 'notLearned' (only requested) or
-  //   'missing' (neither owned nor requested anymore),
-  // as { state, source, requiredFW, currentFW, plannedFW }. null for anything else and for requests
-  // planned before the source was stored with them - those aren't held back.
+  /**
+   * Whether an extension request can be sent to the GM - the system only buys an extension when the
+   * spell/liturgy is there with a high enough FW. state is one of 'ready', 'fwTooLow' (owned, FW
+   * below the requirement), 'notLearned' (only requested) or 'missing' (neither anymore).
+   * @param {Actor} actor
+   * @param {Request} request
+   * @returns {?{state: string, source: string, requiredFW: number, currentFW: ?number,
+   *   plannedFW: ?number}} null for anything else and for requests planned before the source was
+   *   stored - those aren't held back.
+   */
   static extensionState(actor, request) {
     if (request.type !== 'spellextension' || !request.extensionOf) return null;
 
@@ -342,9 +438,13 @@ export default class RequestController {
     return { ...base, state: source.currentFW >= requiredFW ? 'ready' : 'fwTooLow' };
   }
 
-  // The FW part of a spell/liturgy request: { start, target, stepsCost }, start being the FW it's
-  // learned at, stepsCost what raising it from there to target costs (null if that can't be told).
-  // null for other types and for requests planned before the cost data was stored with them.
+  /**
+   * The FW part of a spell/liturgy request.
+   * @param {Request} request
+   * @returns {?{start: number, target: number, stepsCost: ?number}} start is the FW it's learned at,
+   *   stepsCost what raising it to target costs (null if that can't be told). null for other types
+   *   and for requests planned before the cost data was stored.
+   */
   static requestFW(request) {
     if (!FW_TYPES.has(request.type) || !request.costData) return null;
 
@@ -353,7 +453,14 @@ export default class RequestController {
     return { start, target, stepsCost: this.#stepsCost(request.costData.StF?.value, start, target) };
   }
 
-  // Raising a FW from a to a + 1 costs the cost table's entry a + 1, same as a regular planned step.
+  /**
+   * What raising a FW costs. From a to a + 1 costs the cost table's entry a + 1, same as a planned
+   * step.
+   * @param {string} stf
+   * @param {number} from
+   * @param {number} to
+   * @returns {?number} null beyond the cost table.
+   */
   static #stepsCost(stf, from, to) {
     const costs = game.dsa5.config.advancementCosts[stf];
     if (!costs) return null;
@@ -365,8 +472,14 @@ export default class RequestController {
     return total;
   }
 
-  // Changes the FW a spell/liturgy request should be raised to after learning. Also while the GM
-  // has it - they don't see it, it doesn't change what they approve.
+  /**
+   * Changes the FW a spell/liturgy request should be raised to after learning. Also while the GM
+   * has it - it doesn't change what they approve.
+   * @param {Actor} actor
+   * @param {string} id
+   * @param {number} fw
+   * @returns {Promise<void>}
+   */
   static async setTargetFW(actor, id, fw) {
     if (!actor.isOwner) return;
 
@@ -384,8 +497,14 @@ export default class RequestController {
     await PlannerData.saveRequests(actor, requests);
   }
 
-  // Changes the wanted level of a planned request. Not while the GM has it, that would change what
-  // they're approving - it has to be withdrawn first.
+  /**
+   * Changes the wanted level of a planned request. Not while the GM has it, that would change what
+   * they're approving - it has to be withdrawn first.
+   * @param {Actor} actor
+   * @param {string} id
+   * @param {number} level
+   * @returns {Promise<void>}
+   */
   static async setLevel(actor, id, level) {
     if (!actor.isOwner) return;
 
@@ -397,15 +516,27 @@ export default class RequestController {
     await PlannerData.saveRequests(actor, requests);
   }
 
-  // The fields estimateCost reads, kept with the request so the sheet can show its cost without
-  // loading the item from its compendium.
+  /**
+   * The fields estimateCost reads, kept with the request so the sheet can show its cost without
+   * loading the item from its compendium.
+   * @param {object} [system]
+   * @returns {object}
+   */
   static #costData(system = {}) {
     const fields = ['APValue', 'StF', 'talentValue', 'maxRank', 'max'];
     return Object.fromEntries(fields.filter((f) => system[f] !== undefined).map((f) => [f, foundry.utils.deepClone(system[f])]));
   }
 
-  // Returns the new entry, or null if the same item with the same variant is already in there.
-  // `item` is the full item, its system data is needed for the cost.
+  /**
+   * Adds an item to the plan as a catalog entry.
+   * @param {Actor} actor
+   * @param {Item} item   The full item, its system data is needed for the cost.
+   * @param {object} [options]
+   * @param {?number} [options.level]
+   * @param {?object} [options.variant]
+   * @param {?number} [options.targetFW]
+   * @returns {Promise<?Request>} null if the same item with the same variant is already there.
+   */
   static async addRequest(actor, item, { level = null, variant = null, targetFW = null } = {}) {
     if (!actor.isOwner) return null;
 
@@ -434,9 +565,13 @@ export default class RequestController {
     return entry;
   }
 
-  // Everything planned for a character in AP: the queued steps, plus the requests until the GM
-  // approves them (then the system charges them) including a spell's steps up to its wanted FW.
-  // The "… AP verplant" in the planner tab and the GM's overview.
+  /**
+   * Everything planned for a character in AP - the "… AP verplant" in the tab and the overview: the
+   * queued steps, plus the requests until the GM approves them, including a spell's steps up to its
+   * wanted FW.
+   * @param {Actor} actor
+   * @returns {number}
+   */
   static plannedCost(actor) {
     let total = 0;
     for (const group of PlannerData.getGroups(actor).values()) total += group.totalCost;
@@ -446,23 +581,37 @@ export default class RequestController {
     return total;
   }
 
-  // Which group of the planner tab's request list a request belongs to, see LIST_GROUPS. Extensions
-  // planned before their source was stored with them count as magical.
+  /**
+   * The group of the tab's request list a request belongs to, see LIST_GROUPS. Extensions planned
+   * before their source was stored count as magical.
+   * @param {Request} request
+   * @returns {number}
+   */
   static listGroup(request) {
     const type = request.type === 'spellextension' ? (request.extensionOf?.type ?? 'spell') : request.type;
     return LIST_GROUPS[type] ?? Object.keys(LIST_GROUPS).length;
   }
 
-  // Named like the system names the item once a variant is chosen: "Fertigkeitsspezialisierung ()"
-  // becomes "Fertigkeitsspezialisierung (Klettern)", or "(Klettern, Fassaden)" with an addition.
+  /**
+   * The request's name the way the system names the item once a variant is chosen:
+   * "Fertigkeitsspezialisierung ()" becomes "Fertigkeitsspezialisierung (Klettern)", or
+   * "(Klettern, Fassaden)" with an addition.
+   * @param {Request} request
+   * @returns {string}
+   */
   static label(request) {
     if (!request.variant) return request.name;
     const { name, customEntry } = request.variant;
     return `${request.name.replace(' ()', '')} (${name}${customEntry ? `, ${customEntry}` : ''})`;
   }
 
-  // Asking again clears an earlier rejection. Extensions only once they can be bought, and
-  // nothing outside the advancement phase.
+  /**
+   * Sends a request to the GM. Asking again clears an earlier rejection. Extensions only once they
+   * can be bought, and nothing outside the advancement phase.
+   * @param {Actor} actor
+   * @param {string} id
+   * @returns {Promise<void>}
+   */
   static async markRequested(actor, id) {
     if (PlannerPhase.locked) return PlannerPhase.warn();
     const request = PlannerData.getRequests(actor).find((r) => r.id === id);
@@ -471,16 +620,34 @@ export default class RequestController {
     await this.#setStatus(actor, id, 'requested', { rejected: null });
   }
 
-  // Takes a request back from the GM, it stays in the plan as planned.
+  /**
+   * Takes a request back from the GM, it stays in the plan.
+   * @param {Actor} actor
+   * @param {string} id
+   * @returns {Promise<void>}
+   */
   static async withdrawRequest(actor, id) {
     await this.#setStatus(actor, id, 'planned');
   }
 
-  // Sends a request back to the player, with the GM's reason if they gave one.
+  /**
+   * Sends a request back to the player, with the GM's reason if they gave one.
+   * @param {Actor} actor
+   * @param {string} id
+   * @param {string} [reason]
+   * @returns {Promise<void>}
+   */
   static async rejectRequest(actor, id, reason = '') {
     await this.#setStatus(actor, id, 'planned', { rejected: { reason } });
   }
 
+  /**
+   * @param {Actor} actor
+   * @param {string} id
+   * @param {string} status
+   * @param {object} [changes]   Further fields to set.
+   * @returns {Promise<void>}
+   */
   static async #setStatus(actor, id, status, changes = {}) {
     if (!actor.isOwner) return;
 
@@ -492,13 +659,18 @@ export default class RequestController {
     await PlannerData.saveRequests(actor, requests);
   }
 
-  // Buys a request through the system's own functions, as if the GM dropped the item on the sheet
-  // and picked the variant - so the AP check, deduction, item creation and the AP tracker work
-  // exactly like that. The request is removed once the item is there at the wanted level. Returns
-  // whether that worked; if not (usually not enough AP), the system has already said why.
-  //
-  // gift: the GM grants it for free - bought the same way, so the system's rules on acquiring it
-  // still run, and the AP are given back afterwards (see #gift).
+  /**
+   * Buys a request through the system's own functions, as if the GM dropped the item on the sheet
+   * and picked the variant - so the AP check, deduction, item creation and the AP tracker work
+   * exactly like that. The request is removed once the item is there at the wanted level.
+   * @param {Actor} actor
+   * @param {string} id
+   * @param {object} [options]
+   * @param {boolean} [options.gift=false]   Free for the character - bought the same way, so the
+   *   system's rules on acquiring it still run, and the AP are given back (see #gift).
+   * @returns {Promise<boolean>} Whether it worked. If not (usually not enough AP), the system has
+   *   already said why.
+   */
   static async approveRequest(actor, id, { gift = false } = {}) {
     if (!actor.isOwner) return false;
 
@@ -529,10 +701,16 @@ export default class RequestController {
     }
   }
 
-  // Buys like an approval, but the character ends up paying nothing. The system's AP check would
-  // refuse a character short on AP, so the estimated cost is credited first; afterwards whatever
-  // the system really charged (free language points, a variant's StF, ...) is evened out exactly.
-  // The AP tracker gets one entry for the gift next to the purchase.
+  /**
+   * Buys like an approval, but the character ends up paying nothing. The system's AP check would
+   * refuse a character short on AP, so the estimated cost is credited first; afterwards whatever the
+   * system really charged (free language points, a variant's StF, ...) is evened out exactly. The AP
+   * tracker gets one entry for the gift next to the purchase.
+   * @param {Actor} actor
+   * @param {Item} source   The compendium item.
+   * @param {Request} request
+   * @returns {Promise<boolean>}
+   */
   static async #gift(actor, source, request) {
     const spent = () => Number(actor.system.details.experience.spent) || 0;
     const before = spent();
@@ -555,8 +733,13 @@ export default class RequestController {
     return true;
   }
 
-  // Once a spell/liturgy is learned, the FW the player wanted becomes regular plan entries on the
-  // new item - the player applies them like any other steps.
+  /**
+   * Once a spell/liturgy is learned, its wanted FW becomes regular plan steps on the new item - the
+   * player applies them like any other.
+   * @param {Actor} actor
+   * @param {Request} request
+   * @returns {Promise<void>}
+   */
   static async #planTargetFW(actor, request) {
     const fw = this.requestFW(request);
     if (!fw || fw.target <= fw.start) return;
@@ -566,6 +749,13 @@ export default class RequestController {
     await PlannerController.planTo(actor, 'item', item.id, fw.target);
   }
 
+  /**
+   * Buys the item with the system's own functions for its type.
+   * @param {Actor} actor
+   * @param {Item} source   The compendium item.
+   * @param {Request} request
+   * @returns {Promise<boolean>} Whether the character has it at the wanted level now.
+   */
   static async #buy(actor, source, request) {
     const data = game.items.fromCompendium(source);
     const { SpecialabilityRulesDSA5, AdvantageRulesDSA5 } = game.dsa5.apps;
@@ -615,8 +805,13 @@ export default class RequestController {
     return !!owned(name) && (!target || level() >= target);
   }
 
-  // What the system's variant dialog would hand over: the chosen item of the character (its StF
-  // can decide the cost) or just the entered name.
+  /**
+   * What the system's variant dialog would hand over: the chosen item of the character (its StF can
+   * decide the cost) or just the entered name.
+   * @param {Actor} actor
+   * @param {?object} variant
+   * @returns {?object}
+   */
   static #adoption(actor, variant) {
     if (!variant) return null;
     const item = variant.itemId ? actor.items.get(variant.itemId) : null;
@@ -625,8 +820,12 @@ export default class RequestController {
     return adoption;
   }
 
-  // Drops every request the character already has the item for, at the wanted level if it has one.
-  // A wanted FW is kept as plan steps, like on approval.
+  /**
+   * Drops every request the character already has the item for, at the wanted level if it has one.
+   * A wanted FW is kept as plan steps, like on approval.
+   * @param {Actor} actor
+   * @returns {Promise<void>}
+   */
   static async pruneFulfilled(actor) {
     if (!actor.isOwner) return;
 
@@ -638,13 +837,23 @@ export default class RequestController {
     for (const request of fulfilled) await this.#planTargetFW(actor, request);
   }
 
+  /**
+   * Whether the character has the request's item, at the wanted level if it has one.
+   * @param {Actor} actor
+   * @param {Request} request
+   * @returns {boolean}
+   */
   static #fulfilled(actor, request) {
     const item = actor.items.find((i) => i.type === request.type && i.name === this.#itemName(request));
     if (!item) return false;
     return !request.level || (Number(item.system.step?.value) || 0) >= request.level;
   }
 
-  // The name the system gives the bought item - advantages don't take the variant's addition.
+  /**
+   * The name the system gives the bought item - advantages don't take the variant's addition.
+   * @param {Request} request
+   * @returns {string}
+   */
   static #itemName(request) {
     if (!request.variant) return request.name;
     const base = request.name.replace(' ()', '');
@@ -652,6 +861,12 @@ export default class RequestController {
     return `${base} (${request.variant.name}${custom})`;
   }
 
+  /**
+   * Removes a request from the plan.
+   * @param {Actor} actor
+   * @param {string} id
+   * @returns {Promise<void>}
+   */
   static async removeRequest(actor, id) {
     if (!actor.isOwner) return;
 

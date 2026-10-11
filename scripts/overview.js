@@ -1,3 +1,11 @@
+/**
+ * @file The GM's overview: what every player character has planned, with their open requests on
+ * top to approve, gift or reject, and the advancement phase switch. It opens by itself on login when
+ * there's something to decide and whenever a player asks for something - then filtered to open
+ * requests, and closing again once they're done. Opened with the button in the actors directory, it
+ * shows everything and stays open. Also tells players when the GM decided on one of their requests.
+ */
+
 import { FLAG_REQUESTS, MODULE_ID, PART_ID } from './config.js';
 import PlannerController from './plan/controller.js';
 import PlannerData from './plan/data.js';
@@ -7,8 +15,10 @@ import RequestController from './requests/controller.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-// The plan's sections in a fixed order (the planner tab lists them as they were first planned),
-// see PlannerController.sectionFor. Anything else goes after them.
+/**
+ * The plan's sections in a fixed order (the planner tab lists them as they were first planned), see
+ * PlannerController.sectionFor. Anything else goes after them.
+ */
 const SECTION_ORDER = [
   'characteristics',
   'points',
@@ -23,10 +33,7 @@ const SECTION_ORDER = [
   'other',
 ];
 
-// The GM's window: what every player character has planned, with their open requests on top to
-// approve or reject. It opens by itself on login when there's something to decide and whenever a
-// player asks for something - then filtered to open requests, and closing again once they're done.
-// Opened via the button in the actors directory it shows everything and stays open.
+/** The overview window. There's only one. */
 export default class PlannerOverview extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     id: 'steigerungsplaner-overview',
@@ -47,12 +54,22 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     list: { template: `modules/${MODULE_ID}/templates/planner-overview.hbs` },
   };
 
+  /**
+   * The window, if one was created.
+   * @type {?PlannerOverview}
+   */
   static get instance() {
     return foundry.applications.instances.get(this.DEFAULT_OPTIONS.id);
   }
 
-  // `auto`: opened by itself because of open requests. An already open window isn't switched to
-  // that mode - the GM is looking at it already.
+  /**
+   * Opens the window, or brings it to the front.
+   * @param {object} [options]
+   * @param {boolean} [options.auto=false]   Opened by itself because of open requests: filtered to
+   *   them, and closing once they're done. An already open window isn't switched to that mode - the
+   *   GM is looking at it already.
+   * @returns {Promise<PlannerOverview>}
+   */
   static open({ auto = false } = {}) {
     let app = this.instance;
     if (!app?.rendered) {
@@ -65,8 +82,10 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     return app.render({ force: true });
   }
 
-  // Re-renders the open window after a change somewhere - or closes it, if it opened by itself and
-  // nothing is left to decide.
+  /**
+   * Re-renders the open window after a change somewhere - or closes it, if it opened by itself and
+   * nothing is left to decide.
+   */
   static refresh() {
     const app = this.instance;
     if (!app?.rendered) return;
@@ -74,19 +93,28 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     else app.#renderSoon();
   }
 
+  /**
+   * Whether any character has a request waiting for the GM.
+   * @returns {boolean}
+   */
   static #hasOpenRequests() {
     return game.actors.some((actor) => PlannerData.getRequests(actor).some((r) => r.status === 'requested'));
   }
 
-  // Characters some player owns - the GM's own and NPCs aren't anyone's plans.
+  /**
+   * Characters some player owns - the GM's own and NPCs aren't anyone's plans.
+   * @returns {Actor[]}
+   */
   static #playerCharacters() {
     const players = game.users.filter((user) => !user.isGM);
     return game.actors.filter((actor) => actor.type === 'character' && players.some((user) => actor.testUserPermission(user, 'OWNER')));
   }
 
-  // Hooks for the GM: open on login if something's waiting, tell them about new requests, keep the
-  // window up to date, and a button in the actors directory. Players get told when the GM decided
-  // on one of theirs.
+  /**
+   * Registers the hooks. For the GM: open on login if something's waiting, tell them about new
+   * requests, keep the window up to date, and the button in the actors directory. For players: tell
+   * them when the GM decided on one of theirs. Called once on ready.
+   */
   static register() {
     const known = new Map(game.actors.map((actor) => [actor.id, this.#snapshot(actor)]));
 
@@ -148,25 +176,45 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     if (this.#hasOpenRequests()) this.open({ auto: true });
   }
 
+  /**
+   * The actor's requests by id, to compare against after an update.
+   * @param {Actor} actor
+   * @returns {Map<string, Request>}
+   */
   static #snapshot(actor) {
     return new Map(PlannerData.getRequests(actor).map((r) => [r.id, r]));
   }
 
-  // Opened by itself (see open) - only then it also closes by itself.
+  /** Opened by itself (see open) - only then it also closes by itself. */
   #auto = false;
+  /** Filtered to open requests. */
   #onlyOpen = false;
+  /**
+   * Ids of the collapsed characters.
+   * @type {Set<string>}
+   */
   #collapsed = new Set();
+  /**
+   * Compendium items loaded so far, by uuid.
+   * @type {Map<string, Item>}
+   */
   #documents = new Map();
-  // Several updates arrive at once while something is bought or applied - one render for all.
+  /** Several updates arrive at once while something is bought or applied - one render for all. */
   #renderSoon = foundry.utils.debounce(() => {
     if (this.rendered) this.render();
   }, 100);
 
+  /**
+   * The full item from its compendium, loaded once per window - for a request's requirements.
+   * @param {string} uuid
+   * @returns {Promise<?Item>}
+   */
   async #document(uuid) {
     if (!this.#documents.has(uuid)) this.#documents.set(uuid, await fromUuid(uuid));
     return this.#documents.get(uuid);
   }
 
+  /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const enrich = (text) => foundry.applications.ux.TextEditor.implementation.enrichHTML(text);
@@ -268,6 +316,10 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     return context;
   }
 
+  /**
+   * Wires the "open requests only" filter.
+   * @override
+   */
   async _onRender(context, options) {
     await super._onRender(context, options);
     // Switching the filter by hand means the GM is looking at the window - it stays open then.
@@ -278,10 +330,21 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     });
   }
 
+  /**
+   * The character a clicked element belongs to.
+   * @param {HTMLElement} target
+   * @returns {?Actor}
+   */
   static #actorFor(target) {
     return game.actors.get(target.closest('[data-actor-id]')?.dataset.actorId);
   }
 
+  /**
+   * Approves a request: buys it for the character.
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   * @returns {Promise<void>}
+   */
   static async #onApprove(event, target) {
     const actor = PlannerOverview.#actorFor(target);
     if (!actor) return;
@@ -290,6 +353,12 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     PlannerOverview.refresh();
   }
 
+  /**
+   * Gifts a request: buys it without AP cost.
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   * @returns {Promise<void>}
+   */
   static async #onGift(event, target) {
     const actor = PlannerOverview.#actorFor(target);
     if (!actor) return;
@@ -298,6 +367,12 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     PlannerOverview.refresh();
   }
 
+  /**
+   * Rejects a request, asking for an optional reason.
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   * @returns {Promise<void>}
+   */
   static async #onReject(event, target) {
     const actor = PlannerOverview.#actorFor(target);
     const id = target.closest('[data-request-id]')?.dataset.requestId;
@@ -322,7 +397,13 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     PlannerOverview.refresh();
   }
 
-  // Straight to the planner tab, that's what the GM wants to look at from here.
+  /**
+   * Opens the character's sheet straight on the planner tab - that's what the GM wants to look at
+   * from here.
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   * @returns {Promise<void>}
+   */
   static async #onOpenSheet(event, target) {
     const sheet = PlannerOverview.#actorFor(target)?.sheet;
     if (!sheet) return;
@@ -330,11 +411,21 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
     sheet.changeTab?.(PART_ID, 'sheet');
   }
 
-  // The same world setting as in the module settings - its onChange re-renders and tells the players.
+  /**
+   * Opens or closes the advancement phase - the same world setting as in the module settings, its
+   * onChange re-renders and tells the players.
+   * @returns {Promise<void>}
+   */
   static async #onTogglePhase() {
     await PlannerPhase.setOpen(!PlannerPhase.open);
   }
 
+  /**
+   * Collapses or expands a character.
+   * @this {PlannerOverview}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
   static #onToggleActor(event, target) {
     const id = target.closest('[data-actor-id]')?.dataset.actorId;
     if (!id) return;

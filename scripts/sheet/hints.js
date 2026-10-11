@@ -1,10 +1,17 @@
+/**
+ * @file The "Shift-click: add to the planner" line under the system's cost tooltip on every "+"/"-"
+ * button of the sheet - on every one, not only planned targets, since that's how players find out
+ * shift-click exists at all.
+ */
+
 import { ALL_FCTS } from '../config.js';
 
-// Appends a short usage hint to the system's own cost tooltip on every advance/refund "+"/"-"
-// button - not just the ones with something already queued (unlike PlannerBadges, which only
-// decorates targets with an active plan; a first-time user needs this hint on every button, since
-// that's how they'd discover Shift-click exists at all).
+/** The hints. */
 export default class PlannerHints {
+  /**
+   * Adds the hint to the sheet's buttons. Called after every render.
+   * @param {ActorSheet} sheet
+   */
   static decorate(sheet) {
     for (const el of sheet.element.querySelectorAll('[data-fct]')) {
       if (!ALL_FCTS[el.dataset.fct]) continue; // only our six targets - pAsP/pKaP aren't plannable yet
@@ -12,27 +19,15 @@ export default class PlannerHints {
 
       el.dataset.plannerHinted = '1';
 
-      // DSA5's own _onHoverCost (bound to the same mouseenter event, registered before this one in
-      // the same _onRender wrap - see sheet/integration.js) computes the real AP-cost tooltip
-      // lazily on first hover, guarded by "if dataset.tooltip is already set, skip". Setting our
-      // hint proactively here instead of inside this handler would trip that guard permanently for
-      // the rest of this render, silently replacing the AP cost with our hint instead of adding to
-      // it. Appending only once the system's own text is already in place avoids that.
+      // Added on the first hover, after the system's own _onHoverCost has written the cost. That one
+      // skips if a tooltip is already set - setting ours up front would replace the cost for good.
       //
-      // The pAsP/pKaP rebuy buttons (_rebuyPC/_refundPC) never go through _onHoverCost at all - its
-      // fct map doesn't cover them, so their data-tooltip is whatever the template baked in
-      // ("rebuyCost"/"rebuyRevertCost", a raw localization *key*, not yet the localized text -
-      // Foundry's tooltip manager auto-localizes matching keys when it renders the tooltip, without
-      // ever writing the localized string back into the attribute). Running it through localize()
-      // ourselves normalizes both cases: it's a no-op for the already-localized cost text the other
-      // buttons carry, but turns "rebuyCost" into "Zurückkaufen für 2 AP" here - without this, ours
-      // would append onto the raw key, and the key would no longer match anything to auto-localize.
+      // The rebuy buttons (pAsP/pKaP) don't go through _onHoverCost: their tooltip is the raw
+      // localization key from the template, which Foundry only localizes when showing it. Localized
+      // here, otherwise ours would be appended to the key. A no-op for the others' text.
       //
-      // Those same two buttons also nest their icon in a child <i data-tooltip="..."> instead of
-      // carrying data-tooltip on the data-fct element itself (unlike every other advance/refund
-      // button, where _onHoverCost writes straight onto the element the listener is bound to).
-      // Resolving the actual tooltip-bearing element here - falling back to `el` itself when there
-      // is no such child - means we read from and write to wherever the text really lives either way.
+      // Those two also carry the tooltip on a child <i>, not on the button itself - so it's read from
+      // and written to wherever it is.
       el.addEventListener('mouseenter', () => {
         if (el.dataset.plannerHintAdded) return;
         el.dataset.plannerHintAdded = '1';
