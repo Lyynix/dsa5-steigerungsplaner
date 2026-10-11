@@ -1,20 +1,9 @@
-/* Foundry toggles the "active" class on .tab elements to show/hide them; core CSS handles the
-   hide-when-inactive case, but our layout rule must not force display:flex unconditionally or
-   it wins the cascade over that and stays visible regardless of which tab is active. */
-.steigerungsplaner-tab {
-  display: none;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-}
+/* =================================================================================================
+   Character sheet
+   ================================================================================================= */
 
-.steigerungsplaner-tab.active {
-  display: flex;
-}
-
-/* Sized in rem (relative to the root font-size), not em - em would inherit whatever font-size
-   the badge's container happens to have, making it shrink in compact contexts like the
-   characteristics header row even though the CSS is identical. */
+/* Count badge on the sheet's "+" for planned steps (planner-badges.js). In rem, so it's the same
+   size in every row. */
 .steigerungsplaner-badge {
   display: inline-block;
   flex: 0 0 auto;
@@ -31,44 +20,28 @@
   cursor: default;
 }
 
+/* Badge for planned decreases. */
 .steigerungsplaner-badge-decrease {
   background: var(--dsa-danger, #8b0000);
 }
 
-/* A planned step above the rule maximum (planner-limits.js): amber if planned attribute steps make
-   it reachable, red if not even then. Same colors on the badge, in the tab's step tiles and in the
-   GM's overview. Decreases (also red) never get these, they can't go above a maximum. */
+/* Badge for a step above the maximum that the planned attributes make reachable
+   (planner-limits.js). */
 .steigerungsplaner-badge-limit-attributes {
   background: #b7860b;
 }
 
+/* Badge for a step above the maximum even with the planned attributes. */
 .steigerungsplaner-badge-limit-over {
   background: #b22222;
 }
 
-.planner-limit {
-  flex: 0 0 auto;
-  font-size: 0.85em;
-
-  &.planner-limit-attributes {
-    color: #b7860b;
-  }
-
-  &.planner-limit-over {
-    color: #b22222;
-  }
-}
-
-/* The characteristics header row has no room for inline badge text next to "+" at all. Give
-   .header-label a bit of headroom (grows all attribute columns equally, so MU-KK stay aligned)
-   and float a normal-sized badge above the "+" icon in that space instead - see the handling in
-   planner-badges.js, which appends the badge inside the "+" link (position:relative) rather than
-   inserting it as a sibling. Scoped to .char-row-header since .header-label is also used
-   elsewhere (status effects, combat skills title) where this isn't wanted. */
+/* Room above the attributes' "+" for their badge. */
 .char-row-header .header-label {
   padding-top: 1.3rem;
 }
 
+/* Attribute badge, floating above the "+". */
 .steigerungsplaner-badge-above {
   position: absolute;
   top: -1.1rem;
@@ -76,881 +49,461 @@
   margin: 0;
 }
 
-/* dsa5.css sets `.row-section .col.third { flex: 30% }` for the skill probe column; narrow it
-   here specifically (rather than overriding .col.third globally) so the advance column next to
-   it - where our badges live - gets more breathing room. */
+/* Narrower probe column in the skill list, so the advance column has room for the badge. */
 .row-section .col.third.skill-props {
   flex: 20%;
 }
 
-/* dsa5.css splits the combat skill table into .col.fourty (name)/.col.five (guide value)/
-   .col.fifteen (KTW, where our badge + input + +/- live)/.col.eight x2 (AT/FK, PA) = 100%. KTW is
-   too narrow to read once a badge is added - shrink the name and AT/FK/PA columns a little and
-   give the room to KTW. Scoped to .actor-combat-skill so this doesn't affect the many other
-   places .col.fourty/.eight/.fifteen are reused across the sheet. */
-.actor-combat-skill .row-section .col.fourty {
-  flex: 33%;
+/* Combat technique table: more room for the KtW column with the badge. */
+.actor-combat-skill .row-section {
+  /* Name. */
+  & .col.fourty {
+    flex: 33%;
+  }
+
+  /* AT/FK and PA. */
+  & .col.eight {
+    flex: 10%;
+  }
+
+  /* KtW. */
+  & .col.fifteen {
+    flex: 27%;
+  }
 }
 
-.actor-combat-skill .row-section .col.eight {
-  flex: 10%;
-}
+/* =================================================================================================
+   Shared by the planner tab and the overview
+   ================================================================================================= */
 
-.actor-combat-skill .row-section .col.fifteen {
-  flex: 27%;
-}
-
-.steigerungsplaner-tab .planner-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  border-bottom: 1px solid var(--color-border-light-tertiary, #999);
-  padding-bottom: 0.25rem;
-}
-
-.steigerungsplaner-tab .planner-summary {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.9em;
-}
-
-/* Sections now use dsa5.css's own "row-section skills table-header lineheight <group>" class
-   list directly, which already gives skill sections the right .skills.<group> gradient. The
-   sections with no system equivalent get their own gradient here instead. */
+/* Section gradients without a dsa5.css equivalent, for the tab's headers and the overview's strips.
+   Characteristics. */
 .steigerungsplaner-section-characteristics {
   background: linear-gradient(90deg, rgb(147, 123, 72) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Base stats. */
 .steigerungsplaner-section-points {
   background: linear-gradient(90deg, rgb(139, 0, 0) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Combat techniques. */
 .steigerungsplaner-section-combat {
   background: linear-gradient(90deg, rgb(90, 90, 90) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Magic. */
 .steigerungsplaner-section-magic {
   background: linear-gradient(90deg, rgb(74, 90, 168) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Karmic. */
 .steigerungsplaner-section-religion {
   background: linear-gradient(90deg, rgb(205, 162, 94) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Other. */
 .steigerungsplaner-section-other {
   background: linear-gradient(90deg, rgb(120, 120, 120) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Catalog entries. */
 .steigerungsplaner-section-requests {
   background: linear-gradient(90deg, rgb(110, 80, 140) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-/* A request is one row rather than a list of step tiles, so discarding collapses the row vertically
-   instead of folding a tile - same trigger class and red as the tiles, so foldThenRun works for both.
-   max-height instead of height: it needs a concrete start value to animate from, and 2.5rem is just
-   above the row's actual height. */
-.steigerungsplaner-tab .planner-request {
-  max-height: 2.5rem;
-  overflow: hidden;
-  transition: max-height 0.2s ease-in, opacity 0.2s ease-in, padding 0.2s ease-in, background-color 0.15s ease-in;
-
-  &.planner-step-cancelling {
-    max-height: 0;
-    opacity: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    background-color: rgba(139, 0, 0, 0.5);
-  }
-}
-
-.steigerungsplaner-tab .planner-request-label {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-weight: bold;
-}
-
-.steigerungsplaner-tab .planner-request-info {
+/* Limit icon on a step in the tab and the overview. */
+.planner-limit {
   flex: 0 0 auto;
-  margin: 0 0.5rem;
-  opacity: 0.8;
-  white-space: nowrap;
-}
-
-/* Wanted FW of a spell/liturgy request: "FW 0 → [7] +24 AP". The hint is dimmed, it's only the
-   player's own planning on top of what the GM approves. */
-.steigerungsplaner-tab .planner-request-fw {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.25rem;
-  margin: 0 0.5rem;
-  white-space: nowrap;
-
-  & input {
-    width: 3em;
-    height: 1.6rem;
-    text-align: center;
-  }
-}
-
-.steigerungsplaner-tab .planner-request-fw-hint,
-.steigerungsplaner-request-picker .picker-fw-hint {
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
-}
-
-.steigerungsplaner-request-picker .picker-field input[name="targetFW"] {
-  width: 4em;
-}
-
-/* Fixed width, so the level buttons in front of it don't shift when the cost gets another digit. */
-.steigerungsplaner-tab .planner-request-cost {
-  width: 4.5em;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-/* Level buttons of a leveled request: owned levels grey, planned ones green in the apply color of
-   the step tiles. Locked while the GM has the request. */
-.steigerungsplaner-tab .planner-request-levels {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 2px;
-  margin: 0 0.5rem;
-
-  &.locked {
-    opacity: 0.6;
-  }
-}
-
-.steigerungsplaner-tab .planner-request-level {
-  min-width: 1.6rem;
-  padding: 0 4px;
-  border: 1px solid rgba(127, 127, 127, 0.5);
-  border-radius: 3px;
-  font-size: var(--font-size-12);
-  line-height: 1.4rem;
-  text-align: center;
-
-  &.owned {
-    background: rgba(127, 127, 127, 0.35);
-    opacity: 0.6;
-  }
-
-  &.selected {
-    border-color: rgb(86, 168, 19);
-    background: rgba(86, 168, 19, 0.35);
-  }
-
-  &:is(a):hover {
-    border-color: rgb(86, 168, 19);
-  }
-}
-
-/* Dimmed like unaffordable steps - only the content, the buttons stay usable. */
-.steigerungsplaner-tab .planner-request-unaffordable {
-  & .planner-group-icon,
-  & .planner-request-label,
-  & .planner-request-info {
-    opacity: 0.5;
-  }
-}
-
-/* Scoped to our own tab so this doesn't affect the real Talente tab's rows elsewhere on the
-   sheet, which also use the "row-section wrap skills lineheight tableOdd" class combo.
-   The "wrap" class lets the row wrap its children onto multiple lines - with enough queued
-   steps that meant .planner-steps (whose content overflows) wrapped onto its own full-width
-   line below name/apply/delete instead of just shrinking in place. Force single-line so
-   .planner-steps shrinks and scrolls internally (see its min-width: 0) instead. */
-.steigerungsplaner-tab .row-section.wrap.skills.lineheight.tableOdd {
-  align-items: center;
-  flex-wrap: nowrap;
-}
-
-.steigerungsplaner-tab .planner-group-icon {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  border: none;
-  margin-right: 0.35rem;
-}
-
-.steigerungsplaner-tab .planner-group-label {
-  font-weight: bold;
-  flex: 0 0 auto;
-  min-width: 8rem;
-}
-
-/* Many queued steps used to wrap onto a second line, growing the row's height unevenly. Keep it
-   single-line and scroll horizontally instead - min-width: 0 is needed because flex items default
-   to a min-width based on their content, which would otherwise force the row wider rather than
-   let this element shrink and scroll. */
-.steigerungsplaner-tab .planner-steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.steigerungsplaner-tab .planner-step {
-  display: grid;
-  grid-template-columns: 1fr;
-  flex-shrink: 0;
-  height: 30px;
-  box-sizing: border-box;
-  overflow: hidden;
-  margin-right: 0.5rem;
-  transition: background-color 0.15s ease-in, grid-template-columns 0.2s ease-in, opacity 0.2s ease-in, margin-right 0.2s ease-in;
-
-  &:last-child {
-    margin-right: 0;
-  }
-
-  /* Dims steps the queue can't reach yet with the AP currently available (see
-     PlannerController.markAffordability) - not a new color, just opacity, so it doesn't compete
-     with the apply/cancel flash colors below. Declared before those so an unaffordable step still
-     mid-removal (cancelling doesn't care about affordability) fully fades out rather than settling
-     on the dimmed opacity - same specificity, source order decides. */
-  &.planner-step-unaffordable {
-    opacity: 0.5;
-  }
-
-  &.planner-step-applying,
-  &.planner-step-cancelling {
-    grid-template-columns: 0fr;
-    opacity: 0;
-    margin-right: 0;
-  }
-
-  /* Green for a step being applied for real, red (matching the decrease badges' --dsa-danger) for
-     one being discarded - same fold, different color tells the two apart at a glance. */
-  &.planner-step-applying {
-    background-color: #56a8137f;
-  }
-
-  &.planner-step-cancelling {
-    background-color: rgba(139, 0, 0, 0.5);
-  }
-}
-
-.steigerungsplaner-tab .planner-step-inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-  height: 100%;
   font-size: 0.85em;
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0 0.4rem;
-  border-radius: 3px;
-  box-sizing: border-box;
-  white-space: nowrap;
-  cursor: pointer;
+
+  /* Reachable with the planned attributes. */
+  &.planner-limit-attributes {
+    color: #b7860b;
+  }
+
+  /* Not reachable even then. */
+  &.planner-limit-over {
+    color: #b22222;
+  }
 }
 
-/* Sits on top of the step's own content rather than reserving permanent space for it - only
-   revealed on hover, via a fade-in gradient so the X stays legible over whatever text is under it. */
-.steigerungsplaner-tab .planner-step-remove {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 1.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.30) 45%);
-  border-radius: 0 3px 3px 0;
-  opacity: 0;
-  pointer-events: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease-in;
-}
+/* =================================================================================================
+   Planner tab
+   ================================================================================================= */
 
-.steigerungsplaner-tab .planner-step-inner:hover .planner-step-remove {
-  opacity: 1;
-  pointer-events: auto;
-}
+/* Planner tab on the character sheet (planner-tab.js). Hidden by default, so Foundry's .active
+   decides. */
+.steigerungsplaner-tab {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
 
-/* Mirrors the removal preview, but forwards: hovering a step's own content (not the X) tints that
-   step and everything queued *before* it - what would actually get bought, capped at what's still
-   affordable via :not(.planner-step-unaffordable). The X sits inside .planner-step-inner, so a
-   plain ":hover" would still fire while hovering it too - suppressed by requiring no remove button
-   anywhere in the list to be hovered, so hovering the X shows only the red removal preview, never
-   a green/red mix. That check has to sit on .planner-steps (one level up), not nested inside the
-   .planner-step :has() below it - :has() can't contain another :has() in its own argument. */
-.steigerungsplaner-tab .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
-.steigerungsplaner-tab .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
-  background-color: rgba(86, 168, 19, 0.3);
-}
+  /* Shown while it's the active tab. */
+  &.active {
+    display: flex;
+  }
 
-/* Previews the removal scope: hovering a step's X tints that step and every step queued after it
-   (exactly what clicking it would remove, per cancelFrom) - not just the one the X sits on. :has()
-   is needed because the hovered element is nested inside the tile, not a sibling of it; the actual
-   color fade comes for free from .planner-step's own background-color transition further up. */
-.steigerungsplaner-tab .planner-step:has(.planner-step-remove:hover),
-.steigerungsplaner-tab .planner-step:has(.planner-step-remove:hover) ~ .planner-step {
-  background-color: rgba(71, 0, 0, 0.3);
-}
+  /* Header ------------------------------------------------------------------------------------- */
 
-.steigerungsplaner-tab .planner-apply,
-.steigerungsplaner-tab .planner-add,
-.steigerungsplaner-tab .planner-send,
-.steigerungsplaner-tab .planner-withdraw,
-.steigerungsplaner-tab .planner-approve,
-.steigerungsplaner-tab .planner-gift,
-.steigerungsplaner-tab .planner-cancel {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
+  /* Title row with the buttons and the AP summary. */
+  & .planner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--color-border-light-tertiary, #999);
+    padding-bottom: 0.25rem;
+  }
 
-.steigerungsplaner-tab .planner-empty {
-  font-style: italic;
-  opacity: 0.75;
-}
+  /* "Plan value" and "Catalog" next to the title. */
+  & .planner-add-target,
+  & .planner-add-request {
+    margin-left: 0.75rem;
+    cursor: pointer;
+  }
 
-/* Sit right next to the title - the auto margin on the last one pushes the AP summary to the right. */
-.steigerungsplaner-tab .planner-add-target,
-.steigerungsplaner-tab .planner-add-request {
-  margin-left: 0.75rem;
-  cursor: pointer;
-}
+  /* Pushes the AP summary to the right. */
+  & .planner-add-request {
+    margin-right: auto;
+  }
 
-.steigerungsplaner-tab .planner-add-request {
-  margin-right: auto;
-}
+  /* AP free and planned. */
+  & .planner-summary {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9em;
+  }
 
-/* Request picker window (request-picker.js): list on the left, details of the selected entry on
-   the right, both scrolling on their own. */
-.steigerungsplaner-request-picker {
-  & .window-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.75rem;
+  /* Hint while the advancement phase is closed (planner-phase.js). */
+  & .planner-phase-hint {
+    margin: 0.4rem 0;
+    padding: 0.25rem 0.5rem;
+    border-left: 3px solid var(--color-level-warning, #c90);
+    border-radius: 3px;
+    background: rgba(204, 153, 0, 0.12);
+  }
+
+  /* Text when nothing is planned. */
+  & .planner-empty {
+    font-style: italic;
+    opacity: 0.75;
+  }
+
+  /* Rows, for requests and targets alike ------------------------------------------------------- */
+
+  /* Target row: one line, the step list scrolls instead of wrapping. */
+  & .row-section.wrap.skills.lineheight.tableOdd {
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  /* Icon in front of a row. */
+  & .planner-group-icon {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    border: none;
+    margin-right: 0.35rem;
+  }
+
+  /* Icon buttons of a row. */
+  & .planner-apply,
+  & .planner-add,
+  & .planner-send,
+  & .planner-withdraw,
+  & .planner-approve,
+  & .planner-gift,
+  & .planner-cancel {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Requests ----------------------------------------------------------------------------------- */
+
+  /* Row of a catalog entry. max-height so it can collapse when discarded. */
+  & .planner-request {
+    max-height: 2.5rem;
     overflow: hidden;
-  }
+    transition: max-height 0.2s ease-in, opacity 0.2s ease-in, padding 0.2s ease-in, background-color 0.15s ease-in;
 
-  /* Entries and groups are hidden via the attribute when filtering - display rules below would
-     otherwise override it. */
-  & [hidden] {
-    display: none !important;
-  }
-
-  & .picker-list,
-  & .picker-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-height: 0;
-  }
-
-  & .picker-groups,
-  & .picker-details {
-    overflow-y: auto;
-  }
-
-  & .picker-filters {
-    display: flex;
-    gap: 0.5rem;
-
-    & select {
-      flex: 1 1 0;
-      min-width: 0;
+    /* Collapsing while being discarded. */
+    &.planner-step-cancelling {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      background-color: rgba(139, 0, 0, 0.5);
     }
   }
 
-  & .picker-group-label {
-    margin: 0.5rem 0 0.25rem;
-    border: none;
-    font-size: var(--font-size-12);
-    text-transform: uppercase;
-    opacity: 0.7;
+  /* Entry name. */
+  & .planner-request-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: bold;
   }
 
-  /* Flex so description-only hits can be moved behind the name hits with `order`. */
-  & .picker-group ol {
+  /* Level, AP and status next to the name. */
+  & .planner-request-info {
+    flex: 0 0 auto;
+    margin: 0 0.5rem;
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  /* Target SR of a spell or liturgy: "FW 0 → [7] +24 AP". */
+  & .planner-request-fw {
     display: flex;
-    flex-direction: column;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0 0.5rem;
+    white-space: nowrap;
+
+    /* Target SR field. */
+    & input {
+      width: 3em;
+      height: 1.6rem;
+      text-align: center;
+    }
+  }
+
+  /* AP for the target SR, dimmed. */
+  & .planner-request-fw-hint {
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* AP of the entry, fixed width so the level buttons don't shift. */
+  & .planner-request-cost {
+    width: 4.5em;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  /* Level buttons of a leveled entry. */
+  & .planner-request-levels {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 2px;
+    margin: 0 0.5rem;
+
+    /* While requested, can't be changed. */
+    &.locked {
+      opacity: 0.6;
+    }
+  }
+
+  /* One level button. */
+  & .planner-request-level {
+    min-width: 1.6rem;
+    padding: 0 4px;
+    border: 1px solid rgba(127, 127, 127, 0.5);
+    border-radius: 3px;
+    font-size: var(--font-size-12);
+    line-height: 1.4rem;
+    text-align: center;
+
+    /* Already owned. */
+    &.owned {
+      background: rgba(127, 127, 127, 0.35);
+      opacity: 0.6;
+    }
+
+    /* Planned. */
+    &.selected {
+      border-color: rgb(86, 168, 19);
+      background: rgba(86, 168, 19, 0.35);
+    }
+
+    /* Clickable level. */
+    &:is(a):hover {
+      border-color: rgb(86, 168, 19);
+    }
+  }
+
+  /* Entry the AP don't cover. */
+  & .planner-request-unaffordable {
+    /* Dims the content, the buttons stay usable. */
+    & .planner-group-icon,
+    & .planner-request-label,
+    & .planner-request-info {
+      opacity: 0.5;
+    }
+  }
+
+  /* "rejected" status. */
+  & .planner-request-rejected {
+    color: var(--color-level-error, #c00);
+  }
+
+  /* Triangle on an extension whose spell is neither learned nor planned. */
+  & .planner-request-warning {
+    margin-left: 0.35rem;
+    color: var(--color-level-warning, #c90);
+    font-weight: normal;
+  }
+
+  /* Send button of an extension that can't be requested yet. Not .disabled: Foundry's
+     pointer-events: none would hide the tooltip. */
+  & .planner-send-blocked {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  /* Targets and their step tiles --------------------------------------------------------------- */
+
+  /* Target name. */
+  & .planner-group-label {
+    font-weight: bold;
+    flex: 0 0 auto;
+    min-width: 8rem;
+  }
+
+  /* Step tiles of a target, scrolling sideways. min-width: 0 lets it shrink. */
+  & .planner-steps {
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-
-  & .picker-entry.description-match {
-    order: 1;
-    opacity: 0.6;
-  }
-
-  & .picker-entry {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 2px 6px;
-    border-radius: 3px;
-    cursor: pointer;
-
-    &:hover {
-      background: rgba(127, 127, 127, 0.15);
-    }
-
-    &.selected {
-      background: rgba(127, 127, 127, 0.3);
-      font-weight: bold;
-    }
-
-    & img {
-      flex: 0 0 auto;
-      width: 24px;
-      height: 24px;
-      object-fit: contain;
-      border: none;
-    }
-  }
-
-  & .picker-entry-text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  & .picker-entry-source {
-    overflow: hidden;
-    font-size: var(--font-size-10);
-    font-weight: normal;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    opacity: 0.65;
-  }
-
-  & .picker-details-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    & img {
-      width: 48px;
-      height: 48px;
-      object-fit: contain;
-      border: none;
-    }
-
-    & h2 {
-      margin: 0;
-      border: none;
-    }
-  }
-
-  & .picker-details-group,
-  & .picker-hint {
-    opacity: 0.75;
-  }
-
-  & .picker-hint {
-    font-style: italic;
-  }
-
-  & .picker-field {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    & > span {
-      flex: 0 0 7rem;
-    }
-  }
-
-  & .picker-warning {
-    color: var(--color-level-error, #c00);
-  }
-
-  /* What the player chooses and pays sits above the description, which can get long. */
-  & .picker-choice {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 3px;
-    background: rgba(127, 127, 127, 0.1);
-
-    & p {
-      margin: 0;
-    }
-  }
-
-  & .picker-costs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1rem;
-  }
-
-  & .picker-details > p {
-    margin: 0;
-  }
-
-  & .picker-properties,
-  & .picker-description {
-    line-height: 1.4;
-  }
-
-  & .picker-description {
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(127, 127, 127, 0.3);
-  }
-}
-
-/* GM's overview (planner-overview.js): one block per player character in the planner tab's look -
-   dsa5.css's section headers with each section's gradient, the entries as tiles like the tab's step
-   tiles. Open requests on top in a card of their own, they're what the GM has to act on. */
-.steigerungsplaner-overview {
-  --overview-green: rgb(86, 168, 19);
-
-  & .window-content {
-    max-height: 85vh;
-    overflow-y: auto;
-  }
-
-  & .overview {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  & .overview-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  & .overview-filter {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  /* The advancement phase switch: green while open, neutral while closed. */
-  & .overview-phase {
-    flex: 0 0 auto;
-    width: auto;
-    margin: 0;
-    padding: 0 0.75rem;
-    line-height: 1.8rem;
-
-    &.open {
-      border-color: var(--overview-green);
-      background: color-mix(in srgb, var(--overview-green) 25%, transparent);
-    }
-  }
-
-  & .overview-actor {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-
-  & .overview-actor-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-bottom: 0.25rem;
-    border-bottom: 1px solid var(--color-border-light-tertiary, #999);
-
-    & img {
-      width: 32px;
-      height: 32px;
-      object-fit: cover;
-      object-position: top;
-      border: none;
-    }
-  }
-
-  & .overview-toggle {
-    flex: 0 0 1rem;
-    text-align: center;
-  }
-
-  /* The sheet's heading font, like the planner tab's own title. */
-  & .overview-actor-name {
+    flex-wrap: nowrap;
+    overflow-x: auto;
     flex: 1 1 auto;
     min-width: 0;
-    margin: 0;
-    border: none;
-    font-size: 1.6em;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
 
-  & .overview-summary {
-    font-size: 0.9em;
-    white-space: nowrap;
-
-    & .over-budget {
-      color: var(--color-level-error, #c00);
-    }
-  }
-
-  & .overview-empty {
-    font-style: italic;
-    opacity: 0.75;
-  }
-
-  & .overview-icon {
-    flex: 0 0 auto;
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    border: none;
-  }
-
-  & .overview-name {
-    min-width: 0;
-    overflow: hidden;
-    font-weight: bold;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  & .overview-cost {
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  & .overview-rejected {
-    color: var(--color-level-error, #c00);
-  }
-
-  /* Open requests: a green card that stands apart from the plan, with real buttons. */
-  & .overview-requests {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 0.3rem 0.5rem 0.4rem;
-    border: 1px solid color-mix(in srgb, var(--overview-green) 60%, transparent);
-    border-left-width: 4px;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--overview-green) 12%, transparent);
-  }
-
-  & .overview-requests-title {
-    font-size: var(--font-size-12);
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: color-mix(in srgb, var(--overview-green) 70%, black);
-  }
-
-  & .overview-request {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0 0.5rem;
-    min-height: 2rem;
-
-    & + .overview-request {
-      border-top: 1px solid color-mix(in srgb, var(--overview-green) 30%, transparent);
-    }
-
-    & .overview-icon {
-      width: 26px;
-      height: 26px;
-    }
-
-    & .overview-name {
-      flex: 1 1 0;
-    }
-
-    & .overview-cost {
-      flex: 0 0 auto;
-      min-width: 3.5em;
-      text-align: right;
-    }
-
-    & button {
-      flex: 0 0 auto;
-      width: auto;
-      height: 1.6rem;
-      margin: 0;
-      padding: 0 0.6rem;
-      line-height: 1.6rem;
-      font-size: var(--font-size-12);
-    }
-
-    & .overview-approve {
-      border: 1px solid var(--overview-green);
-      background: var(--overview-green);
-      color: white;
-
-      &:hover {
-        background: color-mix(in srgb, var(--overview-green) 80%, black);
-      }
-    }
-
-    /* Gold for a gift - a friendlier action than approve or reject. */
-    & .overview-gift {
-      border: 1px solid rgb(184, 134, 11);
-      background: transparent;
-      color: rgb(150, 105, 0);
-
-      &:hover {
-        background: rgba(184, 134, 11, 0.15);
-      }
-    }
-
-    & .overview-reject {
-      border: 1px solid var(--color-level-error, #c00);
-      background: transparent;
-      color: var(--color-level-error, #c00);
-
-      &:hover {
-        background: color-mix(in srgb, var(--color-level-error, #c00) 15%, transparent);
-      }
-    }
-  }
-
-  /* The compendium link of an open request, without Foundry's boxed content-link look. */
-  & .overview-request .overview-name a.content-link {
-    padding: 0;
-    border: none;
-    background: none;
-    color: inherit;
-
-    & i {
-      display: none;
-    }
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  /* Own line below the request, indented to its name. */
-  & .overview-requirements {
-    flex: 1 0 100%;
-    padding: 0 0 0.2rem calc(26px + 0.5rem);
-    font-size: var(--font-size-12);
-    line-height: 1.3;
-    opacity: 0.85;
-  }
-
-  /* The plan: one band per section, the label in a fixed column on the left, the entries flowing
-     as tiles on the right. The shared left edge keeps the sections apart, no header rows needed.
-     The section's color comes from the same classes as the tab's headers, but only as a thin
-     strip along the top edge, see below. */
-  & .overview-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    container-type: inline-size;
-  }
-
-  & .overview-section {
+  /* One step tile. Folds via the grid column when applied or discarded. */
+  & .planner-step {
     display: grid;
-    grid-template-columns: 9.5rem minmax(0, 1fr);
-    gap: 0 0.5rem;
-    padding: 7px 4px 4px 0.5rem;
-    border-radius: 4px;
-  }
-
-  /* The section class sets its gradient as the background image - shrunk to a 3px strip on top,
-     fading out to the right like in the tab, with a faint neutral ground below. More specific than
-     the section classes, so their background shorthand doesn't win back the size. */
-  & .overview-sections .overview-section {
-    background-color: rgba(0, 0, 0, 0.04);
-    background-position: top left;
-    background-repeat: no-repeat;
-    background-size: 100% 3px;
-  }
-
-  /* On the first tile row's line, not centered - it stays clear what it belongs to. */
-  & .overview-section-label {
-    align-self: start;
-    min-width: 0;
+    grid-template-columns: 1fr;
+    flex-shrink: 0;
+    height: 30px;
+    box-sizing: border-box;
     overflow: hidden;
-    font-family: var(--boldFont);
-    font-weight: bold;
-    line-height: 1.75rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
+    margin-right: 0.5rem;
+    transition: background-color 0.15s ease-in, grid-template-columns 0.2s ease-in, opacity 0.2s ease-in, margin-right 0.2s ease-in;
 
-  & .overview-tiles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
+    /* No gap after the last tile. */
+    &:last-child {
+      margin-right: 0;
+    }
 
-  /* Too narrow for a label column next to the tiles - the label goes on top. */
-  @container (max-width: 26rem) {
-    & .overview-section {
-      grid-template-columns: minmax(0, 1fr);
+    /* Not affordable with the current AP. Before the fold states, so a folding tile still fades out
+       fully. */
+    &.planner-step-unaffordable {
+      opacity: 0.5;
+    }
+
+    /* Folding away. */
+    &.planner-step-applying,
+    &.planner-step-cancelling {
+      grid-template-columns: 0fr;
+      opacity: 0;
+      margin-right: 0;
+    }
+
+    /* Green while being applied. */
+    &.planner-step-applying {
+      background-color: #56a8137f;
+    }
+
+    /* Red while being discarded. */
+    &.planner-step-cancelling {
+      background-color: rgba(139, 0, 0, 0.5);
     }
   }
 
-  & .overview-tile {
-    display: inline-flex;
+  /* Tile content: "from » to · AP". */
+  & .planner-step-inner {
+    position: relative;
+    display: flex;
     align-items: center;
     gap: 0.35rem;
-    max-width: 100%;
-    height: 1.75rem;
-    padding: 0 0.5rem 0 3px;
-    border: 0.5px solid var(--border-color, #736953a6);
+    min-width: 0;
+    height: 100%;
+    font-size: 0.85em;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0 0.4rem;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.5);
+    box-sizing: border-box;
+    white-space: nowrap;
+    cursor: pointer;
+  }
 
-    & .overview-icon {
-      width: 20px;
-      height: 20px;
+  /* X to discard from here, only visible on hover. */
+  & .planner-step-remove {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.30) 45%);
+    border-radius: 0 3px 3px 0;
+    opacity: 0;
+    pointer-events: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease-in;
+  }
+
+  /* Shows the X. */
+  & .planner-step-inner:hover .planner-step-remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Hovering a tile (not its X): green on it and the tiles before it, what "apply up to here" would
+     buy. */
+  & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+  & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+    background-color: rgba(86, 168, 19, 0.3);
+  }
+
+  /* Hovering an X: red on its tile and the ones after it, what would be discarded. */
+  & .planner-step:has(.planner-step-remove:hover),
+  & .planner-step:has(.planner-step-remove:hover) ~ .planner-step {
+    background-color: rgba(71, 0, 0, 0.3);
+  }
+
+  /* Advancement phase closed ------------------------------------------------------------------- */
+
+  /* Phase closed, as a player: advancing looks disabled. */
+  &.planner-phase-locked {
+    /* Apply button. */
+    & .planner-apply {
+      opacity: 0.35;
+      cursor: default;
     }
 
-    & .overview-detail {
-      font-size: 0.85em;
-      white-space: nowrap;
+    /* Clicking a tile doesn't apply. */
+    & .planner-step-inner {
+      cursor: default;
     }
 
-    & .overview-cost {
-      padding-left: 0.35rem;
-      border-left: 0.5px solid var(--border-color, #736953a6);
-      font-size: 0.85em;
-      opacity: 0.8;
+    /* No green preview, the red one for discarding stays. */
+    & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
+    & .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
+      background-color: transparent;
     }
   }
 }
 
-.steigerungsplaner-tab .planner-request-rejected {
-  color: var(--color-level-error, #c00);
-}
+/* =================================================================================================
+   "Plan value" dropdown
+   ================================================================================================= */
 
-/* An extension whose spell/liturgy is gone from both the sheet and the plan. */
-.steigerungsplaner-tab .planner-request-warning {
-  margin-left: 0.35rem;
-  color: var(--color-level-warning, #c90);
-  font-weight: normal;
-}
-
-/* Send button of an extension that can't be asked for yet - the tooltip says why. Not Foundry's
-   .disabled class: that one sets pointer-events: none, which would hide the tooltip too. */
-.steigerungsplaner-tab .planner-send-blocked {
-  opacity: 0.35;
-  cursor: default;
-}
-
-/* Add-target picker (planner-picker.js). Lives on document.body, so nothing here is scoped to the
-   tab. Colors mirror Foundry's own #context-menu for both themes - not the id itself, that would
-   clash with the real context menu. Just below tooltips, so it sits above every app window. */
+/* "Plan value" dropdown (planner-picker.js). On document.body above all windows, colors like
+   Foundry's context menu. */
 .steigerungsplaner-picker {
   --picker-background: var(--color-cool-5);
   --picker-border: var(--color-cool-3);
@@ -972,6 +525,7 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-12);
 
+  /* Light theme colors. */
   &.theme-light {
     --picker-background: #d9d8c8;
     --picker-border: #999;
@@ -979,11 +533,12 @@
     --picker-hover-background: #f0f0e0;
   }
 
-  /* The items are display: flex, which would otherwise override the hidden attribute when filtering. */
+  /* Filtered out. !important beats display: flex. */
   & [hidden] {
     display: none !important;
   }
 
+  /* Scrolling list. */
   & .picker-list {
     list-style: none;
     margin: 0;
@@ -991,6 +546,7 @@
     overflow-y: auto;
   }
 
+  /* Section heading. */
   & .picker-section {
     padding: 6px 8px 2px;
     font-size: var(--font-size-10);
@@ -999,6 +555,7 @@
     opacity: 0.7;
   }
 
+  /* One target. */
   & .picker-item {
     display: flex;
     align-items: center;
@@ -1008,12 +565,14 @@
     border-width: 1px 0;
     cursor: pointer;
 
+    /* Hovered. */
     &:hover {
       border-color: var(--picker-hover-border);
       background: var(--picker-hover-background);
       color: var(--color-text-emphatic);
     }
 
+    /* Icon. */
     & img {
       flex: 0 0 auto;
       width: 20px;
@@ -1023,6 +582,7 @@
     }
   }
 
+  /* "Nothing found". */
   & .picker-empty {
     margin: 4px 8px;
     font-style: italic;
@@ -1030,29 +590,590 @@
   }
 }
 
-/* Advancement phase closed (planner-phase.js): a hint on top of the tab, and for players the
-   controls that would advance for real look disabled. Removing planned steps still works, so only
-   the green "apply up to here" preview goes, not the red removal one. */
-.steigerungsplaner-tab .planner-phase-hint {
-  margin: 0.4rem 0;
-  padding: 0.25rem 0.5rem;
-  border-left: 3px solid var(--color-level-warning, #c90);
-  border-radius: 3px;
-  background: rgba(204, 153, 0, 0.12);
-}
+/* =================================================================================================
+   Catalog
+   ================================================================================================= */
 
-.steigerungsplaner-tab.planner-phase-locked {
-  & .planner-apply {
-    opacity: 0.35;
-    cursor: default;
+/* Catalog window (request-picker.js). */
+.steigerungsplaner-request-picker {
+  /* Layout ------------------------------------------------------------------------------------- */
+
+  /* List left, details right, each scrolling on its own. */
+  & .window-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    overflow: hidden;
   }
 
-  & .planner-step-inner {
-    cursor: default;
+  /* Filtered out. !important beats the display rules below. */
+  & [hidden] {
+    display: none !important;
+  }
+
+  /* Both columns. */
+  & .picker-list,
+  & .picker-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  /* The parts that scroll. */
+  & .picker-groups,
+  & .picker-details {
+    overflow-y: auto;
+  }
+
+  /* List --------------------------------------------------------------------------------------- */
+
+  /* Category and book filters. */
+  & .picker-filters {
+    display: flex;
+    gap: 0.5rem;
+
+    /* Same width each. */
+    & select {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  /* Category heading in the list. */
+  & .picker-group-label {
+    margin: 0.5rem 0 0.25rem;
+    border: none;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* Entries of a category. Flex so description hits can go to the end. */
+  & .picker-group ol {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* List entry. */
+  & .picker-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+
+    /* Hovered. */
+    &:hover {
+      background: rgba(127, 127, 127, 0.15);
+    }
+
+    /* Selected. */
+    &.selected {
+      background: rgba(127, 127, 127, 0.3);
+      font-weight: bold;
+    }
+
+    /* Icon. */
+    & img {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      border: none;
+    }
+  }
+
+  /* Hit only in the description: at the end, dimmed. */
+  & .picker-entry.description-match {
+    order: 1;
+    opacity: 0.6;
+  }
+
+  /* Name with the source below. */
+  & .picker-entry-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Book or compendium, cut off if too long. */
+  & .picker-entry-source {
+    overflow: hidden;
+    font-size: var(--font-size-10);
+    font-weight: normal;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.65;
+  }
+
+  /* Details ------------------------------------------------------------------------------------ */
+
+  /* Icon and name of the selected entry. */
+  & .picker-details-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    /* Icon. */
+    & img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border: none;
+    }
+
+    /* Name. */
+    & h2 {
+      margin: 0;
+      border: none;
+    }
+  }
+
+  /* Category below the name and the hint, dimmed. */
+  & .picker-details-group,
+  & .picker-hint {
+    opacity: 0.75;
+  }
+
+  /* Paragraphs of the details. */
+  & .picker-details > p {
+    margin: 0;
+  }
+
+  /* Box with what the player picks and pays, above the description. */
+  & .picker-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 3px;
+    background: rgba(127, 127, 127, 0.1);
+
+    /* No margins inside. */
+    & p {
+      margin: 0;
+    }
+  }
+
+  /* Extension text while the SR is still too low. */
+  & .picker-warning {
+    color: var(--color-level-error, #c00);
+  }
+
+  /* Label and input: level, variant, target SR. */
+  & .picker-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    /* Label column. */
+    & > span {
+      flex: 0 0 7rem;
+    }
+
+    /* Target SR field. */
+    & input[name="targetFW"] {
+      width: 4em;
+    }
+  }
+
+  /* AP for the target SR. */
+  & .picker-fw-hint {
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* AP costs, wrapping if long. */
+  & .picker-costs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+
+  /* Readable line height for the rule text. */
+  & .picker-properties,
+  & .picker-description {
+    line-height: 1.4;
+  }
+
+  /* Description, set apart by a line. */
+  & .picker-description {
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(127, 127, 127, 0.3);
+  }
+
+  /* Hint while nothing is selected. */
+  & .picker-hint {
+    font-style: italic;
   }
 }
 
-.steigerungsplaner-tab.planner-phase-locked .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(.planner-step-inner:hover),
-.steigerungsplaner-tab.planner-phase-locked .planner-steps:not(:has(.planner-step-remove:hover)) .planner-step:not(.planner-step-unaffordable):has(~ .planner-step .planner-step-inner:hover) {
-  background-color: transparent;
+/* =================================================================================================
+   GM overview
+   ================================================================================================= */
+
+/* GM overview (planner-overview.js). */
+.steigerungsplaner-overview {
+  --overview-green: rgb(86, 168, 19);
+
+  /* Toolbar ------------------------------------------------------------------------------------ */
+
+  /* Scrolls once it gets too tall. */
+  & .window-content {
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  /* Toolbar and characters below each other. */
+  & .overview {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Filter and phase switch. */
+  & .overview-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  /* "Open requests only". */
+  & .overview-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  /* Phase switch. */
+  & .overview-phase {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+    padding: 0 0.75rem;
+    line-height: 1.8rem;
+
+    /* Green while open. */
+    &.open {
+      border-color: var(--overview-green);
+      background: color-mix(in srgb, var(--overview-green) 25%, transparent);
+    }
+  }
+
+  /* Text when nobody planned anything. */
+  & .overview-empty {
+    font-style: italic;
+    opacity: 0.75;
+  }
+
+  /* Character ---------------------------------------------------------------------------------- */
+
+  /* One character. */
+  & .overview-actor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  /* Name row: toggle, portrait, name, AP. */
+  & .overview-actor-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border-light-tertiary, #999);
+
+    /* Portrait, showing the face. */
+    & img {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      object-position: top;
+      border: none;
+    }
+  }
+
+  /* Collapse arrow. */
+  & .overview-toggle {
+    flex: 0 0 1rem;
+    text-align: center;
+  }
+
+  /* Character name in the sheet's heading font. */
+  & .overview-actor-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    border: none;
+    font-size: 1.6em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* AP free and planned. */
+  & .overview-summary {
+    font-size: 0.9em;
+    white-space: nowrap;
+
+    /* More planned than free. */
+    & .over-budget {
+      color: var(--color-level-error, #c00);
+    }
+  }
+
+  /* Entries, in requests and tiles alike ------------------------------------------------------- */
+
+  /* Item icon. */
+  & .overview-icon {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    border: none;
+  }
+
+  /* Item name. */
+  & .overview-name {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: bold;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* AP. */
+  & .overview-cost {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Open requests ------------------------------------------------------------------------------ */
+
+  /* Open requests: green card. */
+  & .overview-requests {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.3rem 0.5rem 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--overview-green) 60%, transparent);
+    border-left-width: 4px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--overview-green) 12%, transparent);
+  }
+
+  /* Card heading. */
+  & .overview-requests-title {
+    font-size: var(--font-size-12);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, var(--overview-green) 70%, black);
+  }
+
+  /* One request. Requirements wrap onto their own line. */
+  & .overview-request {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.5rem;
+    min-height: 2rem;
+
+    /* Line between requests. */
+    & + .overview-request {
+      border-top: 1px solid color-mix(in srgb, var(--overview-green) 30%, transparent);
+    }
+
+    /* Larger icon. */
+    & .overview-icon {
+      width: 26px;
+      height: 26px;
+    }
+
+    /* Name takes the free space. */
+    & .overview-name {
+      flex: 1 1 0;
+    }
+
+    /* AP, right-aligned. */
+    & .overview-cost {
+      flex: 0 0 auto;
+      min-width: 3.5em;
+      text-align: right;
+    }
+
+    /* Approve, gift and reject, smaller than Foundry's buttons. */
+    & button {
+      flex: 0 0 auto;
+      width: auto;
+      height: 1.6rem;
+      margin: 0;
+      padding: 0 0.6rem;
+      line-height: 1.6rem;
+      font-size: var(--font-size-12);
+    }
+
+    /* Approve: green. */
+    & .overview-approve {
+      border: 1px solid var(--overview-green);
+      background: var(--overview-green);
+      color: white;
+
+      /* Darker. */
+      &:hover {
+        background: color-mix(in srgb, var(--overview-green) 80%, black);
+      }
+    }
+
+    /* Gift: gold. */
+    & .overview-gift {
+      border: 1px solid rgb(184, 134, 11);
+      background: transparent;
+      color: rgb(150, 105, 0);
+
+      /* Tinted. */
+      &:hover {
+        background: rgba(184, 134, 11, 0.15);
+      }
+    }
+
+    /* Reject: red. */
+    & .overview-reject {
+      border: 1px solid var(--color-level-error, #c00);
+      background: transparent;
+      color: var(--color-level-error, #c00);
+
+      /* Tinted. */
+      &:hover {
+        background: color-mix(in srgb, var(--color-level-error, #c00) 15%, transparent);
+      }
+    }
+  }
+
+  /* Compendium link in the name, without Foundry's box. */
+  & .overview-request .overview-name a.content-link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+
+    /* No link icon. */
+    & i {
+      display: none;
+    }
+
+    /* Underlined. */
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  /* Requirements on their own line, indented to the name. */
+  & .overview-requirements {
+    flex: 1 0 100%;
+    padding: 0 0 0.2rem calc(26px + 0.5rem);
+    font-size: var(--font-size-12);
+    line-height: 1.3;
+    opacity: 0.85;
+  }
+
+  /* Plan --------------------------------------------------------------------------------------- */
+
+  /* All sections of a character. Container for the narrow layout. */
+  & .overview-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    container-type: inline-size;
+  }
+
+  /* One section: label column left, tiles right. */
+  & .overview-section {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: 0 0.5rem;
+    padding: 7px 4px 4px 0.5rem;
+    border-radius: 4px;
+  }
+
+  /* Section gradient as a 3px strip on top. More specific than the section classes, so their
+     background shorthand doesn't reset the size. */
+  & .overview-sections .overview-section {
+    background-color: rgba(0, 0, 0, 0.04);
+    background-position: top left;
+    background-repeat: no-repeat;
+    background-size: 100% 3px;
+  }
+
+  /* Section name, on the first tile row's line. */
+  & .overview-section-label {
+    align-self: start;
+    min-width: 0;
+    overflow: hidden;
+    font-family: var(--boldFont);
+    font-weight: bold;
+    line-height: 1.75rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Tiles, wrapping. */
+  & .overview-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* One planned target or entry. */
+  & .overview-tile {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    height: 1.75rem;
+    padding: 0 0.5rem 0 3px;
+    border: 0.5px solid var(--border-color, #736953a6);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.5);
+
+    /* Smaller icon. */
+    & .overview-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Details like "13 » 15" or a level. */
+    & .overview-detail {
+      font-size: 0.85em;
+      white-space: nowrap;
+    }
+
+    /* AP, set apart by a line. */
+    & .overview-cost {
+      padding-left: 0.35rem;
+      border-left: 0.5px solid var(--border-color, #736953a6);
+      font-size: 0.85em;
+      opacity: 0.8;
+    }
+  }
+
+  /* "rejected" status. */
+  & .overview-rejected {
+    color: var(--color-level-error, #c00);
+  }
+
+  /* Narrow window: label above the tiles. */
+  @container (max-width: 26rem) {
+    /* One column. */
+    & .overview-section {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 }
