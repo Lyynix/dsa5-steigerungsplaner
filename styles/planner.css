@@ -35,6 +35,30 @@
   background: var(--dsa-danger, #8b0000);
 }
 
+/* A planned step above the rule maximum (planner-limits.js): amber if planned attribute steps make
+   it reachable, red if not even then. Same colors on the badge, in the tab's step tiles and in the
+   GM's overview. Decreases (also red) never get these, they can't go above a maximum. */
+.steigerungsplaner-badge-limit-attributes {
+  background: #b7860b;
+}
+
+.steigerungsplaner-badge-limit-over {
+  background: #b22222;
+}
+
+.planner-limit {
+  flex: 0 0 auto;
+  font-size: 0.85em;
+
+  &.planner-limit-attributes {
+    color: #b7860b;
+  }
+
+  &.planner-limit-over {
+    color: #b22222;
+  }
+}
+
 /* The characteristics header row has no room for inline badge text next to "+" at all. Give
    .header-label a bit of headroom (grows all attribute columns equally, so MU-KK stay aligned)
    and float a normal-sized badge above the "+" icon in that space instead - see the handling in

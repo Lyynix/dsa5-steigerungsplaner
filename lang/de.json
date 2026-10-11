@@ -114,5 +114,11 @@
   "STEIGERUNGSPLANER.ColumnTarget": "Talent",
   "STEIGERUNGSPLANER.ColumnPlan": "Steigerungsliste",
   "STEIGERUNGSPLANER.CannotDecreaseFurther": "{label} kann nicht weiter verringert werden.",
-  "STEIGERUNGSPLANER.NotEnoughXP": "Nicht genug AP, um {label} zu steigern."
+  "STEIGERUNGSPLANER.NotEnoughXP": "Nicht genug AP, um {label} zu steigern.",
+  "STEIGERUNGSPLANER.LimitAttributes": "Steigern auf {target} geht über das aktuelle Maximum ({current}) hinaus. Erreichbar ab {steps}, das ist bereits geplant.",
+  "STEIGERUNGSPLANER.LimitAttributesAll": "Steigern auf {target} geht über das aktuelle Maximum ({current}) hinaus. Erreichbar, sobald die geplanten Eigenschaftssteigerungen angewendet sind (Maximum dann {planned}).",
+  "STEIGERUNGSPLANER.LimitOverPlanned": "Steigern auf {target} geht über das aktuelle Maximum ({current}) hinaus, auch mit den geplanten Eigenschaften liegt es nur bei {planned}.",
+  "STEIGERUNGSPLANER.LimitOverCurrent": "Steigern auf {target} geht über das aktuelle Maximum ({current}) hinaus.",
+  "STEIGERUNGSPLANER.LimitNeeds": "Dafür bräuchte es {needed}.",
+  "STEIGERUNGSPLANER.LimitNoAttribute": "Auch höhere Eigenschaften helfen dabei nicht."
 }

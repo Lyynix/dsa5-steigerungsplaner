@@ -1,5 +1,6 @@
 import { ADVANCE_FCTS } from './module-config.js';
 import PlannerData from './planner-data.js';
+import PlannerLimits from './planner-limits.js';
 
 const BADGE_CLASS = 'steigerungsplaner-badge';
 const DECREASE_CLASS = 'steigerungsplaner-badge-decrease';
@@ -31,6 +32,13 @@ export default class PlannerBadges {
       badge.classList.toggle(DECREASE_CLASS, !isIncrease);
       badge.textContent = `${isIncrease ? '+' : '-'}${group.steps.length}`;
       badge.dataset.tooltip = game.i18n.localize("STEIGERUNGSPLANER.Planned") + '<br>' + group.steps.map((s) => `${s.from} » ${s.to}: ${s.cost} AP`).join('<br>');
+
+      // A planned step above the rule maximum - the badge gets the hint's color and a line on it.
+      const limit = PlannerLimits.mark(sheet.actor, type, el.dataset.attr, group.steps);
+      if (limit) {
+        badge.classList.add(`steigerungsplaner-badge-limit-${limit.limit}`);
+        badge.dataset.tooltip += `<br><br>${limit.hint}`;
+      }
 
       if (type === 'attribute' || type === 'point' || type === 'permanentLoss') {
         // The characteristics header row (and, it turns out, the LeP/AsP/KaP row) is too narrow

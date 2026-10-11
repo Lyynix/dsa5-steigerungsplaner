@@ -57,6 +57,7 @@
                     {{#if entry.img}}<img class="overview-icon" src="{{entry.img}}" alt="">{{/if}}
                     <span class="overview-name">{{entry.label}}</span>
                     {{#if entry.detail}}<span class="overview-detail">{{entry.detail}}</span>{{/if}}
+                    {{#if entry.limit}}<i class="fas fa-triangle-exclamation planner-limit planner-limit-{{entry.limit.limit}}" data-tooltip="{{entry.limit.hint}}"></i>{{/if}}
                     {{#if entry.rejected}}<span class="overview-rejected" data-tooltip="{{localize 'STEIGERUNGSPLANER.RequestRejected'}}"><i class="fas fa-ban"></i></span>{{/if}}
                     <span class="overview-cost">{{entry.cost}}</span>
                 </span>

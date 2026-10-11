@@ -209,6 +209,7 @@ export default class PlannerOverview extends HandlebarsApplicationMixin(Applicat
               label: group.label,
               detail: `${group.steps[0].from} » ${group.steps[group.steps.length - 1].to}`,
               cost: `${group.totalCost} AP`,
+              limit: group.limit,
             }))
             .sort((a, b) => a.label.localeCompare(b.label, game.i18n.lang)),
         }));
